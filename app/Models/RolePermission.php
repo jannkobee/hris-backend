@@ -9,7 +9,7 @@ class RolePermission extends Model
 {
     use HasUuids;
 
-    public $model_name = 'role_permission';
+    public $model_name = 'Role Permission';
 
     protected $fillable = [
         'role_id',
