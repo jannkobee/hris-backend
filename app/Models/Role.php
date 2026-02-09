@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFilterScope;
 
     public $model_name = 'Role';
 
@@ -17,23 +18,10 @@ class Role extends Model
         'description',
     ];
 
-    public function scopeFilter($query)
-    {
-        $search = request('search');
-
-        $query->when($search, function ($query) use ($search) {
-            $columns = [
-                'name',
-                'description',
-            ];
-
-            $query->where(function ($query) use ($search, $columns) {
-                foreach ($columns as $column) {
-                    $query->orWhere($column, 'LIKE', "%$search%");
-                }
-            });
-        });
-    }
+    protected array $filterable = [
+        'name',
+        'description',
+    ];
 
     public function permissions(): BelongsToMany
     {

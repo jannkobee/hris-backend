@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFilterScope;
 
     protected $fillable = [
         'user_id',
@@ -26,6 +27,15 @@ class Employee extends Model
         'position_id',
         'job_grade_id',
         'meta'
+    ];
+
+    protected array $filterable = [
+        'employee_no',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'birthdate',
     ];
 
     protected $casts = [

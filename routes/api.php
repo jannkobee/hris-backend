@@ -25,6 +25,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'role/role',
         'permission/permission',
         'role_permission/role_permission',
+        'department/department',
+        'position/position',
+        'employee/employee',
+        'employment_status/employment_status',
+        'job_grade/job_grade',
     ];
 
     foreach ($routes as $route) {
