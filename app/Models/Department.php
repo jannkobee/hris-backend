@@ -10,6 +10,8 @@ class Department extends Model
 {
     use HasUuids, HasFilterScope;
 
+    public $model_name = 'Department';
+
     protected $fillable = [
         'name',
         'description',

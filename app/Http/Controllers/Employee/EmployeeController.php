@@ -39,4 +39,9 @@ class EmployeeController extends Controller
     {
         return $this->modelRepository->delete($id);
     }
+
+    public function generateEmployeeNo()
+    {
+        return $this->modelRepository->generateEmployeeNo();
+    }
 }

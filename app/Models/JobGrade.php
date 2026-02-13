@@ -10,6 +10,8 @@ class JobGrade extends Model
 {
     use HasUuids, HasFilterScope;
 
+    public $model_name = 'Job Grade';
+
     protected $fillable = [
         'name',
         'code',

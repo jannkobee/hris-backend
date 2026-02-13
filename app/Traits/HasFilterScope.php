@@ -6,20 +6,33 @@ trait HasFilterScope
 {
     public function scopeFilter($query)
     {
-        $search = request('search');
+        $search = trim((string) request('search', ''));
 
-        $query->when($search, function ($query) use ($search) {
-            $columns = property_exists($this, 'filterable') ? $this->filterable : [];
+        if ($search === '') {
+            return $query;
+        }
 
-            if (empty($columns)) {
-                return;
-            }
+        $columns = property_exists($this, 'filterable') ? $this->filterable : [];
+        if (empty($columns)) {
+            return $query;
+        }
 
-            $query->where(function ($query) use ($search, $columns) {
-                foreach ($columns as $column) {
-                    $query->orWhere($column, 'LIKE', "%{$search}%");
+        return $query->where(function ($q) use ($search, $columns) {
+            foreach ($columns as $column) {
+                // Relation column: user.first_name
+                if (str_contains($column, '.')) {
+                    [$relation, $relColumn] = explode('.', $column, 2);
+
+                    $q->orWhereHas($relation, function ($rq) use ($relColumn, $search) {
+                        $rq->where($relColumn, 'LIKE', "%{$search}%");
+                    });
+
+                    continue;
                 }
-            });
+
+                // Direct column: employee_no
+                $q->orWhere($column, 'LIKE', "%{$search}%");
+            }
         });
     }
 }

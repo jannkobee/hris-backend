@@ -10,6 +10,8 @@ class Position extends Model
 {
     use HasUuids, HasFilterScope;
 
+    public $model_name = 'Position';
+
     protected $fillable = [
         'department_id',
         'name',
