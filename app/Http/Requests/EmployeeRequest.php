@@ -34,6 +34,23 @@ class EmployeeRequest extends FormRequest
             'job_grade_id' => 'nullable|exists:job_grades,id',
 
             'meta' => 'nullable|array',
+
+            // Addresses validation
+            'addresses' => 'nullable|array',
+            'addresses.*.id' => 'nullable|exists:employee_addresses,id',
+            'addresses.*.type' => 'required|string|in:current,permanent,previous',
+            'addresses.*.address_line_1' => 'required|string|max:255',
+            'addresses.*.address_line_2' => 'nullable|string|max:255',
+            'addresses.*.city' => 'required|string|max:100',
+            'addresses.*.province' => 'required|string|max:100',
+            'addresses.*.postal_code' => 'nullable|string|max:20',
+            'addresses.*.country' => 'required|string|max:100',
+
+            // Contacts validation
+            'contacts' => 'nullable|array',
+            'contacts.*.id' => 'nullable|exists:employee_contacts,id',
+            'contacts.*.type' => 'required|string|in:mobile,home,work,email,emergency',
+            'contacts.*.value' => 'required|string|max:255',
         ];
     }
 }

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             EmploymentStatusSeeder::class,
             DepartmentSeeder::class,
             PositionSeeder::class,
+            JobGradeSeeder::class,
         ]);
     }
 }
