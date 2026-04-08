@@ -39,6 +39,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'employee/employee',
         'employment_status/employment_status',
         'job_grade/job_grade',
+        'attendance/attendance',
     ];
 
     foreach ($routes as $route) {

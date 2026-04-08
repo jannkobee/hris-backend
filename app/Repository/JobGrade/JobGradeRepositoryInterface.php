@@ -2,7 +2,4 @@
 
 namespace App\Repository\JobGrade;
 
-interface JobGradeRepositoryInterface
-{
-    //
-}
+interface JobGradeRepositoryInterface {}

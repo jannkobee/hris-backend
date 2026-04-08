@@ -20,6 +20,8 @@ use App\Repository\EmploymentStatus\EmploymentStatusRepository;
 use App\Repository\EmploymentStatus\EmploymentStatusRepositoryInterface;
 use App\Repository\JobGrade\JobGradeRepository;
 use App\Repository\JobGrade\JobGradeRepositoryInterface;
+use App\Repository\Attendance\AttendanceRepository;
+use App\Repository\Attendance\AttendanceRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -34,7 +36,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PositionRepositoryInterface::class, PositionRepository::class);
         $this->app->bind(EmployeeRepositoryInterface::class, EmployeeRepository::class);
         $this->app->bind(EmploymentStatusRepositoryInterface::class, EmploymentStatusRepository::class);
-        $this->app->bind(JobGradeRepositoryInterface::class, JobGradeRepository::class);
+        $this->app->bind(JobGradeRepositoryInterface::class, JobGradeRepository::class);        $this->app->bind(AttendanceRepositoryInterface::class, AttendanceRepository::class);
+
     }
 
     public function boot(): void {}

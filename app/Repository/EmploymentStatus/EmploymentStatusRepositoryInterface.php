@@ -2,7 +2,4 @@
 
 namespace App\Repository\EmploymentStatus;
 
-interface EmploymentStatusRepositoryInterface
-{
-    //
-}
+interface EmploymentStatusRepositoryInterface {}
