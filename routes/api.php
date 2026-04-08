@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\PublicAPI\PublicAPIController;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,7 +17,14 @@ use Illuminate\Support\Facades\Route;
 
 // Unauthenticated
 Route::middleware([])->group(function () {
-    Route::group([], base_path('routes/api/auth/auth.php'));
+    $routes = [
+        'auth/auth',
+        'public_api/public_api',
+    ];
+
+    foreach ($routes as $route) {
+        Route::group([], base_path("routes/api/{$route}.php"));
+    }
 });
 
 // Authenticated
@@ -25,6 +34,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'role/role',
         'permission/permission',
         'role_permission/role_permission',
+        'department/department',
+        'position/position',
+        'employee/employee',
+        'employment_status/employment_status',
+        'job_grade/job_grade',
     ];
 
     foreach ($routes as $route) {

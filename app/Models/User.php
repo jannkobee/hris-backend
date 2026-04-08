@@ -4,16 +4,18 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids, HasFilterScope;
 
     public $model_name = 'User';
 
@@ -26,6 +28,15 @@ class User extends Authenticatable
         'gender',
         'birthday',
         'password',
+    ];
+
+    protected array $filterable = [
+        'first_name',
+        'middle_name',
+        'last_name',
+        'email',
+        'gender',
+        'birthday',
     ];
 
     protected $hidden = [
@@ -52,25 +63,8 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id', 'id');
     }
 
-    public function scopeFilter($query)
+    public function employee(): HasOne
     {
-        $search = request('search');
-
-        $query->when($search, function ($query) use ($search) {
-            $columns = [
-                'first_name',
-                'middle_name',
-                'last_name',
-                'email',
-                'gender',
-                'birthday',
-            ];
-
-            $query->where(function ($query) use ($search, $columns) {
-                foreach ($columns as $column) {
-                    $query->orWhere($column, 'LIKE', "%$search%");
-                }
-            });
-        });
+        return $this->hasOne(Employee::class);
     }
 }

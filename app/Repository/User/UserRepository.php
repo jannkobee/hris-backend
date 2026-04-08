@@ -18,6 +18,22 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
         parent::__construct($model, $responseService, $auditLogService);
     }
 
+    // public function getList(): JsonResponse
+    // {
+    //     $withoutEmployee = request()->boolean('without_employee', false);
+
+    //     if ($withoutEmployee) {
+    //         $query = $this->model->whereDoesntHave('employee');
+
+    //         return $this->responseService->successResponse(
+    //             $this->model->model_name,
+    //             $query->get()
+    //         );
+    //     } else {
+    //         return parent::getList();
+    //     }
+    // }
+
     public function getUserByEmail(string $email, $relation = null): User
     {
         $user = User::where('email', $email)

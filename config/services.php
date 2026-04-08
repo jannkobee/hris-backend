@@ -31,4 +31,7 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'countrystatecity' => [
+        'key' => env('COUNTRY_API_KEY'),
+    ],
 ];

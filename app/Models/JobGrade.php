@@ -6,25 +6,23 @@ use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Position extends Model
+class JobGrade extends Model
 {
     use HasUuids, HasFilterScope;
 
-    public $model_name = 'Position';
+    public $model_name = 'Job Grade';
 
     protected $fillable = [
-        'department_id',
         'name',
+        'code',
         'description',
+        'min_salary',
+        'max_salary',
     ];
 
     protected array $filterable = [
         'name',
+        'code',
         'description',
     ];
-
-    public function department()
-    {
-        return $this->belongsTo(Department::class);
-    }
 }

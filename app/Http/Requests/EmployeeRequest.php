@@ -24,16 +24,33 @@ class EmployeeRequest extends FormRequest
         $id = $this->route('employee');
 
         return [
-            'role_id' => 'required|exists:roles,id',
-            'first_name' => 'required|string',
-            'middle_name' => 'nullable|string',
-            'last_name' => 'required|string',
-            'suffix' => 'nullable|string',
+            'user_id' => 'required|exists:users,id',
+            'employee_no' => 'required|string|unique:employees,employee_no,' . $id . ',id',
+            'hire_date' => 'nullable|date|date_format:Y-m-d',
 
-            'email' => "required|email|unique:users,email,{$id},id",
+            'employment_status_id' => 'nullable|exists:employment_statuses,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'position_id' => 'nullable|exists:positions,id',
+            'job_grade_id' => 'nullable|exists:job_grades,id',
 
-            'gender' => 'required|in:male,female',
-            'birthdate' => 'required|date|date_format:Y-m-d',
+            'meta' => 'nullable|array',
+
+            // Addresses validation
+            'addresses' => 'nullable|array',
+            'addresses.*.id' => 'nullable|exists:employee_addresses,id',
+            'addresses.*.type' => 'required|string|in:current,permanent,previous',
+            'addresses.*.address_line_1' => 'required|string|max:255',
+            'addresses.*.address_line_2' => 'nullable|string|max:255',
+            'addresses.*.city' => 'required|string|max:100',
+            'addresses.*.province' => 'required|string|max:100',
+            'addresses.*.postal_code' => 'nullable|string|max:20',
+            'addresses.*.country' => 'required|string|max:100',
+
+            // Contacts validation
+            'contacts' => 'nullable|array',
+            'contacts.*.id' => 'nullable|exists:employee_contacts,id',
+            'contacts.*.type' => 'required|string|in:mobile,home,work,email,emergency',
+            'contacts.*.value' => 'required|string|max:255',
         ];
     }
 }

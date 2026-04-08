@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Employee;
+namespace App\Http\Controllers\Position;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\EmployeeRequest as ModelRequest;
-use App\Repository\Employee\EmployeeRepositoryInterface;
+use App\Http\Requests\PositionRequest as ModelRequest;
+use App\Repository\Position\PositionRepositoryInterface;
 
-class EmployeeController extends Controller
+class PositionController extends Controller
 {
     private $modelRepository;
 
-    public function __construct(EmployeeRepositoryInterface $modelRepository)
+    public function __construct(PositionRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
     }
@@ -38,10 +38,5 @@ class EmployeeController extends Controller
     public function destroy(string $id)
     {
         return $this->modelRepository->delete($id);
-    }
-
-    public function generateEmployeeNo()
-    {
-        return $this->modelRepository->generateEmployeeNo();
     }
 }

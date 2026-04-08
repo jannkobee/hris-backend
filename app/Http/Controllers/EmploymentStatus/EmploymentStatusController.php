@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Employee;
+namespace App\Http\Controllers\EmploymentStatus;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\EmployeeRequest as ModelRequest;
-use App\Repository\Employee\EmployeeRepositoryInterface;
+use App\Http\Requests\EmploymentStatusRequest as ModelRequest;
+use App\Repository\EmploymentStatus\EmploymentStatusRepositoryInterface;
 
-class EmployeeController extends Controller
+class EmploymentStatusController extends Controller
 {
     private $modelRepository;
 
-    public function __construct(EmployeeRepositoryInterface $modelRepository)
+    public function __construct(EmploymentStatusRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
     }
@@ -38,10 +38,5 @@ class EmployeeController extends Controller
     public function destroy(string $id)
     {
         return $this->modelRepository->delete($id);
-    }
-
-    public function generateEmployeeNo()
-    {
-        return $this->modelRepository->generateEmployeeNo();
     }
 }

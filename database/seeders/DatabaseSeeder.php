@@ -16,7 +16,11 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AdminSeeder::class,
             PermissionSeeder::class,
-            RolePermissionSeeder::class
+            RolePermissionSeeder::class,
+            EmploymentStatusSeeder::class,
+            DepartmentSeeder::class,
+            PositionSeeder::class,
+            JobGradeSeeder::class,
         ]);
     }
 }

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class Permission extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFilterScope;
 
     public $model_name = 'Permission';
 
@@ -16,20 +17,7 @@ class Permission extends Model
         'slug'
     ];
 
-    public function scopeFilter($query)
-    {
-        $search = request('search');
-
-        $query->when($search, function ($query) use ($search) {
-            $columns = [
-                'name',
-            ];
-
-            $query->where(function ($query) use ($search, $columns) {
-                foreach ($columns as $column) {
-                    $query->orWhere($column, 'LIKE', "%$search%");
-                }
-            });
-        });
-    }
+    protected array $filterable = [
+        'name',
+    ];
 }
