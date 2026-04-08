@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 class PublicAPIController extends Controller
 {
     protected $responseService;
+    private string $baseUrl = 'https://countriesnow.space/api/v0.1/countries';
 
     public function __construct(ResponseServiceInterface $responseService)
     {
@@ -17,98 +18,87 @@ class PublicAPIController extends Controller
     }
 
     /**
-     * Get API headers with authentication for Country State City API
-     */
-    private function getCountryStateCityHeaders(): array
-    {
-        $apiKey = (string) config('services.countrystatecity.key', '');
-
-        if ($apiKey === '') {
-            throw new \Exception('COUNTRY_API_KEY not configured');
-        }
-
-        return [
-            'X-CSCAPI-KEY' => $apiKey,
-        ];
-    }
-
-    /**
-     * Make HTTP request to Country State City API
-     */
-    private function makeCountryStateCityRequest(string $endpoint): JsonResponse
-    {
-        try {
-            $response = Http::acceptJson()
-                ->asJson()
-                ->withHeaders($this->getCountryStateCityHeaders())
-                ->timeout(10)
-                ->connectTimeout(5)
-                ->get('https://api.countrystatecity.in/v1' . $endpoint)
-                ->throw();
-
-            return $this->responseService->successResponse(
-                'Data',
-                $response->json()
-            );
-        } catch (\Exception $e) {
-            return $this->responseService->rejectResponse(
-                $e->getMessage(),
-                null
-            );
-        }
-    }
-
-    /**
-     * Get all countries
+     * Get all countries (and their ISO2 codes)
      * GET /countries
      */
     public function getCountries(): JsonResponse
     {
-        return $this->makeCountryStateCityRequest('/countries');
+        try {
+            $response = Http::acceptJson()
+                ->timeout(10)
+                ->connectTimeout(5)
+                ->get("{$this->baseUrl}/iso")
+                ->throw();
+
+            // Map the response to match the old API's structure for the frontend
+            $data = collect($response->json('data'))->map(function ($country) {
+                return [
+                    'name' => $country['name'],
+                    'iso2' => $country['Iso2'] ?? null,
+                ];
+            });
+
+            return $this->responseService->successResponse('Data', $data);
+        } catch (\Exception $e) {
+            return $this->responseService->rejectResponse($e->getMessage(), null);
+        }
     }
 
     /**
-     * Get specific country by ISO2 code
-     * GET /countries/{iso2}
+     * Get all states of a specific country by Country Name
+     * GET /countries/{countryName}/states
      */
-    public function getCountry(string $iso2): JsonResponse
+    public function getStatesByCountry(string $countryName): JsonResponse
     {
-        return $this->makeCountryStateCityRequest("/countries/{$iso2}");
+        try {
+            // CountriesNow uses POST for states
+            $response = Http::acceptJson()
+                ->timeout(10)
+                ->connectTimeout(5)
+                ->post("{$this->baseUrl}/states", [
+                    'country' => urldecode($countryName)
+                ])
+                ->throw();
+
+            $data = collect($response->json('data.states'))->map(function ($state) {
+                return [
+                    'name' => $state['name'],
+                    'iso2' => $state['state_code'] ?? null,
+                ];
+            });
+
+            return $this->responseService->successResponse('Data', $data);
+        } catch (\Exception $e) {
+            return $this->responseService->rejectResponse($e->getMessage(), null);
+        }
     }
 
     /**
-     * Get all states of a specific country
-     * GET /countries/{countryIso2}/states
+     * Get all cities of a specific state by Country Name and State Name
+     * GET /countries/{countryName}/states/{stateName}/cities
      */
-    public function getStatesByCountry(string $countryIso2): JsonResponse
+    public function getCitiesByState(string $countryName, string $stateName): JsonResponse
     {
-        return $this->makeCountryStateCityRequest("/countries/{$countryIso2}/states");
-    }
+        try {
+            // CountriesNow uses POST for cities
+            $response = Http::acceptJson()
+                ->timeout(10)
+                ->connectTimeout(5)
+                ->post("{$this->baseUrl}/state/cities", [
+                    'country' => urldecode($countryName),
+                    'state' => urldecode($stateName)
+                ])
+                ->throw();
 
-    /**
-     * Get specific state by ISO2 code within a country
-     * GET /countries/{countryIso2}/states/{stateIso2}
-     */
-    public function getState(string $countryIso2, string $stateIso2): JsonResponse
-    {
-        return $this->makeCountryStateCityRequest("/countries/{$countryIso2}/states/{$stateIso2}");
-    }
+            // CountriesNow returns an array of strings for cities. 
+            // Map to an array of objects to keep frontend compatibility.
+            $data = collect($response->json('data'))->map(function ($cityName) {
+                return ['name' => $cityName];
+            });
 
-    /**
-     * Get all cities of a specific country
-     * GET /countries/{countryIso2}/cities
-     */
-    public function getCitiesByCountry(string $countryIso2): JsonResponse
-    {
-        return $this->makeCountryStateCityRequest("/countries/{$countryIso2}/cities");
-    }
-
-    /**
-     * Get all cities of a specific state within a country
-     * GET /countries/{countryIso2}/states/{stateIso2}/cities
-     */
-    public function getCitiesByState(string $countryIso2, string $stateIso2): JsonResponse
-    {
-        return $this->makeCountryStateCityRequest("/countries/{$countryIso2}/states/{$stateIso2}/cities");
+            return $this->responseService->successResponse('Data', $data);
+        } catch (\Exception $e) {
+            return $this->responseService->rejectResponse($e->getMessage(), null);
+        }
     }
 }
