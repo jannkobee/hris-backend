@@ -2,4 +2,6 @@
 
 namespace App\Repository\EmploymentStatus;
 
-interface EmploymentStatusRepositoryInterface {}
+use App\Repository\Base\BaseRepositoryInterface;
+
+interface EmploymentStatusRepositoryInterface extends BaseRepositoryInterface {}

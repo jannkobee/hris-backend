@@ -2,4 +2,6 @@
 
 namespace App\Repository\JobGrade;
 
-interface JobGradeRepositoryInterface {}
+use App\Repository\Base\BaseRepositoryInterface;
+
+interface JobGradeRepositoryInterface extends BaseRepositoryInterface {}

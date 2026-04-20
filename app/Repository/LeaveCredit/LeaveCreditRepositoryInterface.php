@@ -2,7 +2,6 @@
 
 namespace App\Repository\LeaveCredit;
 
-interface LeaveCreditRepositoryInterface
-{
-    //
-}
+use App\Repository\Base\BaseRepositoryInterface;
+
+interface LeaveCreditRepositoryInterface extends BaseRepositoryInterface {}

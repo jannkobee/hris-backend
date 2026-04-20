@@ -2,7 +2,6 @@
 
 namespace App\Repository\LeaveRequest;
 
-interface LeaveRequestRepositoryInterface
-{
-    //
-}
+use App\Repository\Base\BaseRepositoryInterface;
+
+interface LeaveRequestRepositoryInterface extends BaseRepositoryInterface {}
