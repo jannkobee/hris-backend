@@ -8,6 +8,8 @@ use App\Services\AuditLog\AuditLogService;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Auth\AuthService;
 use App\Services\Auth\AuthServiceInterface;
+use App\Services\EmployeeNumber\EmployeeNumberService;
+use App\Services\EmployeeNumber\EmployeeNumberServiceInterface;
 use App\Services\Utils\ResponseService;
 use App\Services\Utils\ResponseServiceInterface;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AuditLogServiceInterface::class, AuditLogService::class);
         $this->app->singleton(ResponseServiceInterface::class, ResponseService::class);
         $this->app->singleton(PermissionRepositoryInterface::class, PermissionRepository::class);
+        $this->app->singleton(EmployeeNumberServiceInterface::class, EmployeeNumberService::class);
     }
 
     /**

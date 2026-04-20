@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EmployeeRequest as ModelRequest;
 use App\Repository\Employee\EmployeeRepositoryInterface;
+use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
@@ -43,5 +44,26 @@ class EmployeeController extends Controller
     public function generateEmployeeNo()
     {
         return $this->modelRepository->generateEmployeeNo();
+    }
+
+    public function getNumberSettings()
+    {
+        return $this->modelRepository->getEmployeeNumberSettings();
+    }
+
+    public function updateNumberSettings(Request $request)
+    {
+        $data = $request->validate([
+            'strategy' => 'required|in:yearly_random,auto_increment,custom_format',
+            'prefix' => 'required|string',
+            'padding' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        return $this->modelRepository->updateEmployeeNumberSettings($data);
+    }
+
+    public function reformatEmployeeNumbers()
+    {
+        return $this->modelRepository->reformatEmployeeNumbers();
     }
 }
