@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('employee_id')->constrained()->cascadeOnDelete();
             $table->date('date');
             $table->timestamp('time_in')->nullable();
             $table->string('time_in_notes')->nullable();
@@ -21,8 +21,6 @@ return new class extends Migration
             $table->string('time_out_notes')->nullable();
             $table->string('ip_address')->nullable();
             $table->timestamps();
-
-            $table->index(['user_id', 'date']);
         });
     }
 

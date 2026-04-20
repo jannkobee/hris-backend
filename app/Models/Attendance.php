@@ -11,8 +11,10 @@ class Attendance extends Model
 {
     use HasUuids, HasFilterScope;
 
+    public $model_name = 'Attendance';
+
     protected $fillable = [
-        'user_id',
+        'employee_id',
         'date',
         'time_in',
         'time_in_notes',
@@ -25,13 +27,13 @@ class Attendance extends Model
         'date',
         'time_in_notes',
         'time_out_notes',
-        'user.first_name',
-        'user.last_name',
-        'user.email',
+        'employee.first_name',
+        'employee.last_name',
+        'employee.email',
     ];
 
-    public function user(): BelongsTo
+    public function employee(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Employee::class);
     }
 }

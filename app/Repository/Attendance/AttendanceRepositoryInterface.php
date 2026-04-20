@@ -6,11 +6,11 @@ use App\Repository\Base\BaseRepositoryInterface;
 
 interface AttendanceRepositoryInterface extends BaseRepositoryInterface
 {
-    public function timeIn(int $userId, array $data);
+    public function timeIn(string $employeeId, array $data);
 
-    public function timeOut(int $userId, array $data);
+    public function timeOut(string $employeeId, array $data);
 
-    public function getTodayAttendance(int $userId);
+    public function getTodayAttendance(string $employeeId);
 
-    public function getUserHistory(int $userId, array $filters = []);
+    public function getUserHistory(string $employeeId, array $filters = []);
 }

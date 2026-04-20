@@ -16,9 +16,24 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
         parent::__construct($model, $responseService, $auditLogService);
     }
 
-    public function timeIn(int $userId, array $data): JsonResponse
+    public function create(array $attributes): JsonResponse
     {
-        $existing = $this->model->where('user_id', $userId)
+        $date = $attributes['date'] ?? Carbon::today()->toDateString();
+
+        $attributes['time_in'] = isset($attributes['time_in'])
+            ? Carbon::parse($date . ' ' . $attributes['time_in'])->toDateTimeString()
+            : null;
+
+        $attributes['time_out'] = isset($attributes['time_out'])
+            ? Carbon::parse($date . ' ' . $attributes['time_out'])->toDateTimeString()
+            : null;
+
+        return parent::create($attributes);
+    }
+
+    public function timeIn(string $employeeId, array $data): JsonResponse
+    {
+        $existing = $this->model->where('employee_id', $employeeId)
             ->whereDate('date', Carbon::today())
             ->first();
 
@@ -27,7 +42,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
         }
 
         $attendance = $this->model->create([
-            'user_id' => $userId,
+            'employee_id' => $employeeId,
             'date' => Carbon::today()->toDateString(),
             'time_in' => Carbon::now(),
             'time_in_notes' => $data['notes'] ?? null,
@@ -38,9 +53,9 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
         return $this->responseService->storeResponse('Attendance', $attendance);
     }
 
-    public function timeOut(int $userId, array $data): JsonResponse
+    public function timeOut(string $employeeId, array $data): JsonResponse
     {
-        $attendance = $this->model->where('user_id', $userId)
+        $attendance = $this->model->where('employee_id', $employeeId)
             ->whereDate('date', Carbon::today())
             ->first();
 
@@ -62,20 +77,20 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
         return $this->responseService->successResponse('Successfully timed out.', $attendance->fresh());
     }
 
-    public function getTodayAttendance(int $userId): JsonResponse
+    public function getTodayAttendance(string $employeeId): JsonResponse
     {
-        $attendance = $this->model->where('user_id', $userId)
+        $attendance = $this->model->where('employee_id', $employeeId)
             ->whereDate('date', Carbon::today())
             ->first();
 
         return $this->responseService->successResponse('Today\'s attendance retrieved.', $attendance);
     }
 
-    public function getUserHistory(int $userId, array $filters = []): JsonResponse
+    public function getUserHistory(string $employeeId, array $filters = []): JsonResponse
     {
         $limit = $filters['limit'] ?? 15;
 
-        $history = $this->model->where('user_id', $userId)
+        $history = $this->model->where('employee_id', $employeeId)
             ->orderBy('date', 'desc')
             ->paginate($limit);
 
