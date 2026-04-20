@@ -22,6 +22,12 @@ use App\Repository\JobGrade\JobGradeRepository;
 use App\Repository\JobGrade\JobGradeRepositoryInterface;
 use App\Repository\Attendance\AttendanceRepository;
 use App\Repository\Attendance\AttendanceRepositoryInterface;
+use App\Repository\LeaveType\LeaveTypeRepository;
+use App\Repository\LeaveType\LeaveTypeRepositoryInterface;
+use App\Repository\LeaveRequest\LeaveRequestRepository;
+use App\Repository\LeaveRequest\LeaveRequestRepositoryInterface;
+use App\Repository\LeaveCredit\LeaveCreditRepository;
+use App\Repository\LeaveCredit\LeaveCreditRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -36,8 +42,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PositionRepositoryInterface::class, PositionRepository::class);
         $this->app->bind(EmployeeRepositoryInterface::class, EmployeeRepository::class);
         $this->app->bind(EmploymentStatusRepositoryInterface::class, EmploymentStatusRepository::class);
-        $this->app->bind(JobGradeRepositoryInterface::class, JobGradeRepository::class);        $this->app->bind(AttendanceRepositoryInterface::class, AttendanceRepository::class);
-
+        $this->app->bind(JobGradeRepositoryInterface::class, JobGradeRepository::class);
+        $this->app->bind(AttendanceRepositoryInterface::class, AttendanceRepository::class);
+        $this->app->bind(LeaveTypeRepositoryInterface::class, LeaveTypeRepository::class);
+        $this->app->bind(LeaveRequestRepositoryInterface::class, LeaveRequestRepository::class);
+        $this->app->bind(LeaveCreditRepositoryInterface::class, LeaveCreditRepository::class);
     }
 
     public function boot(): void {}

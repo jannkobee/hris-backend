@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([])->group(function () {
     $routes = [
         'auth/auth',
-        'public_api/public_api',
+        'public_api/public_api',        'leave_type/leave_type',        'leave_request/leave_request',        'leave_credit/leave_credit',
+
+
+
     ];
 
     foreach ($routes as $route) {
