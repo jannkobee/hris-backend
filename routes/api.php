@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\PublicAPI\PublicAPIController;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
