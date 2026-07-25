@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LeaveCreditRequest extends FormRequest
+class LeaveConversionRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,9 +16,9 @@ class LeaveCreditRequest extends FormRequest
         return [
             'employee_id' => ['required', 'uuid', 'exists:employees,id'],
             'leave_type_id' => ['required', 'uuid', 'exists:leave_types,id'],
-            'year' => ['required', 'integer', 'between:2000,2100'],
-            'total_earned' => ['required', 'numeric', 'min:0', 'max:999.99'],
-            'used' => ['nullable', 'numeric', 'min:0', 'lte:total_earned'],
+            'credits_requested' => ['required', 'numeric', 'min:0.5'],
+            'monetary_value' => ['nullable', 'numeric', 'min:0'],
+            'reason' => ['nullable', 'string'],
         ];
     }
 }

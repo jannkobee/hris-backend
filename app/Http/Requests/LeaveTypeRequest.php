@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class LeaveTypeRequest extends FormRequest
 {
@@ -14,17 +13,10 @@ class LeaveTypeRequest extends FormRequest
 
     public function rules(): array
     {
-        $model = $this->route('leaveType');
-        $modelId = is_object($model) ? $model->id : $model;
-
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('leave_types', 'name')->ignore($modelId),
-            ],
-            'description' => ['nullable', 'string'],
+            'name' => ['required', 'string', 'max:255', 'unique:leave_types,name,' . $this->route('leave_type')],
+            'default_days' => ['required', 'numeric', 'min:0', 'max:365'],
+            'is_paid' => ['required', 'boolean'],
         ];
     }
 }

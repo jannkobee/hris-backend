@@ -28,7 +28,6 @@ class UserFactory extends Factory
             'gender' => fake()->randomElement(['Male', 'Female']),
             'birthday' => fake()->date('Y-m-d'),
             'password' => Hash::make('secret'),
-            'is_admin' => true,
         ];
     }
 

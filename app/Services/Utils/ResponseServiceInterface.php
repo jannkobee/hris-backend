@@ -6,17 +6,17 @@ use Illuminate\Http\JsonResponse;
 
 interface ResponseServiceInterface
 {
-    public function resolveResponse($message, $data): JsonResponse;
-    
-    public function rejectResponse($message, $data): JsonResponse;
-    
-    public function successResponse($model, $data): JsonResponse;
-    
-    public function storeResponse($model, $data): JsonResponse;
-    
-    public function updateResponse($model, $data): JsonResponse;
-    
-    public function deleteResponse($model, $data): JsonResponse;
-    
-    public function restoreResponse($model, $data): JsonResponse;
+    public function resolveResponse(string $message, mixed $data, int $statusCode = 200): JsonResponse;
+
+    public function rejectResponse(string $message, mixed $data, int $statusCode = 500): JsonResponse;
+
+    public function successResponse(string $model, mixed $data): JsonResponse;
+
+    public function storeResponse(string $model, mixed $data): JsonResponse;
+
+    public function updateResponse(string $model, mixed $data): JsonResponse;
+
+    public function deleteResponse(string $model, mixed $data): JsonResponse;
+
+    public function restoreResponse(string $model, mixed $data): JsonResponse;
 }

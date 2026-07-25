@@ -19,10 +19,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([])->group(function () {
     $routes = [
         'auth/auth',
-        'public_api/public_api',        'leave_type/leave_type',        'leave_request/leave_request',        'leave_credit/leave_credit',
-
-
-
+        'public_api/public_api',
+        'leave_type/leave_type',
+        'leave_request/leave_request',
+        'leave_credit/leave_credit',
+        'leave_credit_setting/leave_credit_setting',
+        'leave_conversion_request/leave_conversion_request',
     ];
 
     foreach ($routes as $route) {
@@ -43,6 +45,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'employment_status/employment_status',
         'job_grade/job_grade',
         'attendance/attendance',
+        'announcement/announcement',
     ];
 
     foreach ($routes as $route) {

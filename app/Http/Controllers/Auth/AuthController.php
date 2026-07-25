@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Services\Auth\AuthServiceInterface;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -28,5 +29,17 @@ class AuthController extends Controller
     public function authUser()
     {
         return $this->authService->authUser();
+    }
+
+    public function getSettings()
+    {
+        return $this->authService->getSettings();
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $data = $request->all();
+
+        return $this->authService->updateSettings($data)['response'];
     }
 }

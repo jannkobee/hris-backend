@@ -8,9 +8,9 @@ use App\Services\Utils\ResponseServiceInterface;
 
 class RolePermissionRepository implements RolePermissionRepositoryInterface
 {
-    protected $model;
-    protected $responseService;
-    protected $auditLogService;
+    protected Role $model;
+    protected ResponseServiceInterface $responseService;
+    protected AuditLogServiceInterface $auditLogService;
 
     public function __construct(Role $model, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)
     {
@@ -19,7 +19,7 @@ class RolePermissionRepository implements RolePermissionRepositoryInterface
         $this->auditLogService = $auditLogService;
     }
 
-    public function update(string $roleId, array $attributes)
+    public function update(string $roleId, array $attributes): mixed
     {
         $role = $this->model->findOrFail($roleId);
 

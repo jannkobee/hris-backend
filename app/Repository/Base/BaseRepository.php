@@ -14,9 +14,9 @@ use PDOException;
 
 abstract class BaseRepository implements BaseRepositoryInterface
 {
-    protected $model;
-    protected $responseService;
-    protected $auditLogService;
+    protected Model $model;
+    protected ResponseServiceInterface $responseService;
+    protected AuditLogServiceInterface $auditLogService;
 
     public function __construct(Model $model, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)
     {
@@ -91,7 +91,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         ]);
     }
 
-    public function update(array $attributes, $id): JsonResponse
+    public function update(array $attributes, string|int $id): JsonResponse
     {
         $relations = request()->input('relations');
 

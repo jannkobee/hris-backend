@@ -2,7 +2,6 @@
 
 namespace App\Repository\Base;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 
 interface BaseRepositoryInterface
@@ -13,7 +12,7 @@ interface BaseRepositoryInterface
 
     public function find(string $id): JsonResponse;
 
-    public function update(array $attributes, $id): JsonResponse;
+    public function update(array $attributes, string|int $id): JsonResponse;
 
     public function delete(string $id): JsonResponse;
 }

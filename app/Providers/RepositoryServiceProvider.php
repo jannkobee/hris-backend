@@ -28,6 +28,12 @@ use App\Repository\LeaveRequest\LeaveRequestRepository;
 use App\Repository\LeaveRequest\LeaveRequestRepositoryInterface;
 use App\Repository\LeaveCredit\LeaveCreditRepository;
 use App\Repository\LeaveCredit\LeaveCreditRepositoryInterface;
+use App\Repository\Announcement\AnnouncementRepository;
+use App\Repository\Announcement\AnnouncementRepositoryInterface;
+use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepository;
+use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepositoryInterface;
+use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepository;
+use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -47,6 +53,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(LeaveTypeRepositoryInterface::class, LeaveTypeRepository::class);
         $this->app->bind(LeaveRequestRepositoryInterface::class, LeaveRequestRepository::class);
         $this->app->bind(LeaveCreditRepositoryInterface::class, LeaveCreditRepository::class);
+        $this->app->bind(AnnouncementRepositoryInterface::class, AnnouncementRepository::class);
+        $this->app->bind(LeaveCreditSettingRepositoryInterface::class, LeaveCreditSettingRepository::class);        $this->app->bind(LeaveConversionRequestRepositoryInterface::class, LeaveConversionRequestRepository::class);
+
     }
 
     public function boot(): void {}

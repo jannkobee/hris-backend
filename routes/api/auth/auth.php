@@ -8,4 +8,6 @@ Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(f
     Route::post('/logout', 'logout')->middleware('auth:sanctum')->name('logout');
 
     Route::get('/auth-user', 'authUser')->middleware('auth:sanctum')->name('auth-user');
+    Route::get('/settings', 'getSettings')->middleware('auth:sanctum')->name('settings.index');
+    Route::patch('/settings', 'updateSettings')->middleware('auth:sanctum')->name('settings.update');
 });

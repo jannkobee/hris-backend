@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 class PublicAPIController extends Controller
 {
-    protected $responseService;
+    protected ResponseServiceInterface $responseService;
     private string $baseUrl = 'https://countriesnow.space/api/v0.1/countries';
 
     public function __construct(ResponseServiceInterface $responseService)
@@ -90,7 +90,7 @@ class PublicAPIController extends Controller
                 ])
                 ->throw();
 
-            // CountriesNow returns an array of strings for cities. 
+            // CountriesNow returns an array of strings for cities.
             // Map to an array of objects to keep frontend compatibility.
             $data = collect($response->json('data'))->map(function ($cityName) {
                 return ['name' => $cityName];

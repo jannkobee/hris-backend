@@ -8,6 +8,7 @@ use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -49,13 +50,20 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    protected $appends = ['initials'];
+    protected $appends = ['initials', 'full_name'];
 
     public function getInitialsAttribute(): string
     {
         $firstInitial = $this->first_name[0] ?? '';
         $lastInitial = $this->last_name[0] ?? '';
         return strtoupper($firstInitial . $lastInitial);
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return collect([$this->first_name, $this->middle_name, $this->last_name])
+            ->filter()
+            ->join(' ');
     }
 
     public function role(): BelongsTo
@@ -66,5 +74,10 @@ class User extends Authenticatable
     public function employee(): HasOne
     {
         return $this->hasOne(Employee::class);
+    }
+
+    public function settings(): HasMany
+    {
+        return $this->hasMany(UserSetting::class);
     }
 }

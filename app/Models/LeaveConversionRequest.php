@@ -6,34 +6,37 @@ use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LeaveCredit extends Model
+class LeaveConversionRequest extends Model
 {
     use HasUuids, HasFilterScope;
 
-    public $model_name = 'Leave Credit';
+    public $model_name = 'Leave Conversion Request';
 
     protected $fillable = [
         'employee_id',
         'leave_type_id',
-        'year',
-        'total_earned',
-        'used'
+        'leave_credit_id',
+        'credits_requested',
+        'monetary_value',
+        'reason',
+        'status',
+        'approved_by',
+        'approved_at',
+        'remarks',
     ];
 
     protected array $filterable = [
         'employee_id',
         'leave_type_id',
-        'year',
+        'leave_credit_id',
+        'status',
     ];
 
-    protected $appends = ['remaining'];
-
     protected $casts = [
-        'year' => 'integer',
-        'total_earned' => 'decimal:2',
-        'used' => 'decimal:2',
+        'credits_requested' => 'decimal:2',
+        'monetary_value' => 'decimal:2',
+        'approved_at' => 'datetime',
     ];
 
     public function employee(): BelongsTo
@@ -46,13 +49,13 @@ class LeaveCredit extends Model
         return $this->belongsTo(LeaveType::class);
     }
 
-    public function conversionRequests(): HasMany
+    public function leaveCredit(): BelongsTo
     {
-        return $this->hasMany(LeaveConversionRequest::class);
+        return $this->belongsTo(LeaveCredit::class);
     }
 
-    public function getRemainingAttribute(): float
+    public function approver(): BelongsTo
     {
-        return (float) $this->total_earned - (float) $this->used;
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }
