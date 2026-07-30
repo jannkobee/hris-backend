@@ -34,6 +34,8 @@ use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepository;
 use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepositoryInterface;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepository;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepositoryInterface;
+use App\Repository\ScheduledTask\ScheduledTaskRepository;
+use App\Repository\ScheduledTask\ScheduledTaskRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -54,8 +56,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(LeaveRequestRepositoryInterface::class, LeaveRequestRepository::class);
         $this->app->bind(LeaveCreditRepositoryInterface::class, LeaveCreditRepository::class);
         $this->app->bind(AnnouncementRepositoryInterface::class, AnnouncementRepository::class);
-        $this->app->bind(LeaveCreditSettingRepositoryInterface::class, LeaveCreditSettingRepository::class);        $this->app->bind(LeaveConversionRequestRepositoryInterface::class, LeaveConversionRequestRepository::class);
-
+        $this->app->bind(LeaveCreditSettingRepositoryInterface::class, LeaveCreditSettingRepository::class);
+        $this->app->bind(LeaveConversionRequestRepositoryInterface::class, LeaveConversionRequestRepository::class);
+        $this->app->bind(ScheduledTaskRepositoryInterface::class, ScheduledTaskRepository::class);
     }
 
     public function boot(): void {}

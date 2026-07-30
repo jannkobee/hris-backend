@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'job_grade/job_grade',
         'attendance/attendance',
         'announcement/announcement',
+        'scheduled_task/scheduled_task'
     ];
 
     foreach ($routes as $route) {
