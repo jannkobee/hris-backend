@@ -46,6 +46,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'leave_credit_setting/leave_credit_setting',
         'leave_conversion_request/leave_conversion_request',
         'overtime/overtime',
+        'audit_log/audit_log'
     ];
 
     foreach ($routes as $route) {
