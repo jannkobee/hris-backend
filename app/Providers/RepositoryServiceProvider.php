@@ -36,6 +36,8 @@ use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepository;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepositoryInterface;
 use App\Repository\ScheduledTask\ScheduledTaskRepository;
 use App\Repository\ScheduledTask\ScheduledTaskRepositoryInterface;
+use App\Repository\Overtime\OvertimeRepository;
+use App\Repository\Overtime\OvertimeRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -59,6 +61,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(LeaveCreditSettingRepositoryInterface::class, LeaveCreditSettingRepository::class);
         $this->app->bind(LeaveConversionRequestRepositoryInterface::class, LeaveConversionRequestRepository::class);
         $this->app->bind(ScheduledTaskRepositoryInterface::class, ScheduledTaskRepository::class);
+        $this->app->bind(OvertimeRepositoryInterface::class, OvertimeRepository::class);
     }
 
     public function boot(): void {}

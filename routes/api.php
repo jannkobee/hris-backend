@@ -19,10 +19,6 @@ Route::middleware([])->group(function () {
         'auth/auth',
         'public_api/public_api',
         'leave_type/leave_type',
-        'leave_request/leave_request',
-        'leave_credit/leave_credit',
-        'leave_credit_setting/leave_credit_setting',
-        'leave_conversion_request/leave_conversion_request',
     ];
 
     foreach ($routes as $route) {
@@ -44,7 +40,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'job_grade/job_grade',
         'attendance/attendance',
         'announcement/announcement',
-        'scheduled_task/scheduled_task'
+        'scheduled_task/scheduled_task',
+        'leave_request/leave_request',
+        'leave_credit/leave_credit',
+        'leave_credit_setting/leave_credit_setting',
+        'leave_conversion_request/leave_conversion_request',
+        'overtime/overtime',
     ];
 
     foreach ($routes as $route) {

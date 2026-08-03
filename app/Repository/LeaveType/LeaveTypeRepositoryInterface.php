@@ -2,7 +2,9 @@
 
 namespace App\Repository\LeaveType;
 
-interface LeaveTypeRepositoryInterface
+use App\Repository\Base\BaseRepositoryInterface;
+
+interface LeaveTypeRepositoryInterface extends BaseRepositoryInterface
 {
     //
 }
