@@ -96,4 +96,19 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
 
         return $this->responseService->successResponse('Attendance history retrieved.', $history);
     }
+
+    public function getListByDate(string $date, array $filters = []): JsonResponse
+    {
+        $limit = $filters['limit'] ?? 10;
+
+        $query = $this->model->whereDate('date', $date);
+
+        if (!empty($filters['relations'])) {
+            $query->with(explode(',', $filters['relations']));
+        }
+
+        $records = $query->orderBy('date', 'desc')->paginate($limit);
+
+        return $this->responseService->successResponse('Attendance records retrieved.', $records);
+    }
 }

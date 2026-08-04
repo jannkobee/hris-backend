@@ -17,8 +17,14 @@ class AttendanceController extends Controller
         $this->modelRepository = $modelRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $date = $request->query('date');
+
+        if ($date) {
+            return $this->modelRepository->getListByDate($date, $request->query());
+        }
+
         return $this->modelRepository->getList();
     }
 

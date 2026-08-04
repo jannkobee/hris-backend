@@ -18,10 +18,10 @@ This project is a **Human Resource Information System (HRIS)** built using **Lar
 
 The system is designed to be **modular, scalable, and maintainable**, following clean architecture principles and enterprise-ready patterns such as:
 
--   Module-based structure
--   Repository pattern
--   Request validation
--   Separation of concerns
+- Module-based structure
+- Repository pattern
+- Request validation
+- Separation of concerns
 
 ---
 
@@ -45,6 +45,9 @@ routes/
 └── api/
     └── {module}/
         └── {module}.php
+database/
+└── migrations/
+    └── {timestamp}_create_{module_plural}_table.php
 ```
 
 ### Example: Department Module
@@ -55,6 +58,7 @@ app/Http/Requests/DepartmentRequest.php
 app/Repository/Department/DepartmentRepository.php
 app/Repository/Department/DepartmentRepositoryInterface.php
 routes/api/department/department.php
+database/migrations/{timestamp}_create_departments_table.php
 ```
 
 ---
@@ -63,20 +67,20 @@ routes/api/department/department.php
 
 ### Current / Planned Modules
 
--   Employee
--   Department
--   Position
--   Employment Status
--   Roles
--   Permissions
--   Audit Logs
+- Employee
+- Department
+- Position
+- Employment Status
+- Roles
+- Permissions
+- Audit Logs
 
 Each module includes:
 
--   Controller
--   Form Request
--   Repository + Interface
--   API route file
+- Controller
+- Form Request
+- Repository + Interface
+- API route file
 
 ---
 
@@ -96,13 +100,23 @@ php artisan make:module Department
 
 This command safely creates (only if missing):
 
--   Controller
--   Request
--   Repository
--   Repository Interface
--   API route file
+- Controller
+- Request
+- Repository
+- Repository Interface
+- API route file
+- Model
+- Migration
 
-**Note:** Existing files and folders are never overwritten.
+It also auto-registers the module's API route include in `routes/api.php` and its repository binding in `app/Providers/RepositoryServiceProvider.php`.
+
+**Note:** Existing files and folders are never overwritten. The migration is matched by table name (not the timestamped filename), so re-running the command won't create a duplicate migration for the same module.
+
+After scaffolding, remember to run:
+
+```bash
+php artisan migrate
+```
 
 ---
 
@@ -149,10 +163,10 @@ php artisan migrate:fresh
 
 ## 🔐 Authentication & Authorization
 
--   Laravel authentication
--   Role-based access control (RBAC)
--   Roles and permissions stored in the database
--   Repositories abstract all data access
+- Laravel authentication
+- Role-based access control (RBAC)
+- Roles and permissions stored in the database
+- Repositories abstract all data access
 
 ---
 
@@ -182,11 +196,11 @@ php artisan test
 
 ## 🧠 Development Conventions
 
--   Modules are isolated and self-contained
--   Controllers stay thin
--   Business logic lives in repositories/services
--   Validation is handled via Form Requests
--   API routes are organized per module
+- Modules are isolated and self-contained
+- Controllers stay thin
+- Business logic lives in repositories/services
+- Validation is handled via Form Requests
+- API routes are organized per module
 
 ---
 

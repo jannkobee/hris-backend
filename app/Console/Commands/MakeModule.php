@@ -27,6 +27,7 @@ class MakeModule extends Command
         $requestDir    = app_path("Http/Requests");
         $repoDir       = app_path("Repository/{$className}");
         $apiDir        = base_path("routes/api/{$snakeName}");
+        $migrationDir  = database_path('migrations');
 
         // Files
         $controllerPath = "{$controllerDir}/{$className}Controller.php";
@@ -53,6 +54,9 @@ class MakeModule extends Command
 
         // Create model safely (with contents)
         $this->ensureFile($modelPath, $this->modelStub($className));
+
+        // Create migration safely (with contents) - skips if a migration for this table already exists
+        $this->ensureMigration($migrationDir, $pluralSnake, $className);
 
         // Auto-register route include and repository bindings (non-destructive)
         $this->registerApiRouteInclude($snakeName);
@@ -81,6 +85,31 @@ class MakeModule extends Command
         } else {
             $this->line("↪️  File exists, skipped: {$path}");
         }
+    }
+
+    /**
+     * Creates a migration for the module's table, unless one already exists.
+     * Migrations are timestamp-prefixed, so we can't rely on ensureFile()'s
+     * exact-path check — instead we glob for any existing
+     * "*_create_{table}_table.php" file before creating a new one.
+     */
+    private function ensureMigration(string $migrationDir, string $pluralSnake, string $className): void
+    {
+        $this->ensureDir($migrationDir);
+
+        $pattern = "{$migrationDir}/*_create_{$pluralSnake}_table.php";
+        $existing = File::glob($pattern);
+
+        if (!empty($existing)) {
+            $this->line("↪️  Migration exists, skipped: create_{$pluralSnake}_table");
+            return;
+        }
+
+        $timestamp = date('Y_m_d_His');
+        $migrationPath = "{$migrationDir}/{$timestamp}_create_{$pluralSnake}_table.php";
+
+        File::put($migrationPath, $this->migrationStub($pluralSnake, $className));
+        $this->line("📄 Created file: {$migrationPath}");
     }
 
     /**
@@ -393,6 +422,43 @@ class {$className} extends Model
         {$filterableLines},
     ];
 {$extraRelation}}
+PHP;
+    }
+
+    private function migrationStub(string $pluralSnake, string $className): string
+    {
+        // Mirrors modelStub()'s column set. Position gets a department_id FK,
+        // matching its extra belongsTo(Department::class) relation.
+        $extraColumn = '';
+        if ($className === 'Position') {
+            $extraColumn = "            \$table->foreignUuid('department_id')->nullable()->constrained('departments')->nullOnDelete();\n";
+        }
+
+        return <<<PHP
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('{$pluralSnake}', function (Blueprint \$table) {
+            \$table->uuid('id')->primary();
+{$extraColumn}            \$table->string('name');
+            \$table->text('description')->nullable();
+            \$table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('{$pluralSnake}');
+    }
+};
+
 PHP;
     }
 }

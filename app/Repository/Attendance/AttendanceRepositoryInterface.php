@@ -13,4 +13,6 @@ interface AttendanceRepositoryInterface extends BaseRepositoryInterface
     public function getTodayAttendance(string $employeeId);
 
     public function getUserHistory(string $employeeId, array $filters = []);
+
+    public function getListByDate(string $date, array $filters = []);
 }
