@@ -9,8 +9,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use PDOException;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 abstract class BaseRepository implements BaseRepositoryInterface
 {
@@ -156,6 +159,34 @@ abstract class BaseRepository implements BaseRepositoryInterface
 
         throw ValidationException::withMessages([
             'record_not_found' => "Record not found",
+        ]);
+    }
+
+    public function downloadTemplate()
+    {
+        $modelClass = get_class($this->model);
+        $filename = Str::snake(class_basename($modelClass)) . '_template.xlsx';
+
+        return Excel::download($modelClass::importTemplate(), $filename);
+    }
+
+    public function import(UploadedFile $file): JsonResponse
+    {
+        $modelClass = get_class($this->model);
+        $import = $modelClass::importer($this);
+
+        Excel::import($import, $file);
+
+        if ($import->failures()->isNotEmpty() || $import->errors()->isNotEmpty()) {
+            return response()->json([
+                'message' => "Imported {$import->createdCount()} record(s), some rows were skipped.",
+                'failures' => $import->failures(),
+                'errors' => $import->errors(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => "Imported {$import->createdCount()} record(s) successfully.",
         ]);
     }
 }

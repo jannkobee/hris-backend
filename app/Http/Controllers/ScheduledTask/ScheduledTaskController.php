@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class ScheduledTaskController extends Controller
 {
-    private $modelRepository;
+    private ScheduledTaskRepositoryInterface $modelRepository;
 
     public function __construct(ScheduledTaskRepositoryInterface $modelRepository)
     {

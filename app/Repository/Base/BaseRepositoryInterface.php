@@ -3,6 +3,7 @@
 namespace App\Repository\Base;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 
 interface BaseRepositoryInterface
 {
@@ -15,4 +16,8 @@ interface BaseRepositoryInterface
     public function update(array $attributes, string|int $id): JsonResponse;
 
     public function delete(string $id): JsonResponse;
+
+    public function downloadTemplate();
+
+    public function import(UploadedFile $file): JsonResponse;
 }

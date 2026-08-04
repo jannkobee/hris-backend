@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\HasFilterScope;
+use App\Traits\Importable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,11 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids, HasFilterScope;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids, HasFilterScope, Importable;
 
     public $model_name = 'User';
 
@@ -79,5 +81,53 @@ class User extends Authenticatable
     public function settings(): HasMany
     {
         return $this->hasMany(UserSetting::class);
+    }
+
+    public static function importColumns(): array
+    {
+        return [
+            'first_name' => [
+                'label' => 'First Name',
+                'attribute' => 'first_name',
+                'rules' => 'required|string|max:255',
+            ],
+            'middle_name' => [
+                'label' => 'Middle Name',
+                'attribute' => 'middle_name',
+                'rules' => 'nullable|string|max:255',
+            ],
+            'last_name' => [
+                'label' => 'Last Name',
+                'attribute' => 'last_name',
+                'rules' => 'required|string|max:255',
+            ],
+            'email' => [
+                'label' => 'Email',
+                'attribute' => 'email',
+                'rules' => 'required|email|unique:users,email',
+            ],
+            'gender' => [
+                'label' => 'Gender',
+                'attribute' => 'gender',
+                'rules' => 'required|in:male,female',
+            ],
+            'birthday' => [
+                'label' => 'Birthday',
+                'attribute' => 'birthday',
+                'rules' => 'required|date',
+            ],
+            'role' => [
+                'label' => 'Role',
+                'attribute' => 'role_id',
+                'rules' => 'required|exists:roles,name',
+                'resolve' => fn($value) => Role::where('name', $value)->value('id'),
+            ],
+            'password' => [
+                'label' => 'Password (optional)',
+                'attribute' => 'password',
+                'rules' => 'nullable|string|min:8',
+                'default' => fn() => Str::random(12),
+            ],
+        ];
     }
 }

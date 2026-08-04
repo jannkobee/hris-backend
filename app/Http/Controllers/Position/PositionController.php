@@ -8,7 +8,7 @@ use App\Repository\Position\PositionRepositoryInterface;
 
 class PositionController extends Controller
 {
-    private $modelRepository;
+    private PositionRepositoryInterface $modelRepository;
 
     public function __construct(PositionRepositoryInterface $modelRepository)
     {

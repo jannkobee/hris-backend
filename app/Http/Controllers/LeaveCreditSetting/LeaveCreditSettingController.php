@@ -8,7 +8,7 @@ use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepositoryInterface;
 
 class LeaveCreditSettingController extends Controller
 {
-    private $modelRepository;
+    private LeaveCreditSettingRepositoryInterface $modelRepository;
 
     public function __construct(LeaveCreditSettingRepositoryInterface $modelRepository)
     {

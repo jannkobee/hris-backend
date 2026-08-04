@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class RolePermissionController extends Controller
 {
-    private $modelRepository;
+    private RolePermissionRepositoryInterface $modelRepository;
 
     public function __construct(RolePermissionRepositoryInterface $modelRepository)
     {

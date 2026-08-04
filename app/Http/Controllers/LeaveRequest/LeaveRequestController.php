@@ -8,7 +8,7 @@ use App\Repository\LeaveRequest\LeaveRequestRepositoryInterface;
 
 class LeaveRequestController extends Controller
 {
-    private $modelRepository;
+    private LeaveRequestRepositoryInterface $modelRepository;
 
     public function __construct(LeaveRequestRepositoryInterface $modelRepository)
     {

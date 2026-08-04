@@ -8,7 +8,7 @@ use App\Repository\LeaveType\LeaveTypeRepositoryInterface;
 
 class LeaveTypeController extends Controller
 {
-    private $modelRepository;
+    private LeaveTypeRepositoryInterface $modelRepository;
 
     public function __construct(LeaveTypeRepositoryInterface $modelRepository)
     {

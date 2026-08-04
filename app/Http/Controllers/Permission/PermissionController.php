@@ -8,7 +8,7 @@ use App\Repository\Permission\PermissionRepositoryInterface;
 
 class PermissionController extends Controller
 {
-    private $modelRepository;
+    private PermissionRepositoryInterface $modelRepository;
 
     public function __construct(PermissionRepositoryInterface $modelRepository)
     {
