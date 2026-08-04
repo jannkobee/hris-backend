@@ -170,6 +170,18 @@ php artisan migrate:fresh
 
 ---
 
+## 🧰 Requirements
+
+Make sure the following services are installed and running before starting the system:
+
+- PHP >= 8.1
+- Composer
+- MySQL / MariaDB (or your configured DB driver)
+- **Redis** (used for the queue worker)
+- Node.js & NPM (for frontend assets, if applicable)
+
+---
+
 ## 🚀 Installation & Setup
 
 ```bash
@@ -180,6 +192,70 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan serve
+```
+
+### Redis Setup
+
+This project uses **Redis** as the queue connection for the worker.
+
+**1. Install Redis**
+
+```bash
+# macOS (Homebrew)
+brew install redis
+brew services start redis
+
+# Ubuntu/Debian
+sudo apt install redis-server
+sudo systemctl enable --now redis-server
+
+# Or via Docker
+docker run -d --name hris-redis -p 6379:6379 redis:alpine
+```
+
+**2. Configure `.env`**
+
+```env
+QUEUE_CONNECTION=redis
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+**3. Install the PHP Redis client** (if not already available)
+
+```bash
+composer require predis/predis
+```
+
+> If you prefer the native `phpredis` PHP extension instead of `predis`, install it via PECL/your OS package manager and set `REDIS_CLIENT=phpredis`.
+
+**4. Run the queue worker**
+
+```bash
+php artisan queue:work redis
+```
+
+---
+
+## ▶️ Running the Full System
+
+To bring the whole system up, you'll typically need these running together (e.g. in separate terminals, or via a process manager / Docker Compose):
+
+```bash
+# 1. Start Redis (if not already running as a service)
+redis-server
+
+# 2. Start the Laravel app
+php artisan serve
+
+# 3. Start the queue worker
+php artisan queue:work redis
+
+# 4. (Optional) Start the scheduler, if the app uses scheduled tasks
+php artisan schedule:work
 ```
 
 ---
