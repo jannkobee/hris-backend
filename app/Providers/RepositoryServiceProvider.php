@@ -30,10 +30,14 @@ use App\Repository\LeaveCredit\LeaveCreditRepository;
 use App\Repository\LeaveCredit\LeaveCreditRepositoryInterface;
 use App\Repository\Announcement\AnnouncementRepository;
 use App\Repository\Announcement\AnnouncementRepositoryInterface;
+use App\Repository\Conversation\ConversationRepository;
+use App\Repository\Conversation\ConversationRepositoryInterface;
 use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepository;
 use App\Repository\LeaveCreditSetting\LeaveCreditSettingRepositoryInterface;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepository;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepositoryInterface;
+use App\Repository\Message\MessageRepository;
+use App\Repository\Message\MessageRepositoryInterface;
 use App\Repository\ScheduledTask\ScheduledTaskRepository;
 use App\Repository\ScheduledTask\ScheduledTaskRepositoryInterface;
 use App\Repository\Overtime\OvertimeRepository;
@@ -62,6 +66,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(LeaveConversionRequestRepositoryInterface::class, LeaveConversionRequestRepository::class);
         $this->app->bind(ScheduledTaskRepositoryInterface::class, ScheduledTaskRepository::class);
         $this->app->bind(OvertimeRepositoryInterface::class, OvertimeRepository::class);
+        $this->app->bind(ConversationRepositoryInterface::class, ConversationRepository::class);
+        $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
     }
 
     public function boot(): void {}

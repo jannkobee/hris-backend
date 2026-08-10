@@ -30,6 +30,7 @@ Route::middleware([])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     $routes = [
         'user/user',
+        'conversation/conversation',
         'role/role',
         'permission/permission',
         'role_permission/role_permission',

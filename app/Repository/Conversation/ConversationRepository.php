@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Repository\Conversation;
+
+use App\Models\Conversation;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+// NOTE: written as a standalone class implementing the interface directly.
+// If your other repositories extend a shared BaseRepository, adjust the
+// constructor/imports to match — the method bodies don't depend on it.
+class ConversationRepository implements ConversationRepositoryInterface
+{
+    public function indexForUser(string $userId, int $perPage = 20): LengthAwarePaginator
+    {
+        return Conversation::query()
+            ->whereHas('participants', fn($q) => $q->whereKey($userId))
+            ->with([
+                'participants:id,first_name,last_name',
+                'latestMessage.sender:id,first_name,last_name',
+            ])
+            ->withCount(['messages as unread_count' => function ($q) use ($userId) {
+                $q->whereHas('conversation.participants', function ($p) use ($userId) {
+                    $p->whereKey($userId);
+                })->where(function ($q) use ($userId) {
+                    $q->whereRaw(
+                        'messages.created_at > (select last_read_at from conversation_participants
+                            where conversation_participants.conversation_id = messages.conversation_id
+                            and conversation_participants.user_id = ?)',
+                        [$userId]
+                    )->orWhereRaw(
+                        '(select last_read_at from conversation_participants
+                            where conversation_participants.conversation_id = messages.conversation_id
+                            and conversation_participants.user_id = ?) is null',
+                        [$userId]
+                    );
+                });
+            }])
+            ->orderByDesc('last_message_at')
+            ->paginate($perPage);
+    }
+
+    public function findForUser(string $conversationId, string $userId): ?Conversation
+    {
+        return Conversation::whereKey($conversationId)
+            ->whereHas('participants', fn($q) => $q->whereKey($userId))
+            ->with('participants:id,first_name,last_name')
+            ->first();
+    }
+
+    public function findDirectBetween(string $userId, string $otherUserId): ?Conversation
+    {
+        return Conversation::where('is_group', false)
+            ->whereHas('participants', fn($q) => $q->whereKey($userId))
+            ->whereHas('participants', fn($q) => $q->whereKey($otherUserId))
+            ->first();
+    }
+
+    public function create(string $createdBy, Collection $participantIds, ?string $name = null): Conversation
+    {
+        return DB::transaction(function () use ($createdBy, $participantIds, $name) {
+            $allParticipants = $participantIds->push($createdBy)->unique();
+
+            $conversation = Conversation::create([
+                'name' => $name,
+                'is_group' => $allParticipants->count() > 2,
+                'created_by' => $createdBy,
+            ]);
+
+            $conversation->participants()->attach($allParticipants);
+
+            return $conversation->load('participants:id,first_name,last_name');
+        });
+    }
+
+    public function markRead(string $conversationId, string $userId): void
+    {
+        DB::table('conversation_participants')
+            ->where('conversation_id', $conversationId)
+            ->where('user_id', $userId)
+            ->update(['last_read_at' => now()]);
+    }
+}
