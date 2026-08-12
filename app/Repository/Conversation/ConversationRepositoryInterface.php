@@ -14,7 +14,11 @@ interface ConversationRepositoryInterface
 
     public function findDirectBetween(string $userId, string $otherUserId): ?Conversation;
 
-    public function create(string $createdBy, Collection $participantIds, ?string $name = null): Conversation;
+    public function recipientsForUser(string $userId): Collection;
+
+    public function canMessageUser(string $senderId, string $recipientId): bool;
+
+    public function create(string $createdBy, Collection $participantIds, string $name = null): Conversation;
 
     public function markRead(string $conversationId, string $userId): void;
 }

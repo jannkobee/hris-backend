@@ -11,10 +11,17 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class MessageController extends Controller
 {
+    private MessageRepositoryInterface $messages;
+
+    private ConversationRepositoryInterface $conversations;
+
     public function __construct(
-        protected MessageRepositoryInterface $messages,
-        protected ConversationRepositoryInterface $conversations
-    ) {}
+        MessageRepositoryInterface $messages,
+        ConversationRepositoryInterface $conversations
+    ) {
+        $this->messages = $messages;
+        $this->conversations = $conversations;
+    }
 
     public function index(Request $request, string $conversation)
     {

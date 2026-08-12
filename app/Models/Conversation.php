@@ -43,7 +43,7 @@ class Conversation extends Model
 
     public function latestMessage(): HasMany
     {
-        return $this->hasMany(Message::class)->latestOfMany();
+        return $this->hasMany(Message::class)->latestOfMany('created_at');
     }
 
     public function creator(): BelongsTo

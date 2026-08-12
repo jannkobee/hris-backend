@@ -3,6 +3,7 @@
 namespace App\Repository\Conversation;
 
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ class ConversationRepository implements ConversationRepositoryInterface
     public function indexForUser(string $userId, int $perPage = 20): LengthAwarePaginator
     {
         return Conversation::query()
-            ->whereHas('participants', fn($q) => $q->whereKey($userId))
+            ->whereHas('participants', fn ($q) => $q->whereKey($userId))
             ->with([
                 'participants:id,first_name,last_name',
                 'latestMessage.sender:id,first_name,last_name',
@@ -44,7 +45,7 @@ class ConversationRepository implements ConversationRepositoryInterface
     public function findForUser(string $conversationId, string $userId): ?Conversation
     {
         return Conversation::whereKey($conversationId)
-            ->whereHas('participants', fn($q) => $q->whereKey($userId))
+            ->whereHas('participants', fn ($q) => $q->whereKey($userId))
             ->with('participants:id,first_name,last_name')
             ->first();
     }
@@ -52,12 +53,27 @@ class ConversationRepository implements ConversationRepositoryInterface
     public function findDirectBetween(string $userId, string $otherUserId): ?Conversation
     {
         return Conversation::where('is_group', false)
-            ->whereHas('participants', fn($q) => $q->whereKey($userId))
-            ->whereHas('participants', fn($q) => $q->whereKey($otherUserId))
+            ->whereHas('participants', fn ($q) => $q->whereKey($userId))
+            ->whereHas('participants', fn ($q) => $q->whereKey($otherUserId))
             ->first();
     }
 
-    public function create(string $createdBy, Collection $participantIds, ?string $name = null): Conversation
+    public function recipientsForUser(string $userId): Collection
+    {
+        return $this->recipientQuery($userId)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get(['id', 'role_id', 'first_name', 'last_name']);
+    }
+
+    public function canMessageUser(string $senderId, string $recipientId): bool
+    {
+        return $this->recipientQuery($senderId)
+            ->whereKey($recipientId)
+            ->exists();
+    }
+
+    public function create(string $createdBy, Collection $participantIds, string $name = null): Conversation
     {
         return DB::transaction(function () use ($createdBy, $participantIds, $name) {
             $allParticipants = $participantIds->push($createdBy)->unique();
@@ -80,5 +96,29 @@ class ConversationRepository implements ConversationRepositoryInterface
             ->where('conversation_id', $conversationId)
             ->where('user_id', $userId)
             ->update(['last_read_at' => now()]);
+    }
+
+    private function recipientQuery(string $userId)
+    {
+        $query = User::query()
+            ->with('role:id,name')
+            ->whereKeyNot($userId);
+
+        if (! $this->isAdministrator($userId)) {
+            $query->whereHas('role', function ($role) {
+                $role->whereIn('name', config('messaging.administrator_roles'));
+            });
+        }
+
+        return $query;
+    }
+
+    private function isAdministrator(string $userId): bool
+    {
+        return User::whereKey($userId)
+            ->whereHas('role', function ($role) {
+                $role->whereIn('name', config('messaging.administrator_roles'));
+            })
+            ->exists();
     }
 }
