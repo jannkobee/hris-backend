@@ -21,6 +21,7 @@ class WorkplaceMeeting extends Model
         'agenda',
         'minutes',
         'decisions',
+        'links',
         'starts_at',
         'ends_at',
         'status',
@@ -30,6 +31,7 @@ class WorkplaceMeeting extends Model
 
     protected $casts = [
         'decisions' => 'array',
+        'links' => 'array',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'completed_at' => 'datetime',

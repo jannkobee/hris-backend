@@ -36,6 +36,10 @@ class WorkplaceHubTest extends TestCase
             'starts_at' => '2026-08-14T01:00:00.000Z',
             'ends_at' => '2026-08-14T01:30:00.000Z',
             'attendee_ids' => [$attendee->id],
+            'links' => [
+                ['label' => 'Join video call', 'url' => 'https://meet.example.com/daily-operations'],
+                ['label' => 'Working document', 'url' => 'https://docs.example.com/operations'],
+            ],
             'recurrence' => 'none',
         ])->assertCreated()->json('data.id');
 
@@ -51,7 +55,18 @@ class WorkplaceHubTest extends TestCase
         $this->actingAs($attendee, 'sanctum')
             ->getJson(route('workplace.meetings.show', $meetingId))
             ->assertOk()
-            ->assertJsonPath('data.title', 'Daily operations review');
+            ->assertJsonPath('data.title', 'Daily operations review')
+            ->assertJsonPath('data.links.0.label', 'Join video call')
+            ->assertJsonPath('data.links.1.url', 'https://docs.example.com/operations');
+
+        $this->actingAs($admin, 'sanctum')->postJson(route('workplace.meetings.store'), [
+            'title' => 'Unsafe link meeting',
+            'type' => 'team_meeting',
+            'starts_at' => '2026-08-14T03:00:00.000Z',
+            'ends_at' => '2026-08-14T04:00:00.000Z',
+            'links' => [['label' => 'Unsafe', 'url' => 'javascript:alert(1)']],
+            'recurrence' => 'none',
+        ])->assertUnprocessable()->assertJsonValidationErrors('links.0.url');
 
         $upload = $this->actingAs($attendee, 'sanctum')->post(route('workplace.attachments.store', $meetingId), [
             'file' => UploadedFile::fake()->create('daily-report.pdf', 100, 'application/pdf'),

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Announcement;
+use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
@@ -10,6 +11,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -78,6 +80,62 @@ class DashboardOverviewTest extends TestCase
                 'to' => '2026-08-31',
             ]))->json('data.quote')
         );
+    }
+
+    public function test_every_authenticated_employee_can_see_safe_company_presence(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-13 10:00:00', 'Asia/Manila'));
+
+        try {
+            $role = Role::create(['name' => 'No management permissions']);
+            $viewer = User::factory()->create(['role_id' => $role->id]);
+            Employee::create([
+                'user_id' => $viewer->id,
+                'employee_no' => 'EMP-OUT',
+            ]);
+
+            $colleague = User::factory()->create(['role_id' => $role->id]);
+            $colleagueEmployee = Employee::create([
+                'user_id' => $colleague->id,
+                'employee_no' => 'EMP-IN',
+            ]);
+            Attendance::create([
+                'employee_id' => $colleagueEmployee->id,
+                'date' => '2026-08-13',
+                'time_in' => '2026-08-13 08:00:00',
+                'time_in_latitude' => 14.5995,
+                'time_in_longitude' => 120.9842,
+                'time_in_notes' => 'Sensitive note',
+            ]);
+
+            $clockedOutUser = User::factory()->create(['role_id' => $role->id]);
+            $clockedOutEmployee = Employee::create([
+                'user_id' => $clockedOutUser->id,
+                'employee_no' => 'EMP-CLOCKED-OUT',
+            ]);
+            Attendance::create([
+                'employee_id' => $clockedOutEmployee->id,
+                'date' => '2026-08-13',
+                'time_in' => '2026-08-13 07:30:00',
+                'time_out' => '2026-08-13 09:30:00',
+            ]);
+
+            $response = $this->actingAs($viewer, 'sanctum')->getJson(route('dashboard.overview', [
+                'from' => '2026-08-01',
+                'to' => '2026-08-31',
+            ]))->assertOk()
+                ->assertJsonCount(3, 'data.presence');
+
+            $presence = collect($response->json('data.presence'));
+            $this->assertSame('in', $presence->firstWhere('employee_no', 'EMP-IN')['status']);
+            $this->assertSame('not_clocked_in', $presence->firstWhere('employee_no', 'EMP-OUT')['status']);
+            $this->assertSame('clocked_out', $presence->firstWhere('employee_no', 'EMP-CLOCKED-OUT')['status']);
+            $this->assertSame($colleague->full_name, $presence->firstWhere('employee_no', 'EMP-IN')['user']['full_name']);
+            $this->assertArrayNotHasKey('time_in_latitude', $presence->firstWhere('employee_no', 'EMP-IN'));
+            $this->assertArrayNotHasKey('time_in_notes', $presence->firstWhere('employee_no', 'EMP-IN'));
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     private function workplaceUser(string $roleName): User

@@ -60,6 +60,8 @@ return [
             'manage-announcements' => ['Manage announcements', 'Create, publish, update, and remove announcements.'],
         ],
         'Organization Setup' => [
+            'view-holidays' => ['View workforce calendar', 'View company holidays and special working days.'],
+            'manage-holidays' => ['Manage workforce calendar', 'Create, update, and remove company holidays and special working days.'],
             'view-departments' => ['View departments', 'View the department directory.'],
             'manage-departments' => ['Manage departments', 'Create, update, and remove departments.'],
             'view-positions' => ['View positions', 'View configured positions.'],
@@ -92,6 +94,7 @@ return [
 
     'default_roles' => [
         'User' => [
+            'view-holidays',
             'view-workplace-hub',
             'create-meetings',
             'view-leave-requests',

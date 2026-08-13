@@ -67,6 +67,22 @@ class ConversationController extends Controller
         return $this->conversations->recipientsForUser($request->user()->id);
     }
 
+    public function show(Request $request, string $conversation)
+    {
+        $record = $this->conversations->findForUser($conversation, $request->user()->id);
+        if (! $record) {
+            abort(404);
+        }
+
+        $record->loadCount(['messages', 'attachments']);
+        $record->setRelation(
+            'recent_attachments',
+            $record->attachments()->latest()->limit(8)->get()
+        );
+
+        return $record;
+    }
+
     public function markRead(Request $request, string $conversation)
     {
         if ($this->conversations->findForUser($conversation, $request->user()->id) === null) {

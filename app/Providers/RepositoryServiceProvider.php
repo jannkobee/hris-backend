@@ -42,6 +42,8 @@ use App\Repository\ScheduledTask\ScheduledTaskRepository;
 use App\Repository\ScheduledTask\ScheduledTaskRepositoryInterface;
 use App\Repository\Overtime\OvertimeRepository;
 use App\Repository\Overtime\OvertimeRepositoryInterface;
+use App\Repository\Holiday\HolidayRepository;
+use App\Repository\Holiday\HolidayRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -68,6 +70,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OvertimeRepositoryInterface::class, OvertimeRepository::class);
         $this->app->bind(ConversationRepositoryInterface::class, ConversationRepository::class);
         $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
+        $this->app->bind(HolidayRepositoryInterface::class, HolidayRepository::class);
     }
 
     public function boot(): void {}

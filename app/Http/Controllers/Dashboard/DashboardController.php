@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\Attendance;
+use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
@@ -120,6 +122,7 @@ class DashboardController extends Controller
         return response()->json([
             'data' => [
                 'quote' => $this->inspiration->forToday(),
+                'presence' => $this->companyPresence($timezone),
                 'events' => $events->sortBy('starts_at')->values(),
                 'announcements' => Announcement::query()
                     ->where('is_active', true)
@@ -128,5 +131,64 @@ class DashboardController extends Controller
                     ->get(['id', 'title', 'content', 'published_at', 'created_at']),
             ],
         ]);
+    }
+
+    private function companyPresence(string $timezone): array
+    {
+        $today = Carbon::now($timezone)->toDateString();
+        $employees = Employee::query()
+            ->select(['id', 'user_id', 'employee_no', 'department_id', 'position_id'])
+            ->whereHas('user')
+            ->with([
+                'user:id,first_name,middle_name,last_name,profile_photo_path,updated_at',
+                'department:id,name',
+                'position:id,name',
+            ])
+            ->orderBy('employee_no')
+            ->get();
+
+        $employeeIds = $employees->pluck('id');
+        $attendances = Attendance::query()
+            ->whereDate('date', $today)
+            ->whereIn('employee_id', $employeeIds)
+            ->orderBy('time_in')
+            ->get(['id', 'employee_id', 'date', 'time_in', 'time_out'])
+            ->keyBy('employee_id');
+        $employeesOnLeave = LeaveRequest::query()
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->whereIn('employee_id', $employeeIds)
+            ->pluck('employee_id')
+            ->flip();
+
+        return $employees->map(function (Employee $employee) use ($attendances, $employeesOnLeave): array {
+            $attendance = $attendances->get($employee->id);
+            $status = match (true) {
+                $attendance && $attendance->time_in && ! $attendance->time_out => 'in',
+                $employeesOnLeave->has($employee->id) => 'on_leave',
+                $attendance && $attendance->time_out => 'clocked_out',
+                default => 'not_clocked_in',
+            };
+
+            return [
+                'employee_id' => $employee->id,
+                'employee_no' => $employee->employee_no,
+                'user' => $employee->user?->only([
+                    'id',
+                    'first_name',
+                    'middle_name',
+                    'last_name',
+                    'full_name',
+                    'initials',
+                    'profile_photo_url',
+                ]),
+                'department' => $employee->department?->name,
+                'position' => $employee->position?->name,
+                'status' => $status,
+                'time_in' => $attendance?->time_in?->toIso8601String(),
+                'time_out' => $attendance?->time_out?->toIso8601String(),
+            ];
+        })->values()->all();
     }
 }

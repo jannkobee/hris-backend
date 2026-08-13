@@ -18,7 +18,8 @@ class MessageSent implements ShouldBroadcastNow
     public function __construct(public Message $message)
     {
         $this->message->loadMissing(
-            'sender:id,first_name,last_name',
+            'sender:id,first_name,middle_name,last_name,profile_photo_path,updated_at',
+            'attachments',
             'conversation.participants:id'
         );
     }
@@ -49,8 +50,13 @@ class MessageSent implements ShouldBroadcastNow
             'created_at' => $this->message->created_at->toIso8601String(),
             'sender' => [
                 'id' => $this->message->sender->id,
-                'name' => trim($this->message->sender->first_name.' '.$this->message->sender->last_name),
+                'first_name' => $this->message->sender->first_name,
+                'middle_name' => $this->message->sender->middle_name,
+                'last_name' => $this->message->sender->last_name,
+                'name' => $this->message->sender->full_name,
+                'profile_photo_url' => $this->message->sender->profile_photo_url,
             ],
+            'attachments' => $this->message->attachments->toArray(),
         ];
     }
 }

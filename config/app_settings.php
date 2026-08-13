@@ -89,6 +89,22 @@ return [
         'description' => 'Allow clients to connect to Reverb for live conversation updates.',
         'rules' => ['required', 'boolean'],
     ],
+    'messaging.attachments_enabled' => [
+        'default' => true,
+        'type' => 'boolean',
+        'group' => 'messaging',
+        'label' => 'Message attachments',
+        'description' => 'Allow conversation participants to exchange photos and files.',
+        'rules' => ['required', 'boolean'],
+    ],
+    'messaging.max_attachment_size_mb' => [
+        'default' => 25,
+        'type' => 'integer',
+        'group' => 'messaging',
+        'label' => 'Message attachment size limit',
+        'description' => 'Maximum size of each file sent through Messages.',
+        'rules' => ['required', 'integer', 'min:1', 'max:50'],
+    ],
     'notifications.success_alerts_enabled' => [
         'default' => true,
         'type' => 'boolean',

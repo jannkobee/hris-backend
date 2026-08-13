@@ -19,8 +19,10 @@ class ConversationRepository implements ConversationRepositoryInterface
         return Conversation::query()
             ->whereHas('participants', fn ($q) => $q->whereKey($userId))
             ->with([
-                'participants:id,first_name,last_name',
-                'latestMessage.sender:id,first_name,last_name',
+                'participants:id,role_id,first_name,middle_name,last_name,email,profile_photo_path,updated_at',
+                'participants.role:id,name',
+                'latestMessage.sender:id,first_name,middle_name,last_name,profile_photo_path,updated_at',
+                'latestMessage.attachments',
             ])
             ->withCount(['messages as unread_count' => function ($q) use ($userId) {
                 $q->whereHas('conversation.participants', function ($p) use ($userId) {
@@ -47,7 +49,10 @@ class ConversationRepository implements ConversationRepositoryInterface
     {
         return Conversation::whereKey($conversationId)
             ->whereHas('participants', fn ($q) => $q->whereKey($userId))
-            ->with('participants:id,first_name,last_name')
+            ->with([
+                'participants:id,role_id,first_name,middle_name,last_name,email,profile_photo_path,updated_at',
+                'participants.role:id,name',
+            ])
             ->first();
     }
 
@@ -64,7 +69,15 @@ class ConversationRepository implements ConversationRepositoryInterface
         return $this->recipientQuery($userId)
             ->orderBy('first_name')
             ->orderBy('last_name')
-            ->get(['id', 'role_id', 'first_name', 'last_name']);
+            ->get([
+                'id',
+                'role_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'profile_photo_path',
+                'updated_at',
+            ]);
     }
 
     public function canMessageUser(string $senderId, string $recipientId): bool
@@ -91,7 +104,10 @@ class ConversationRepository implements ConversationRepositoryInterface
                     ->all()
             );
 
-            return $conversation->load('participants:id,first_name,last_name');
+            return $conversation->load([
+                'participants:id,role_id,first_name,middle_name,last_name,email,profile_photo_path,updated_at',
+                'participants.role:id,name',
+            ]);
         });
     }
 

@@ -8,8 +8,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('conversations', [ConversationController::class, 'index']);
     Route::get('conversations/recipients', [ConversationController::class, 'recipients']);
     Route::post('conversations', [ConversationController::class, 'store']);
+    Route::get('conversations/{conversation}', [ConversationController::class, 'show']);
     Route::post('conversations/{conversation}/read', [ConversationController::class, 'markRead']);
 
     Route::get('conversations/{conversation}/messages', [MessageController::class, 'index']);
     Route::post('conversations/{conversation}/messages', [MessageController::class, 'store']);
+    Route::get('conversations/{conversation}/attachments/{attachment}', [MessageController::class, 'attachment']);
 });

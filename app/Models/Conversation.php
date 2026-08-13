@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
@@ -47,6 +48,16 @@ class Conversation extends Model
     public function latestMessage(): HasOne
     {
         return $this->hasOne(Message::class)->latestOfMany('created_at');
+    }
+
+    public function attachments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            MessageAttachment::class,
+            Message::class,
+            'conversation_id',
+            'message_id'
+        );
     }
 
     public function creator(): BelongsTo

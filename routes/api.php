@@ -63,6 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'app_setting/app_setting',
         'payroll/payroll',
         'workplace_hub/workplace_hub',
+        'holiday/holiday',
     ];
 
     foreach ($routes as $route) {
