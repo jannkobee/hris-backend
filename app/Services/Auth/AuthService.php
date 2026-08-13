@@ -16,7 +16,9 @@ use Illuminate\Validation\ValidationException;
 class AuthService implements AuthServiceInterface
 {
     private UserRepositoryInterface $userRepository;
+
     private ResponseServiceInterface $responseService;
+
     private AuditLogServiceInterface $auditLogService;
 
     public function __construct(UserRepositoryInterface $userRepository, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)
@@ -29,9 +31,9 @@ class AuthService implements AuthServiceInterface
     public function headers(): array
     {
         return [
-            'Authorization'                    => request()->header('Authorization'),
-            'Content-Type'                     => 'application/json',
-            'Accept'                           => 'application/json',
+            'Authorization' => request()->header('Authorization'),
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
             'Access-Control-Allow-Credentials' => true,
         ];
     }
@@ -49,12 +51,12 @@ class AuthService implements AuthServiceInterface
 
             return [
                 'token' => $user->createToken('UserLogin')->plainTextToken,
-                'user'  => $user,
+                'user' => $user,
             ];
         }
 
         throw ValidationException::withMessages([
-            'invalid_user_name_or_password' => "Invalid E-mail or Password",
+            'invalid_user_name_or_password' => 'Invalid E-mail or Password',
         ]);
     }
 
@@ -73,11 +75,11 @@ class AuthService implements AuthServiceInterface
     {
         $authUser = Auth::user();
 
-        if (!$authUser) {
+        if (! $authUser) {
             return $this->responseService->resolveResponse('Unauthenticated', null, 401);
         }
 
-        $user = User::withoutGlobalScopes()->find($authUser->id)->load('role.permissions', 'settings');
+        $user = User::withoutGlobalScopes()->find($authUser->id)->load('role.permissions', 'settings', 'employee.department', 'employee.position');
         $settings = $user->settings
             ->mapWithKeys(function ($setting) {
                 return [$setting->setting_key => $this->normalizeSettingValue($setting->setting_value)];
@@ -92,7 +94,7 @@ class AuthService implements AuthServiceInterface
     {
         $authUser = Auth::user();
 
-        if (!$authUser) {
+        if (! $authUser) {
             return $this->responseService->resolveResponse('Unauthenticated', null, 401);
         }
 
@@ -121,7 +123,7 @@ class AuthService implements AuthServiceInterface
 
     private function normalizeSettingValue(mixed $value): mixed
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $value;
         }
 
@@ -146,7 +148,7 @@ class AuthService implements AuthServiceInterface
     {
         $authUser = Auth::user();
 
-        if (!$authUser) {
+        if (! $authUser) {
             return ['response' => $this->responseService->resolveResponse('Unauthenticated', null, 401)];
         }
 

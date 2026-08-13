@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Repository\Base\BaseRepository;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\EmployeeNumber\EmployeeNumberServiceInterface;
+use App\Services\LeaveAccrual\LeaveCreditAccrualService;
 use App\Services\Utils\ResponseServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
@@ -15,8 +16,13 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
 {
     protected EmployeeNumberServiceInterface $employeeNumberService;
 
-    public function __construct(Employee $model, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService, EmployeeNumberServiceInterface $employeeNumberService)
-    {
+    public function __construct(
+        Employee $model,
+        ResponseServiceInterface $responseService,
+        AuditLogServiceInterface $auditLogService,
+        EmployeeNumberServiceInterface $employeeNumberService,
+        private readonly LeaveCreditAccrualService $leaveCreditAccrualService,
+    ) {
         parent::__construct($model, $responseService, $auditLogService);
         $this->employeeNumberService = $employeeNumberService;
     }
@@ -44,12 +50,19 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             $employeeId = $responseData['data']['id'];
             $employee = Employee::find($employeeId);
 
-            if (!empty($addresses)) $this->syncAddresses($employee, $addresses);
-            if (!empty($contacts)) $this->syncContacts($employee, $contacts);
+            if (! empty($addresses)) {
+                $this->syncAddresses($employee, $addresses);
+            }
+            if (! empty($contacts)) {
+                $this->syncContacts($employee, $contacts);
+            }
 
-            $employee->load(['addresses', 'contacts']);
+            $accrual = $this->leaveCreditAccrualService->accrueEmployee($employee);
+            $employee->setAttribute('leave_credits_accrued', $accrual['credited']);
 
-            return $this->responseService->resolveResponse("Employee created successfully", $employee);
+            $employee->load(['addresses', 'contacts', 'leaveCredits.leaveType']);
+
+            return $this->responseService->resolveResponse('Employee created successfully', $employee);
         }
 
         return $response;
@@ -63,7 +76,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         $attributes['position_id'] = $attributes['position_id'] ?? data_get($attributes, 'position.id');
         $attributes['job_grade_id'] = $attributes['job_grade_id'] ?? data_get($attributes, 'jobGrade.id');
 
-        if (!array_key_exists('employee_no', $attributes) || blank($attributes['employee_no'])) {
+        if (! array_key_exists('employee_no', $attributes) || blank($attributes['employee_no'])) {
             unset($attributes['employee_no']);
         }
 
@@ -78,12 +91,16 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         if ($response->isSuccessful()) {
             $employee = Employee::find($id);
 
-            if ($addresses !== null) $this->syncAddresses($employee, $addresses);
-            if ($contacts !== null) $this->syncContacts($employee, $contacts);
+            if ($addresses !== null) {
+                $this->syncAddresses($employee, $addresses);
+            }
+            if ($contacts !== null) {
+                $this->syncContacts($employee, $contacts);
+            }
 
             $employee->load(['addresses', 'contacts']);
 
-            return $this->responseService->resolveResponse("Employee updated successfully", $employee);
+            return $this->responseService->resolveResponse('Employee updated successfully', $employee);
         }
 
         return $response;
@@ -92,7 +109,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function generateEmployeeNo(): JsonResponse
     {
         return $this->responseService->resolveResponse(
-            "Employee Number generated successfully",
+            'Employee Number generated successfully',
             ['employee_no' => $this->employeeNumberService->generate()]
         );
     }
@@ -102,7 +119,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         $settings = $this->employeeNumberService->updateSettings($data);
 
         return $this->responseService->resolveResponse(
-            "Employee number settings updated successfully",
+            'Employee number settings updated successfully',
             $settings
         );
     }
@@ -110,7 +127,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function getEmployeeNumberSettings(): JsonResponse
     {
         return $this->responseService->resolveResponse(
-            "Employee number settings retrieved successfully",
+            'Employee number settings retrieved successfully',
             $this->employeeNumberService->getSettings()
         );
     }
@@ -120,7 +137,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         $addressIds = [];
 
         foreach ($addresses as $addressData) {
-            if (!empty($addressData['id'])) {
+            if (! empty($addressData['id'])) {
                 $address = $employee->addresses()->find($addressData['id']);
                 if ($address) {
                     $address->update(Arr::except($addressData, ['id', 'employee_id']));
@@ -140,7 +157,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         $contactIds = [];
 
         foreach ($contacts as $contactData) {
-            if (!empty($contactData['id'])) {
+            if (! empty($contactData['id'])) {
                 $contact = $employee->contacts()->find($contactData['id']);
                 if ($contact) {
                     $contact->update(Arr::except($contactData, ['id', 'employee_id']));
@@ -158,7 +175,7 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     public function reformatEmployeeNumbers(): JsonResponse
     {
         DB::beginTransaction();
-        
+
         try {
             $employees = Employee::orderBy('created_at', 'asc')->get();
             $count = 0;
@@ -180,9 +197,10 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             );
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to reformat employee numbers.',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

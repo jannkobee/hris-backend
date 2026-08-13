@@ -13,6 +13,7 @@ class JobGradeController extends Controller
     public function __construct(JobGradeRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('job-grades');
     }
 
     public function index()

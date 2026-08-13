@@ -14,6 +14,10 @@ class EmployeeController extends Controller
     public function __construct(EmployeeRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('employees');
+        $this->middleware('permission:manage-employees')->only('generateEmployeeNo');
+        $this->middleware('permission:manage-employee-number-settings')
+            ->only(['getNumberSettings', 'updateNumberSettings', 'reformatEmployeeNumbers']);
     }
 
     public function index()

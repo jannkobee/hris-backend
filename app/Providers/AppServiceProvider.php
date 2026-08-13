@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\LeaveCreditSetting;
+use App\Observers\LeaveCreditSettingObserver;
 use App\Repository\Permission\PermissionRepository;
 use App\Repository\Permission\PermissionRepositoryInterface;
 use App\Services\AuditLog\AuditLogService;
@@ -33,6 +35,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        LeaveCreditSetting::observe(LeaveCreditSettingObserver::class);
     }
 }

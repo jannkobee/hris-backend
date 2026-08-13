@@ -13,6 +13,9 @@ class LeaveTypeController extends Controller
     public function __construct(LeaveTypeRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        // Every employee needs the active leave types when filing a request.
+        // Management screens remain protected by the write permission.
+        $this->middleware('permission:manage-leave-types')->only(['store', 'update', 'destroy']);
     }
 
     public function index()

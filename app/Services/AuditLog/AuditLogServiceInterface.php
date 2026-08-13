@@ -8,5 +8,5 @@ interface AuditLogServiceInterface
 
     public function loginLog(string $action, array $attr);
 
-    public function getLogsByDate(string $from, string $to);
+    public function getLogsByDate(?string $from, ?string $to);
 }

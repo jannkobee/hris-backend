@@ -13,6 +13,7 @@ class PositionController extends Controller
     public function __construct(PositionRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('positions');
     }
 
     public function index()

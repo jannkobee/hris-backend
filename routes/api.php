@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::get('/health', fn () => response()->json([
+    'status' => 'ok',
+    'timestamp' => now()->toIso8601String(),
+]))->name('health');
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,7 +23,7 @@ Route::middleware([])->group(function () {
     $routes = [
         'auth/auth',
         'public_api/public_api',
-        'leave_type/leave_type',
+        'realtime/realtime',
     ];
 
     foreach ($routes as $route) {
@@ -28,6 +33,8 @@ Route::middleware([])->group(function () {
 
 // Authenticated
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate']);
+
     $routes = [
         'user/user',
         'conversation/conversation',
@@ -43,11 +50,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'announcement/announcement',
         'scheduled_task/scheduled_task',
         'leave_request/leave_request',
+        'leave_type/leave_type',
         'leave_credit/leave_credit',
         'leave_credit_setting/leave_credit_setting',
         'leave_conversion_request/leave_conversion_request',
         'overtime/overtime',
-        'audit_log/audit_log'
+        'audit_log/audit_log',
+        'app_setting/app_setting',
     ];
 
     foreach ($routes as $route) {

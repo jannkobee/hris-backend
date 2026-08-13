@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveCreditSetting extends Model
 {
-    use HasUuids, HasFilterScope;
+    use HasFilterScope, HasUuids;
 
     public $model_name = 'Leave Credit Setting';
 
@@ -20,6 +20,11 @@ class LeaveCreditSetting extends Model
         'credit_amount',
         'frequency',
         'run_months',
+        'eligible_employment_status_ids',
+        'eligible_department_ids',
+        'eligible_position_ids',
+        'eligible_job_grade_ids',
+        'minimum_service_months',
         'is_active',
     ];
 
@@ -33,6 +38,11 @@ class LeaveCreditSetting extends Model
     protected $casts = [
         'credit_amount' => 'decimal:2',
         'run_months' => 'array',
+        'eligible_employment_status_ids' => 'array',
+        'eligible_department_ids' => 'array',
+        'eligible_position_ids' => 'array',
+        'eligible_job_grade_ids' => 'array',
+        'minimum_service_months' => 'integer',
         'is_active' => 'boolean',
     ];
 

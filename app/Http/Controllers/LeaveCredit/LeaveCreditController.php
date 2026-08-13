@@ -13,6 +13,7 @@ class LeaveCreditController extends Controller
     public function __construct(LeaveCreditRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->middleware('permission:view-leave-credits')->only(['index', 'show']);
     }
 
     public function index()

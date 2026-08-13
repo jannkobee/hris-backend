@@ -8,6 +8,8 @@ use App\Repository\LeaveCredit\LeaveCreditRepositoryInterface;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Utils\ResponseServiceInterface;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,26 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
         parent::__construct($model, $responseService, $auditLogService);
     }
 
+    public function getList(): JsonResponse
+    {
+        return parent::getList();
+    }
+
+    protected function applyVisibilityScope(Builder $query): Builder
+    {
+        return $this->canManageAll()
+            ? $query
+            : $query->where('employee_id', $this->currentEmployeeId());
+    }
+
+    public function find(string $id): JsonResponse
+    {
+        $conversion = $this->findConversion($id);
+        $this->ensureCanActForEmployee($conversion->employee_id);
+
+        return parent::find($id);
+    }
+
     /**
      * Attaches the request to the employee's current-year credit bucket for
      * that leave type, and rejects it up front if there isn't enough balance
@@ -32,6 +54,7 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
      */
     public function create(array $attributes): JsonResponse
     {
+        $this->ensureCanActForEmployee($attributes['employee_id']);
         $year = (int) ($attributes['year'] ?? Carbon::now()->year);
 
         $credit = $this->creditRepository->findOrCreateBucket(
@@ -52,6 +75,34 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
         return parent::create($attributes);
     }
 
+    public function update(array $attributes, string|int $id): JsonResponse
+    {
+        $conversion = $this->findConversion((string) $id);
+        $this->ensureCanActForEmployee($conversion->employee_id);
+
+        if ($conversion->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'status' => 'Only pending conversion requests can be updated.',
+            ]);
+        }
+
+        return parent::update($attributes, $id);
+    }
+
+    public function delete(string $id): JsonResponse
+    {
+        $conversion = $this->findConversion($id);
+        $this->ensureCanActForEmployee($conversion->employee_id);
+
+        if ($conversion->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'status' => 'Only pending conversion requests can be removed.',
+            ]);
+        }
+
+        return parent::delete($id);
+    }
+
     /**
      * Debits the credit bucket and marks the request approved. Locks both
      * rows for the duration of the transaction so a double-approve or a
@@ -59,6 +110,8 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
      */
     public function approve(string $id): JsonResponse
     {
+        $this->ensureCanApprove();
+
         return DB::transaction(function () use ($id) {
             $conversion = $this->model->newQuery()->lockForUpdate()->find($id);
 
@@ -101,6 +154,7 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
 
     public function reject(string $id, ?string $remarks = null): JsonResponse
     {
+        $this->ensureCanApprove();
         $conversion = $this->model->find($id);
 
         if (!$conversion) {
@@ -127,5 +181,49 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
             $this->model->model_name,
             $conversion->fresh()
         );
+    }
+
+    private function ensureCanActForEmployee(string $employeeId): void
+    {
+        if (! $this->canManageAll() && $this->currentEmployeeId() !== $employeeId) {
+            throw new AuthorizationException('You can only access your own leave conversion requests.');
+        }
+    }
+
+    private function ensureCanApprove(): void
+    {
+        if (! Auth::user()?->hasPermission('approve-leave-conversion-requests')) {
+            throw new AuthorizationException('You do not have permission to approve leave conversions.');
+        }
+    }
+
+    private function canManageAll(): bool
+    {
+        $user = Auth::user();
+
+        return (bool) ($user?->hasPermission('manage-leave-conversion-requests')
+            || $user?->hasPermission('approve-leave-conversion-requests'));
+    }
+
+    private function currentEmployeeId(): string
+    {
+        $employeeId = Auth::user()?->employee?->id;
+
+        if (! $employeeId) {
+            throw new AuthorizationException('This account is not linked to an employee record.');
+        }
+
+        return $employeeId;
+    }
+
+    private function findConversion(string $id): LeaveConversionRequest
+    {
+        $conversion = $this->model->find($id);
+
+        if (! $conversion) {
+            throw ValidationException::withMessages(['record_not_found' => 'Record not found.']);
+        }
+
+        return $conversion;
     }
 }

@@ -13,8 +13,10 @@ class Permission extends Model
     public $model_name = 'Permission';
 
     protected $fillable = [
+        'model',
         'name',
-        'slug'
+        'slug',
+        'description',
     ];
 
     protected array $filterable = [

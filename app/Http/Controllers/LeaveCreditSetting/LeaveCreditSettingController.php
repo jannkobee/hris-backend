@@ -13,6 +13,7 @@ class LeaveCreditSettingController extends Controller
     public function __construct(LeaveCreditSettingRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('leave-credit-settings');
     }
 
     public function index()

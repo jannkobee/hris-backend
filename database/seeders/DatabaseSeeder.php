@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             JobGradeSeeder::class,
             LeaveTypeSeeder::class,
+            ScheduledTaskSeeder::class,
         ]);
     }
 }

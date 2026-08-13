@@ -6,7 +6,10 @@ use App\Models\Overtime;
 use App\Repository\Base\BaseRepository;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Utils\ResponseServiceInterface;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInterface
@@ -17,6 +20,57 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
         AuditLogServiceInterface $auditLogService
     ) {
         parent::__construct($model, $responseService, $auditLogService);
+    }
+
+    protected function applyVisibilityScope(Builder $query): Builder
+    {
+        return $this->canManageAll()
+            ? $query
+            : $query->where('employee_id', $this->currentEmployeeId());
+    }
+
+    public function create(array $attributes): JsonResponse
+    {
+        $this->ensureCanActForEmployee($attributes['employee_id']);
+        $attributes['status'] = 'pending';
+
+        return parent::create($attributes);
+    }
+
+    public function find(string $id): JsonResponse
+    {
+        $overtime = $this->findOvertime($id);
+        $this->ensureCanActForEmployee($overtime->employee_id);
+
+        return parent::find($id);
+    }
+
+    public function update(array $attributes, string|int $id): JsonResponse
+    {
+        $overtime = $this->findOvertime((string) $id);
+        $this->ensureCanActForEmployee($overtime->employee_id);
+
+        if ($overtime->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'status' => 'Only pending overtime requests can be updated.',
+            ]);
+        }
+
+        return parent::update($attributes, $id);
+    }
+
+    public function delete(string $id): JsonResponse
+    {
+        $overtime = $this->findOvertime($id);
+        $this->ensureCanActForEmployee($overtime->employee_id);
+
+        if ($overtime->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'status' => 'Only pending overtime requests can be removed.',
+            ]);
+        }
+
+        return parent::delete($id);
     }
 
     public function approve(string $id, ?string $remarks = null): JsonResponse
@@ -35,11 +89,15 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
      */
     protected function setStatus(string $id, string $status, ?string $remarks): JsonResponse
     {
-        $overtime = $this->model->find($id);
+        if (! Auth::user()?->hasPermission('approve-overtimes')) {
+            throw new AuthorizationException('You do not have permission to approve overtime requests.');
+        }
 
-        if (!$overtime) {
+        $overtime = $this->findOvertime($id);
+
+        if ($overtime->status !== 'pending') {
             throw ValidationException::withMessages([
-                'record_not_found' => 'Record not found',
+                'status' => 'Only pending overtime requests can be actioned.',
             ]);
         }
 
@@ -59,5 +117,42 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
             $this->model->model_name,
             $overtime
         );
+    }
+
+    private function ensureCanActForEmployee(string $employeeId): void
+    {
+        if (! $this->canManageAll() && $this->currentEmployeeId() !== $employeeId) {
+            throw new AuthorizationException('You can only access your own overtime requests.');
+        }
+    }
+
+    private function canManageAll(): bool
+    {
+        $user = Auth::user();
+
+        return (bool) ($user?->hasPermission('manage-overtimes')
+            || $user?->hasPermission('approve-overtimes'));
+    }
+
+    private function currentEmployeeId(): string
+    {
+        $employeeId = Auth::user()?->employee?->id;
+
+        if (! $employeeId) {
+            throw new AuthorizationException('This account is not linked to an employee record.');
+        }
+
+        return $employeeId;
+    }
+
+    private function findOvertime(string $id): Overtime
+    {
+        $overtime = $this->model->find($id);
+
+        if (! $overtime) {
+            throw ValidationException::withMessages(['record_not_found' => 'Record not found.']);
+        }
+
+        return $overtime;
     }
 }

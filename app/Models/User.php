@@ -83,6 +83,26 @@ class User extends Authenticatable
         return $this->hasMany(UserSetting::class);
     }
 
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->role?->name === 'Admin') {
+            return true;
+        }
+
+        $permissions = $this->role?->relationLoaded('permissions')
+            ? $this->role->permissions
+            : $this->role?->permissions()->get();
+
+        return (bool) $permissions?->contains('slug', $permission);
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        return collect($permissions)->contains(
+            fn (string $permission) => $this->hasPermission($permission)
+        );
+    }
+
     public static function importColumns(): array
     {
         return [

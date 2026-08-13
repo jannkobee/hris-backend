@@ -13,6 +13,7 @@ class DepartmentController extends Controller
     public function __construct(DepartmentRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('departments');
     }
 
     public function index()

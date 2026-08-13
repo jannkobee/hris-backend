@@ -15,7 +15,7 @@ class AuthSettingsTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user, 'sanctum')
-            ->patchJson('/api/auth/settings', ['theme' => 'dark']);
+            ->patchJson(route('auth.settings.update'), ['theme' => 'dark']);
 
         $response->assertOk()
             ->assertJsonPath('data.theme', 'dark');

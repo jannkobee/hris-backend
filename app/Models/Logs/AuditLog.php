@@ -17,6 +17,13 @@ class AuditLog extends Model
         'module',
         'payload',
         'result',
+        'ip_address',
+        'http_method',
+        'route_name',
+    ];
+
+    protected $casts = [
+        'payload' => 'array',
     ];
 
     public function scopeFilter(Builder $query): Builder
@@ -25,7 +32,7 @@ class AuditLog extends Model
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('module_name', 'LIKE', "%{$search}%")
+                $q->where('module', 'LIKE', "%{$search}%")
                     ->orWhere('user_id', 'LIKE', "%{$search}%")
                     ->orWhere('user_full_name', 'LIKE', "%{$search}%")
                     ->orWhere('action', 'LIKE', "%{$search}%")

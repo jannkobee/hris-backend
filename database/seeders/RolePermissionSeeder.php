@@ -5,28 +5,18 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        DB::table('role_permission')->truncate();
+        $admin = Role::query()->where('name', 'Admin')->first();
+        $admin?->permissions()->sync(Permission::query()->pluck('id'));
 
-        Role::all()->each(function ($role) {
-            $permissions = Permission::all()->pluck('id')->toArray();
-            $syncData = [];
-            foreach ($permissions as $permissionId) {
-                $syncData[$permissionId] = [
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ];
-            }
-            $role->permissions()->sync($syncData);
-        });
+        foreach (config('permissions.default_roles', []) as $roleName => $slugs) {
+            $role = Role::query()->where('name', $roleName)->first();
+            $permissionIds = Permission::query()->whereIn('slug', $slugs)->pluck('id');
+            $role?->permissions()->sync($permissionIds);
+        }
     }
 }

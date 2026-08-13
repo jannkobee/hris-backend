@@ -13,6 +13,7 @@ class EmploymentStatusController extends Controller
     public function __construct(EmploymentStatusRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('employment-statuses');
     }
 
     public function index()

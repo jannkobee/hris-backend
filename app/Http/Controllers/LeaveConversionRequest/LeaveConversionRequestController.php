@@ -14,6 +14,10 @@ class LeaveConversionRequestController extends Controller
     public function __construct(LeaveConversionRequestRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->middleware('permission:view-leave-conversion-requests')->only(['index', 'show']);
+        $this->middleware('permission:create-leave-conversion-requests')->only('store');
+        $this->middleware('permission:manage-leave-conversion-requests')->only(['update', 'destroy']);
+        $this->middleware('permission:approve-leave-conversion-requests')->only(['approve', 'reject']);
     }
 
     public function index()

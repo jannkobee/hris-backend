@@ -14,6 +14,8 @@ class UserController extends Controller
     public function __construct(UserRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('users');
+        $this->middleware('permission:manage-users')->only(['downloadTemplate', 'import']);
     }
 
     public function index()

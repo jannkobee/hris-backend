@@ -13,13 +13,21 @@ class AuditLogController extends Controller
     public function __construct(AuditLogServiceInterface $auditLogService)
     {
         $this->auditLogService = $auditLogService;
+        $this->middleware('permission:view-audit-logs');
     }
 
     public function index(Request $request)
     {
-        $from = $request->input('from');
-        $to = $request->input('to');
+        $filters = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        return $this->auditLogService->getLogsByDate($from, $to);
+        return $this->auditLogService->getLogsByDate(
+            $filters['from'] ?? null,
+            $filters['to'] ?? null,
+        );
     }
 }

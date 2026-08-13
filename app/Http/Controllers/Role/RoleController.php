@@ -13,6 +13,7 @@ class RoleController extends Controller
     public function __construct(RoleRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->requireResourcePermissions('roles');
     }
 
     public function index()

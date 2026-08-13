@@ -10,6 +10,7 @@ Route::prefix('attendances')
         Route::post('time-out', [AttendanceController::class, 'timeOut'])->name('time-out');
         Route::get('today', [AttendanceController::class, 'today'])->name('today');
         Route::get('history', [AttendanceController::class, 'history'])->name('history');
+        Route::get('{attendance}/photos/{type}', [AttendanceController::class, 'photo'])->name('photo');
     });
 
 Route::apiResource('attendances', AttendanceController::class);

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Cron\CronExpression;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\Rule;
 
 class ScheduledTaskRequest extends FormRequest
@@ -34,7 +36,17 @@ class ScheduledTaskRequest extends FormRequest
                 Rule::unique('scheduled_tasks', 'name')->ignore($taskId),
             ],
             'description' => ['nullable', 'string'],
-            'command' => ['required', 'string', 'max:255'],
+            'command' => [
+                'required',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $command = strtok(trim((string) $value), ' ');
+                    if (! $command || ! array_key_exists($command, Artisan::all())) {
+                        $fail('The command must be a registered Artisan command.');
+                    }
+                },
+            ],
             'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly', 'yearly', 'custom'])],
 
             'run_time' => [
@@ -61,7 +73,14 @@ class ScheduledTaskRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if ($value && ! CronExpression::isValidExpression($value)) {
+                        $fail('The cron expression is invalid.');
+                    }
+                },
             ],
+
+            'timezone' => ['nullable', 'timezone'],
 
             'is_active' => ['boolean'],
         ];

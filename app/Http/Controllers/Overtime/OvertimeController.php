@@ -15,6 +15,10 @@ class OvertimeController extends Controller
     public function __construct(OvertimeRepositoryInterface $modelRepository)
     {
         $this->modelRepository = $modelRepository;
+        $this->middleware('permission:view-overtimes')->only(['index', 'show']);
+        $this->middleware('permission:create-overtimes')->only('store');
+        $this->middleware('permission:manage-overtimes')->only(['update', 'destroy']);
+        $this->middleware('permission:approve-overtimes')->only(['approve', 'reject']);
     }
 
     public function index(): JsonResponse

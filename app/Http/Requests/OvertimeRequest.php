@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class OvertimeRequest extends FormRequest
 {
@@ -28,7 +27,7 @@ class OvertimeRequest extends FormRequest
             'time_end' => ['required', 'date_format:H:i', 'after:time_start'],
             'hours' => ['required', 'numeric', 'min:0.01', 'max:24'],
             'reason' => ['nullable', 'string', 'max:1000'],
-            'status' => ['sometimes', Rule::in(['pending', 'approved', 'rejected'])],
+            'status' => ['prohibited'],
         ];
     }
 

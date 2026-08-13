@@ -37,7 +37,9 @@ abstract class BaseRepository implements BaseRepositoryInterface
 
         $modelName = $this->model->model_name;
 
-        $query = $this->model->filter()->newQuery()->orderBy($sortByColumn, $sortBy);
+        $query = $this->applyVisibilityScope(
+            $this->model->filter()->newQuery()
+        )->orderBy($sortByColumn, $sortBy);
 
         $query->when($relations, function (Builder $query) use ($relations) {
             $relations = explode(',', $relations);
@@ -53,13 +55,21 @@ abstract class BaseRepository implements BaseRepositoryInterface
         );
     }
 
+    protected function applyVisibilityScope(Builder $query): Builder
+    {
+        return $query;
+    }
+
     public function create(array $attributes): JsonResponse
     {
         $relations = request()->input('relations');
 
         $created = $this->model->create($attributes)->fresh();
 
-        $this->auditLogService->insertLog($this->model, 'create', $attributes);
+        $this->auditLogService->insertLog($created, 'create', [
+            'record_id' => $created->getKey(),
+            'after' => $created->toArray(),
+        ]);
 
         if ($relations) {
             $relations = explode(',', $relations);
@@ -101,8 +111,14 @@ abstract class BaseRepository implements BaseRepositoryInterface
         $data = $this->model->find($id);
 
         if ($data) {
+            $before = $data->toArray();
             $data->update($attributes);
-            $this->auditLogService->insertLog($this->model, 'update', $attributes);
+            $data->refresh();
+            $this->auditLogService->insertLog($data, 'update', [
+                'record_id' => $data->getKey(),
+                'before' => $before,
+                'after' => $data->toArray(),
+            ]);
 
             if ($relations) {
                 $relations = explode(',', $relations);
@@ -126,13 +142,17 @@ abstract class BaseRepository implements BaseRepositoryInterface
 
         if ($data) {
             try {
+                $snapshot = $data->toArray();
                 $data->forceDelete();
 
-                $this->auditLogService->insertLog($this->model, 'forced delete', ['id' => $id]);
+                $this->auditLogService->insertLog($this->model, 'delete', [
+                    'record_id' => $id,
+                    'before' => $snapshot,
+                ]);
 
                 return $this->responseService->deleteResponse(
                     $this->model->model_name,
-                    $data->delete()
+                    true
                 );
             } catch (QueryException $e) {
                 logger()->error('Error deleting record.' . $e->getMessage());

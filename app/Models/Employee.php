@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use HasUuids, HasFilterScope;
+    use HasFilterScope, HasUuids;
 
     public $model_name = 'Employee';
 
@@ -71,5 +71,15 @@ class Employee extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(EmployeeContact::class);
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function leaveCredits(): HasMany
+    {
+        return $this->hasMany(LeaveCredit::class);
     }
 }

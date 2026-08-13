@@ -4,79 +4,151 @@ namespace App\Services\AuditLog;
 
 use App\Models\Logs\AuditLog;
 use App\Models\User;
-use Exception;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use JsonSerializable;
+use Throwable;
 
 class AuditLogService implements AuditLogServiceInterface
 {
-    public function insertLog($model, $action, $attr = [])
-    {
-        DB::beginTransaction();
+    private const REDACTED = '[REDACTED]';
 
+    private const SENSITIVE_KEYS = [
+        'password',
+        'password_confirmation',
+        'current_password',
+        'token',
+        'access_token',
+        'refresh_token',
+        'authorization',
+        'secret',
+        'api_key',
+    ];
+
+    public function insertLog($model, string $action, array $attr = []): void
+    {
         try {
-            if (Auth::guest()) {
-                throw new Exception("Invalid Audit Log, Not authenticated.");
-            }
             $user = Auth::user();
 
-            $data = json_encode($attr, JSON_THROW_ON_ERROR);
-
-            AuditLog::create([
-                'module_name' => get_class($model),
-                'user_id' => $user->id,
-                'user_full_name' => $user->firstname . ' ' . $user->lastname,
+            AuditLog::create(array_merge([
+                'module' => $this->moduleName($model),
+                'user_id' => $user?->id,
+                'user_full_name' => $user?->full_name ?? 'System',
                 'action' => $action,
-                'payload' => $data,
-                'result' => 'Success'
-            ]);
-
-            DB::commit();
-        } catch (Exception $e) {
-            logger()->critical('AuditLogService ' . $e->getMessage());
-
-            DB::rollBack();
+                'payload' => $this->sanitize($attr),
+                'result' => 'Success',
+            ], $this->requestContext()));
+        } catch (Throwable $exception) {
+            // An unavailable audit trail must never roll back the business action.
+            report($exception);
         }
     }
 
-    public function loginLog($action, $attr)
+    public function loginLog(string $action, array $attr): void
     {
-        DB::beginTransaction();
-
         try {
-            $user = User::where('email', $attr['email'])->first();
+            $user = isset($attr['email'])
+                ? User::where('email', $attr['email'])->first()
+                : null;
 
-            $data = json_encode($attr, JSON_THROW_ON_ERROR);
-
-            AuditLog::create([
-                'user_id' => $user->id,
-                'user_full_name' => $user->firstname . ' ' . $user->lastname,
+            AuditLog::create(array_merge([
+                'user_id' => $user?->id,
+                'user_full_name' => $user?->full_name ?? ($attr['email'] ?? 'Unknown user'),
                 'action' => $action,
-                'payload' => $data,
-                'result' => 'Success'
-            ]);
-
-            DB::commit();
-        } catch (Exception $e) {
-            logger()->critical('AuditLogService ' . $e->getMessage());
-
-            DB::rollBack();
+                'module' => User::class,
+                'payload' => $this->sanitize($attr),
+                'result' => 'Success',
+            ], $this->requestContext()));
+        } catch (Throwable $exception) {
+            report($exception);
         }
     }
 
-    public function getLogsByDate(string $from, string $to)
+    public function getLogsByDate(?string $from, ?string $to)
     {
-        try {
-            $limit = request()->input('limit', 10);
+        $fromDate = $from
+            ? CarbonImmutable::parse($from)->startOfDay()
+            : CarbonImmutable::now()->subDays(30)->startOfDay();
+        $toDate = $to
+            ? CarbonImmutable::parse($to)->endOfDay()
+            : CarbonImmutable::now()->endOfDay();
 
-            $logs = AuditLog::whereBetween('created_at', [$from, $to])
-                ->filter()
-                ->orderBy('created_at', 'desc')
-                ->paginate($limit);
+        return AuditLog::query()
+            ->whereBetween('created_at', [$fromDate, $toDate])
+            ->filter()
+            ->orderByDesc('created_at')
+            ->paginate((int) request()->input('limit', 10));
+    }
 
-            return $logs;
-        } catch (Exception $e) {
-            logger()->critical('AuditLogService ' . $e->getMessage());
+    private function moduleName(mixed $model): string
+    {
+        $class = is_object($model) ? $model::class : (string) $model;
+
+        return $class;
+    }
+
+    private function requestContext(): array
+    {
+        if (! app()->bound('request')) {
+            return [];
         }
+
+        $request = request();
+
+        return [
+            'ip_address' => $request->ip(),
+            'http_method' => $request->method(),
+            'route_name' => $request->route()?->getName(),
+        ];
+    }
+
+    private function sanitize(mixed $value, ?string $key = null): mixed
+    {
+        if ($key !== null && $this->isSensitiveKey($key)) {
+            return self::REDACTED;
+        }
+
+        if ($value instanceof Model) {
+            $value = $value->toArray();
+        } elseif ($value instanceof UploadedFile) {
+            return [
+                'name' => $value->getClientOriginalName(),
+                'mime_type' => $value->getClientMimeType(),
+                'size' => $value->getSize(),
+            ];
+        } elseif ($value instanceof DateTimeInterface) {
+            return $value->format(DateTimeInterface::ATOM);
+        } elseif ($value instanceof JsonSerializable) {
+            $value = $value->jsonSerialize();
+        }
+
+        if (is_array($value)) {
+            $sanitized = [];
+            foreach ($value as $childKey => $childValue) {
+                $sanitized[$childKey] = $this->sanitize($childValue, (string) $childKey);
+            }
+
+            return $sanitized;
+        }
+
+        if (is_object($value)) {
+            return method_exists($value, '__toString')
+                ? (string) $value
+                : $value::class;
+        }
+
+        return $value;
+    }
+
+    private function isSensitiveKey(string $key): bool
+    {
+        $normalized = Str::lower(str_replace(['-', ' '], '_', $key));
+
+        return in_array($normalized, self::SENSITIVE_KEYS, true)
+            || Str::endsWith($normalized, ['_password', '_token', '_secret', '_api_key']);
     }
 }

@@ -291,3 +291,48 @@ This project is open-sourced software licensed under the MIT license.
 **Laravel Framework** — [https://laravel.com](https://laravel.com)
 
 ---
+
+## ⚙️ Additional Local Services
+
+The current app also uses a Vue frontend, Laravel Reverb for real-time messages, and scheduled tasks for leave credits.
+
+### One-time setup
+
+```bash
+# Backend, from hris-backend
+composer install
+copy .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+
+# Frontend, from hris-frontend
+npm.cmd install
+```
+
+Set your MySQL/MariaDB credentials in `hris-backend/.env`. The local API base URL is `http://localhost:8000/backend/api/v1`.
+
+### Required running processes
+
+```bash
+# Laravel API
+php artisan serve
+
+# Real-time message server
+php artisan reverb:start --host=127.0.0.1 --port=8080
+
+# Required for Scheduled Tasks and Leave Accrual
+php artisan schedule:work
+
+# Required only when QUEUE_CONNECTION is not sync
+php artisan queue:work --tries=3
+```
+
+Start the frontend separately:
+
+```bash
+npm.cmd run dev
+```
+
+The `Batch Files/hris-backend.bat` and `Batch Files/hris-frontend.bat` files launch these local development processes. Start the backend batch file first, then the frontend batch file.
+
+For real-time messaging, keep `BROADCAST_DRIVER=reverb` and the generated `REVERB_*` values in the backend `.env`; do not commit that file.

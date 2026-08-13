@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 // NOTE: written as a standalone class implementing the interface directly.
 // If your other repositories extend a shared BaseRepository, adjust the
@@ -84,7 +85,11 @@ class ConversationRepository implements ConversationRepositoryInterface
                 'created_by' => $createdBy,
             ]);
 
-            $conversation->participants()->attach($allParticipants);
+            $conversation->participants()->attach(
+                $allParticipants
+                    ->mapWithKeys(fn (string $userId) => [$userId => ['id' => (string) Str::uuid()]])
+                    ->all()
+            );
 
             return $conversation->load('participants:id,first_name,last_name');
         });
