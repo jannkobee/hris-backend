@@ -22,9 +22,9 @@ class RealtimeConfigController extends Controller
             'data' => [
                 'enabled' => $enabled,
                 'key' => $enabled ? config('broadcasting.connections.reverb.key') : null,
-                'host' => config('broadcasting.connections.reverb.options.host'),
-                'port' => (int) config('broadcasting.connections.reverb.options.port'),
-                'scheme' => config('broadcasting.connections.reverb.options.scheme'),
+                'host' => env('REVERB_PUBLIC_HOST', config('broadcasting.connections.reverb.options.host')),
+                'port' => (int) env('REVERB_PUBLIC_PORT', config('broadcasting.connections.reverb.options.port')),
+                'scheme' => env('REVERB_PUBLIC_SCHEME', config('broadcasting.connections.reverb.options.scheme')),
             ],
         ]);
     }

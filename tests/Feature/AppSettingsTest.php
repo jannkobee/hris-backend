@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\AppSetting;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AppSettings\AppSettingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AppSettingsTest extends TestCase
@@ -41,6 +46,53 @@ class AppSettingsTest extends TestCase
             route('app-settings.update'),
             ['values' => ['attendance.location_capture_enabled' => false]]
         )->assertForbidden();
+    }
+
+    public function test_settings_permissions_are_enforced_per_section(): void
+    {
+        $role = Role::create(['name' => 'Attendance Policy Owner']);
+        $role->permissions()->attach(Permission::create([
+            'model' => 'Audit and Settings',
+            'name' => 'Manage attendance settings',
+            'slug' => 'manage-attendance-settings',
+        ]));
+        $user = User::factory()->create(['role_id' => $role->id]);
+
+        $response = $this->actingAs($user, 'sanctum')->putJson(
+            route('app-settings.update'),
+            ['values' => ['attendance.notes_enabled' => false]]
+        )->assertAccepted();
+
+        $this->assertFalse($response->json('data.values')['attendance.notes_enabled']);
+
+        $this->actingAs($user, 'sanctum')->putJson(
+            route('app-settings.update'),
+            ['values' => ['organization.company_name' => 'Not allowed']]
+        )->assertForbidden();
+    }
+
+    public function test_company_settings_are_loaded_once_and_updates_invalidate_the_cache(): void
+    {
+        Cache::flush();
+        AppSetting::create([
+            'key' => 'organization.company_name',
+            'value' => json_encode('Acme'),
+        ]);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $settings = app(AppSettingService::class);
+        $this->assertSame('Acme', $settings->get('organization.company_name'));
+        $this->assertSame('Acme', $settings->get('organization.company_name'));
+
+        $settingReads = collect(DB::getQueryLog())
+            ->filter(fn (array $query): bool => str_contains($query['query'], 'from "app_settings"'))
+            ->count();
+        $this->assertSame(1, $settingReads);
+
+        $settings->update(['organization.company_name' => 'Globex']);
+        $this->assertSame('Globex', $settings->get('organization.company_name'));
     }
 
     public function test_timezone_options_come_from_the_php_timezone_database(): void

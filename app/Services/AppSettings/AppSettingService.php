@@ -4,12 +4,27 @@ namespace App\Services\AppSettings;
 
 use App\Models\AppSetting;
 use DateTimeZone;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 
 class AppSettingService
 {
+    private const VALUES_CACHE_KEY = 'app-settings.values.v1';
+
+    private const CACHE_TTL_SECONDS = 300;
+
     public function all(): array
+    {
+        return Cache::remember(
+            self::VALUES_CACHE_KEY,
+            self::CACHE_TTL_SECONDS,
+            fn (): array => $this->loadValues()
+        );
+    }
+
+    private function loadValues(): array
     {
         $values = collect(config('app_settings', []))
             ->mapWithKeys(fn (array $definition, string $key) => [$key => $definition['default']])
@@ -36,15 +51,7 @@ class AppSettingService
             return $fallback;
         }
 
-        if (! Schema::hasTable('app_settings')) {
-            return $definitions[$key]['default'] ?? $fallback;
-        }
-
-        $setting = AppSetting::query()->where('key', $key)->first();
-
-        return $setting
-            ? $this->decode($key, $setting->value)
-            : ($definitions[$key]['default'] ?? $fallback);
+        return $this->all()[$key] ?? ($definitions[$key]['default'] ?? $fallback);
     }
 
     public function definitions(): array
@@ -57,6 +64,8 @@ class AppSettingService
                     $publicDefinition['options'] = DateTimeZone::listIdentifiers();
                 }
 
+                $publicDefinition['permission'] = $this->permissionFor($key);
+
                 return $publicDefinition;
             })
             ->all();
@@ -66,18 +75,32 @@ class AppSettingService
     {
         $definitions = config('app_settings', []);
 
-        foreach ($values as $key => $value) {
-            if (! array_key_exists($key, $definitions)) {
-                throw new InvalidArgumentException("Unknown app setting: {$key}");
-            }
+        DB::transaction(function () use ($values, $definitions): void {
+            foreach ($values as $key => $value) {
+                if (! array_key_exists($key, $definitions)) {
+                    throw new InvalidArgumentException("Unknown app setting: {$key}");
+                }
 
-            AppSetting::query()->updateOrCreate(
-                ['key' => $key],
-                ['value' => $this->encode($value)]
-            );
-        }
+                AppSetting::query()->updateOrCreate(
+                    ['key' => $key],
+                    ['value' => $this->encode($value)]
+                );
+            }
+        });
+
+        Cache::forget(self::VALUES_CACHE_KEY);
 
         return $this->all();
+    }
+
+    public function permissionFor(string $key): string
+    {
+        return match (true) {
+            str_starts_with($key, 'organization.') => 'manage-organization-settings',
+            str_starts_with($key, 'attendance.') => 'manage-attendance-settings',
+            str_starts_with($key, 'payroll.') => 'manage-payroll-settings',
+            default => 'manage-feature-settings',
+        };
     }
 
     private function encode(mixed $value): string

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AppSetting;
 
 use App\Http\Controllers\Controller;
 use App\Services\AppSettings\AppSettingService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +14,9 @@ class AppSettingController extends Controller
 {
     public function __construct(private readonly AppSettingService $settings)
     {
-        $this->middleware('permission:manage-app-settings')->only('update');
+        $this->middleware(
+            'permission:manage-app-settings,manage-organization-settings,manage-attendance-settings,manage-feature-settings,manage-payroll-settings'
+        )->only('update');
     }
 
     public function index(): JsonResponse
@@ -31,6 +34,8 @@ class AppSettingController extends Controller
         $payload = $request->validate([
             'values' => ['required', 'array'],
         ]);
+
+        $this->authorizeSettingKeys($request, array_keys($payload['values']));
 
         $definitions = config('app_settings', []);
         $errors = [];
@@ -88,5 +93,24 @@ class AppSettingController extends Controller
                 'definitions' => $this->settings->definitions(),
             ],
         ], 202);
+    }
+
+    private function authorizeSettingKeys(Request $request, array $keys): void
+    {
+        $user = $request->user();
+
+        if ($user?->hasPermission('manage-app-settings')) {
+            return;
+        }
+
+        $unauthorized = collect($keys)
+            ->filter(fn (string $key): bool => ! $user?->hasPermission($this->settings->permissionFor($key)))
+            ->values();
+
+        if ($unauthorized->isNotEmpty()) {
+            throw new AuthorizationException(
+                'You do not have permission to update: '.$unauthorized->join(', ').'.'
+            );
+        }
     }
 }

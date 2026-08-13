@@ -1,35 +1,65 @@
 <?php
 
-use App\Repository\Permission\PermissionRepositoryInterface;
+namespace App\Services\Permission;
+
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use InvalidArgumentException;
 
 class PermissionService implements PermissionServiceInterface
 {
-    protected $permissionRepository;
-
-    public function __construct(PermissionRepositoryInterface $permissionRepository)
-    {
-        $this->permissionRepository = $permissionRepository;
-    }
-
     public function hasPermission(string $action, $user): bool
     {
-        // Logic to check if the user has the specified permission
-        return true; // Placeholder return value
+        return $user instanceof User && $user->hasPermission($action);
     }
 
     public function getPermissionsForUser($user): array
     {
-        // Logic to retrieve permissions for the user
-        return []; // Placeholder return value
+        if (! $user instanceof User) {
+            return [];
+        }
+
+        if ($user->role?->name === 'Admin') {
+            return Permission::query()->orderBy('slug')->pluck('slug')->all();
+        }
+
+        $user->role?->loadMissing('permissions');
+
+        return $user->role?->permissions->pluck('slug')->sort()->values()->all() ?? [];
     }
 
     public function assignPermission(string $permission, $user): void
     {
-        // Logic to assign a permission to the user
+        $role = $this->roleFor($user);
+        $permissionId = Permission::query()->where('slug', $permission)->value('id');
+
+        if (! $permissionId) {
+            throw (new ModelNotFoundException())->setModel(Permission::class, [$permission]);
+        }
+
+        $role->permissions()->syncWithoutDetaching([$permissionId]);
+        $role->unsetRelation('permissions');
     }
 
     public function revokePermission(string $permission, $user): void
     {
-        // Logic to revoke a permission from the user
+        $role = $this->roleFor($user);
+        $permissionId = Permission::query()->where('slug', $permission)->value('id');
+
+        if ($permissionId) {
+            $role->permissions()->detach($permissionId);
+            $role->unsetRelation('permissions');
+        }
+    }
+
+    private function roleFor(mixed $user): Role
+    {
+        if (! $user instanceof User || ! $user->role) {
+            throw new InvalidArgumentException('A user with an assigned role is required.');
+        }
+
+        return $user->role;
     }
 }

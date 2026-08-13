@@ -17,13 +17,21 @@ class MessageSent implements ShouldBroadcastNow
 
     public function __construct(public Message $message)
     {
-        $this->message->loadMissing('sender:id,first_name,last_name');
+        $this->message->loadMissing(
+            'sender:id,first_name,last_name',
+            'conversation.participants:id'
+        );
     }
 
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel('conversation.'.$this->message->conversation_id),
+            ...$this->message->conversation->participants
+                ->where('id', '!=', $this->message->sender_id)
+                ->map(fn ($participant) => new PrivateChannel('App.Models.User.'.$participant->id))
+                ->values()
+                ->all(),
         ];
     }
 

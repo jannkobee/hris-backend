@@ -174,7 +174,7 @@ php artisan migrate:fresh
 
 Make sure the following services are installed and running before starting the system:
 
-- PHP >= 8.1
+- PHP >= 8.3 for a fresh install using the current dependency lockfile
 - Composer
 - MySQL / MariaDB (or your configured DB driver)
 - **Redis** (used for the queue worker)
@@ -196,7 +196,7 @@ php artisan serve
 
 ### Redis Setup
 
-This project uses **Redis** as the queue connection for the worker.
+For shared or multi-instance deployments, this project uses **Redis** for queues and application caching. The file cache remains suitable for a single local process.
 
 **1. Install Redis**
 
@@ -217,6 +217,7 @@ docker run -d --name hris-redis -p 6379:6379 redis:alpine
 
 ```env
 QUEUE_CONNECTION=redis
+CACHE_DRIVER=redis
 
 REDIS_CLIENT=phpredis
 REDIS_HOST=127.0.0.1
@@ -336,3 +337,131 @@ npm.cmd run dev
 The `Batch Files/hris-backend.bat` and `Batch Files/hris-frontend.bat` files launch these local development processes. Start the backend batch file first, then the frontend batch file.
 
 For real-time messaging, keep `BROADCAST_DRIVER=reverb` and the generated `REVERB_*` values in the backend `.env`; do not commit that file.
+
+---
+
+## Docker Compose setup
+
+The repository includes a complete local Docker stack. It starts the Vue frontend, Laravel API, MySQL, Redis, Reverb, queue worker, scheduler, database migrations/seeders, and Mailpit.
+
+### Requirements
+
+- Docker Desktop or Docker Engine with Docker Compose v2
+- Both `hris-backend` and `hris-frontend` in the same parent directory
+
+Expected directory layout:
+
+```text
+HRIS/
+|-- hris-backend/
+|   `-- docker-compose.yml
+`-- hris-frontend/
+    `-- Dockerfile
+```
+
+### Start the complete application
+
+Run these commands from `hris-backend`:
+
+```bash
+docker compose up --build -d
+docker compose ps
+```
+
+Open:
+
+- Frontend: `http://localhost:3000`
+- Backend health check: `http://localhost:8000/backend/api/v1/health`
+- Reverb WebSocket server: `http://localhost:8080`
+- Mailpit inbox: `http://localhost:8025`
+- MySQL from the host: `127.0.0.1:3307`
+- Redis from the host: `127.0.0.1:6380`
+
+The initial local administrator created by the seeder is:
+
+```text
+Email: admin@base.com
+Password: secret
+```
+
+Change this password immediately outside local development.
+
+### Services started by Compose
+
+| Service | Purpose |
+| --- | --- |
+| `frontend` | Builds Vue and serves the SPA through Nginx |
+| `backend` | Runs the Laravel HTTP API |
+| `migrate` | Runs migrations and idempotent seeders before the app starts |
+| `reverb` | Delivers real-time messaging events |
+| `queue` | Processes Redis-backed jobs |
+| `scheduler` | Runs Laravel scheduled tasks and leave accrual |
+| `mysql` | Stores application data |
+| `redis` | Stores queues, cache, and sessions |
+| `mailpit` | Captures development email |
+
+Useful commands:
+
+```bash
+# Follow application logs
+docker compose logs -f backend reverb queue scheduler frontend
+
+# Run an Artisan command
+docker compose exec backend php artisan about
+
+# Re-run migrations and seeders
+docker compose run --rm migrate
+
+# Stop the stack while keeping database and uploaded-file volumes
+docker compose down
+
+# Rebuild after dependency or Dockerfile changes
+docker compose up --build -d
+```
+
+The Compose file contains local-development defaults. Docker-specific overrides can be placed in the backend `.env` using `DOCKER_APP_KEY`, `DOCKER_DB_DATABASE`, `DOCKER_DB_USERNAME`, `DOCKER_DB_PASSWORD`, and `DOCKER_DB_ROOT_PASSWORD`; these names intentionally do not reuse the native local database variables. For a shared or production environment, also configure unique Reverb credentials, allowed origins, TLS, backups, and secret management. Do not use `docker compose down -v` unless you intentionally want to delete the Docker database and uploaded files.
+
+---
+
+## Workplace Hub
+
+Workplace Hub combines room reservations and meeting operations in one permission-aware module.
+
+Included functions:
+
+- Meeting-room directory with capacity, location, amenities, and active/inactive status
+- Conflict-safe room reservations; overlapping active bookings are rejected by the API
+- One-time, daily, weekday, and weekly recurring meetings
+- Daily stand-ups, team meetings, planning, reviews, one-on-ones, training, and custom meeting types
+- Organizer and attendee access controls
+- Meeting agenda, minutes, decisions, completion, and cancellation
+- Collaborative action items with owner, due date, priority, and status
+- Private meeting attachments with authenticated download and audit logging
+- Company-wide meeting and room-management permissions for authorized managers
+
+Relevant permissions:
+
+- `view-workplace-hub`
+- `create-meetings`
+- `manage-company-meetings`
+- `manage-meeting-rooms`
+
+After pulling the module into an existing installation, run:
+
+```bash
+php artisan migrate
+php artisan db:seed --class=PermissionSeeder
+php artisan db:seed --class=RolePermissionSeeder
+```
+
+### Payroll demo data
+
+To test payroll calculations with realistic attendance scenarios, run the optional demo seeder manually:
+
+```bash
+php artisan db:seed --class=PayrollDemoSeeder
+```
+
+It creates six linked demo users and employees, a completed semi-monthly attendance period, paid leave, approved overtime, late/undertime examples, one absence, and a draft payroll period ready to generate from the Payroll module. It is idempotent and is intentionally excluded from the normal production seed sequence.
+
+Demo employee credentials use `payroll.demo.1@hris.test` through `payroll.demo.6@hris.test`, all with password `password`.

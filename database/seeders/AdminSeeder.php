@@ -17,13 +17,15 @@ class AdminSeeder extends Seeder
     {
         $role = Role::where('name', 'Admin')->first();
 
-        User::create([
-            'role_id' => $role->id,
-            'first_name' => 'Admin',
-            'email' => 'admin@base.com',
-            'gender' => 'Male',
-            'birthday' => Carbon::now()->format('Y-m-d'),
-            'password' => Hash::make('secret'),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@base.com'],
+            [
+                'role_id' => $role->id,
+                'first_name' => 'Admin',
+                'gender' => 'Male',
+                'birthday' => Carbon::now()->format('Y-m-d'),
+                'password' => Hash::make('secret'),
+            ]
+        );
     }
 }

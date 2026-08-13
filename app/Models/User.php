@@ -103,15 +103,15 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-        if ($this->role?->name === 'Admin') {
+        $role = $this->role;
+
+        if ($role?->name === 'Admin') {
             return true;
         }
 
-        $permissions = $this->role?->relationLoaded('permissions')
-            ? $this->role->permissions
-            : $this->role?->permissions()->get();
+        $role?->loadMissing('permissions');
 
-        return (bool) $permissions?->contains('slug', $permission);
+        return (bool) $role?->permissions->contains('slug', $permission);
     }
 
     public function hasAnyPermission(array $permissions): bool

@@ -16,7 +16,7 @@ class RolePermissionSeeder extends Seeder
         foreach (config('permissions.default_roles', []) as $roleName => $slugs) {
             $role = Role::query()->where('name', $roleName)->first();
             $permissionIds = Permission::query()->whereIn('slug', $slugs)->pluck('id');
-            $role?->permissions()->sync($permissionIds);
+            $role?->permissions()->syncWithoutDetaching($permissionIds);
         }
     }
 }

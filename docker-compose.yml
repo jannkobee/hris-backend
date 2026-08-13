@@ -1,0 +1,146 @@
+name: hris
+
+x-backend-environment: &backend-environment
+  APP_NAME: HRIS
+  APP_ENV: local
+  APP_DEBUG: "true"
+  APP_URL: http://localhost:8000
+  APP_KEY: "${DOCKER_APP_KEY:-base64:aHJpcy1sb2NhbC1kb2NrZXIta2V5LTMyLWJ5dGVzISE=}"
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: 3306
+  DB_DATABASE: "${DOCKER_DB_DATABASE:-hris}"
+  DB_USERNAME: "${DOCKER_DB_USERNAME:-hris}"
+  DB_PASSWORD: "${DOCKER_DB_PASSWORD:-hris_secret}"
+  CACHE_DRIVER: redis
+  SESSION_DRIVER: redis
+  QUEUE_CONNECTION: redis
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  BROADCAST_DRIVER: reverb
+  REVERB_APP_ID: hris-app
+  REVERB_APP_KEY: hris-local-key
+  REVERB_APP_SECRET: hris-local-secret
+  REVERB_HOST: reverb
+  REVERB_PORT: 8080
+  REVERB_SCHEME: http
+  REVERB_SERVER_HOST: 0.0.0.0
+  REVERB_SERVER_PORT: 8080
+  REVERB_PUBLIC_HOST: localhost
+  REVERB_PUBLIC_PORT: 8080
+  REVERB_PUBLIC_SCHEME: http
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: 1025
+  MAIL_FROM_ADDRESS: no-reply@hris.local
+  MAIL_FROM_NAME: HRIS
+
+x-backend-service: &backend-service
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: hris-backend:local
+  restart: unless-stopped
+  environment: *backend-environment
+  volumes:
+    - backend-storage:/var/www/html/storage/app
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${DOCKER_DB_DATABASE:-hris}"
+      MYSQL_USER: "${DOCKER_DB_USERNAME:-hris}"
+      MYSQL_PASSWORD: "${DOCKER_DB_PASSWORD:-hris_secret}"
+      MYSQL_ROOT_PASSWORD: "${DOCKER_DB_ROOT_PASSWORD:-root_secret}"
+    ports:
+      - "${DOCKER_DB_PORT_FORWARD:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${DOCKER_REDIS_PORT_FORWARD:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hris-backend:local
+    restart: "no"
+    environment: *backend-environment
+    command: php artisan migrate --seed --force
+    volumes:
+      - backend-storage:/var/www/html/storage/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  backend:
+    <<: *backend-service
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/backend/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  reverb:
+    <<: *backend-service
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+
+  queue:
+    <<: *backend-service
+    command: php artisan queue:work redis --tries=3 --timeout=120
+
+  scheduler:
+    <<: *backend-service
+    command: php artisan schedule:work
+
+  frontend:
+    build:
+      context: ../hris-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000/backend/api/v1
+    image: hris-frontend:local
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
+  backend-storage:

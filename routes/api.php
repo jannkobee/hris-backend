@@ -38,6 +38,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     $routes = [
         'user/user',
         'profile/profile',
+        'dashboard/dashboard',
+        'navigation/navigation',
         'conversation/conversation',
         'role/role',
         'permission/permission',
@@ -60,6 +62,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'audit_log/audit_log',
         'app_setting/app_setting',
         'payroll/payroll',
+        'workplace_hub/workplace_hub',
     ];
 
     foreach ($routes as $route) {

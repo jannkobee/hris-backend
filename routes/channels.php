@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+    return hash_equals((string) $user->id, (string) $id);
 });
 
 Broadcast::channel('conversation.{conversationId}', function ($user, string $conversationId) {
     return Conversation::whereKey($conversationId)
-        ->whereHas('participants', fn($query) => $query->whereKey($user->id))
+        ->whereHas('participants', fn ($query) => $query->whereKey($user->id))
         ->exists();
 });

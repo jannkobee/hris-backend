@@ -26,6 +26,7 @@ class PermissionAndAuditTest extends TestCase
 
         $viewUsers = $this->permission('User Management', 'view-users');
         $role->permissions()->attach($viewUsers);
+        $user->unsetRelation('role');
 
         $this->actingAs($user, 'sanctum')
             ->getJson(route('users.index'))
@@ -38,6 +39,7 @@ class PermissionAndAuditTest extends TestCase
         $role->permissions()->attach(
             $this->permission('Organization Setup', 'manage-departments')
         );
+        $user->unsetRelation('role');
 
         $this->actingAs($user, 'sanctum')
             ->postJson(route('departments.store'), ['name' => 'Operations'])

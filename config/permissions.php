@@ -24,6 +24,12 @@ return [
             'approve-payroll' => ['Approve payroll', 'Approve processed payroll before disbursement.'],
             'mark-payroll-paid' => ['Record payroll payment', 'Mark an approved payroll period as paid.'],
         ],
+        'Workplace Hub' => [
+            'view-workplace-hub' => ['Use Workplace Hub', 'View rooms and meetings where the user is an organizer or attendee.'],
+            'create-meetings' => ['Schedule meetings', 'Schedule meetings, invite coworkers, and collaborate on meeting records.'],
+            'manage-company-meetings' => ['Manage company meetings', 'View and manage every meeting across the company.'],
+            'manage-meeting-rooms' => ['Manage meeting rooms', 'Create, update, deactivate, and remove bookable rooms.'],
+        ],
         'Attendance' => [
             'view-attendances' => ['View company attendance', 'View attendance records for all employees.'],
             'manage-attendances' => ['Manage attendance', 'Create, correct, and remove manual attendance records.'],
@@ -76,12 +82,18 @@ return [
         ],
         'Audit and Settings' => [
             'view-audit-logs' => ['View audit logs', 'Search and inspect the company audit trail.'],
-            'manage-app-settings' => ['Manage app settings', 'Change company-wide application policies.'],
+            'manage-app-settings' => ['Manage all app settings', 'Change every company-wide application policy.'],
+            'manage-organization-settings' => ['Manage organization settings', 'Change the company name, timezone, and regional defaults.'],
+            'manage-attendance-settings' => ['Manage attendance settings', 'Configure attendance photos, location, notes, IP capture, and manual entries.'],
+            'manage-feature-settings' => ['Manage feature settings', 'Enable or configure shared features such as 201 files, leave attachments, messaging, and alerts.'],
+            'manage-payroll-settings' => ['Manage payroll settings', 'Change payroll calculation and statutory contribution policies.'],
         ],
     ],
 
     'default_roles' => [
         'User' => [
+            'view-workplace-hub',
+            'create-meetings',
             'view-leave-requests',
             'create-leave-requests',
             'view-leave-conversion-requests',
