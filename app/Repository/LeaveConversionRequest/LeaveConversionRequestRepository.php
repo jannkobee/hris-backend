@@ -3,6 +3,7 @@
 namespace App\Repository\LeaveConversionRequest;
 
 use App\Models\LeaveConversionRequest;
+use App\Models\User;
 use App\Repository\Base\BaseRepository;
 use App\Repository\LeaveCredit\LeaveCreditRepositoryInterface;
 use App\Services\AuditLog\AuditLogServiceInterface;
@@ -192,13 +193,16 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
 
     private function ensureCanApprove(): void
     {
-        if (! Auth::user()?->hasPermission('approve-leave-conversion-requests')) {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (! $user?->hasPermission('approve-leave-conversion-requests')) {
             throw new AuthorizationException('You do not have permission to approve leave conversions.');
         }
     }
 
     private function canManageAll(): bool
     {
+        /** @var User|null $user */
         $user = Auth::user();
 
         return (bool) ($user?->hasPermission('manage-leave-conversion-requests')
@@ -207,7 +211,9 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
 
     private function currentEmployeeId(): string
     {
-        $employeeId = Auth::user()?->employee?->id;
+        /** @var User|null $user */
+        $user = Auth::user();
+        $employeeId = $user?->employee?->id;
 
         if (! $employeeId) {
             throw new AuthorizationException('This account is not linked to an employee record.');

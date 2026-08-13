@@ -38,6 +38,7 @@ class AppSettingController extends Controller
         foreach ($payload['values'] as $key => $value) {
             if (! array_key_exists($key, $definitions)) {
                 $errors["values.{$key}"][] = 'This app setting is not supported.';
+
                 continue;
             }
 
@@ -55,6 +56,23 @@ class AppSettingController extends Controller
         if (($effectiveValues['attendance.location_required'] ?? false)
             && ! ($effectiveValues['attendance.location_capture_enabled'] ?? false)) {
             $errors['values.attendance.location_required'][] = 'Location cannot be required while location capture is disabled.';
+        }
+
+        if (($effectiveValues['payroll.sss_max_msc'] ?? 0) < ($effectiveValues['payroll.sss_min_msc'] ?? 0)) {
+            $errors['values.payroll.sss_max_msc'][] = 'The maximum SSS MSC must be at least the minimum MSC.';
+        }
+
+        if (($effectiveValues['payroll.philhealth_salary_ceiling'] ?? 0) < ($effectiveValues['payroll.philhealth_salary_floor'] ?? 0)) {
+            $errors['values.payroll.philhealth_salary_ceiling'][] = 'The PhilHealth ceiling must be at least the income floor.';
+        }
+
+        $weekdays = $effectiveValues['payroll.work_weekdays'] ?? [];
+        if (! is_array($weekdays) || collect($weekdays)->contains(fn ($day) => ! is_numeric($day) || (int) $day < 1 || (int) $day > 7)) {
+            $errors['values.payroll.work_weekdays'][] = 'Scheduled weekdays must contain values from 1 (Monday) through 7 (Sunday).';
+        }
+
+        if (($effectiveValues['payroll.scheduled_end_time'] ?? '00:00') <= ($effectiveValues['payroll.scheduled_start_time'] ?? '00:00')) {
+            $errors['values.payroll.scheduled_end_time'][] = 'The scheduled end time must be after the start time.';
         }
 
         if ($errors !== []) {

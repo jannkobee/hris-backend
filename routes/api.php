@@ -37,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     $routes = [
         'user/user',
+        'profile/profile',
         'conversation/conversation',
         'role/role',
         'permission/permission',
@@ -44,6 +45,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'department/department',
         'position/position',
         'employee/employee',
+        'employee_document/employee_document',
         'employment_status/employment_status',
         'job_grade/job_grade',
         'attendance/attendance',
@@ -57,6 +59,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'overtime/overtime',
         'audit_log/audit_log',
         'app_setting/app_setting',
+        'payroll/payroll',
     ];
 
     foreach ($routes as $route) {

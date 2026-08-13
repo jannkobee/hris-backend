@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Pivots\ConversationParticipant;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +34,8 @@ class Conversation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-            ->withPivot('last_read_at')
+            ->using(ConversationParticipant::class)
+            ->withPivot('id', 'last_read_at')
             ->withTimestamps();
     }
 

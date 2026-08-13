@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TimeOfDay;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -42,8 +43,10 @@ class LeaveRequest extends Model
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'date:Y-m-d',
+        'start_time' => TimeOfDay::class,
+        'end_date' => 'date:Y-m-d',
+        'end_time' => TimeOfDay::class,
         'approved_at' => 'datetime',
     ];
 

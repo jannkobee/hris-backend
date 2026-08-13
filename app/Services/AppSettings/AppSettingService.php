@@ -3,6 +3,7 @@
 namespace App\Services\AppSettings;
 
 use App\Models\AppSetting;
+use DateTimeZone;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 
@@ -49,7 +50,15 @@ class AppSettingService
     public function definitions(): array
     {
         return collect(config('app_settings', []))
-            ->map(fn (array $definition) => collect($definition)->except('rules')->all())
+            ->map(function (array $definition, string $key): array {
+                $publicDefinition = collect($definition)->except('rules')->all();
+
+                if ($key === 'organization.timezone') {
+                    $publicDefinition['options'] = DateTimeZone::listIdentifiers();
+                }
+
+                return $publicDefinition;
+            })
             ->all();
     }
 

@@ -22,6 +22,8 @@ class Employee extends Model
         'department_id',
         'position_id',
         'job_grade_id',
+        'basic_monthly_salary',
+        'pay_schedule',
         'meta',
     ];
 
@@ -34,7 +36,8 @@ class Employee extends Model
     ];
 
     protected $casts = [
-        'hire_date' => 'date',
+        'hire_date' => 'date:Y-m-d',
+        'basic_monthly_salary' => 'decimal:2',
         'meta' => 'array',
     ];
 
@@ -71,6 +74,16 @@ class Employee extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(EmployeeContact::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(EmployeeDocument::class);
+    }
+
+    public function payrollItems(): HasMany
+    {
+        return $this->hasMany(PayrollItem::class);
     }
 
     public function leaveRequests(): HasMany

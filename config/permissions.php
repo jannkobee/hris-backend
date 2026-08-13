@@ -15,6 +15,14 @@ return [
             'view-employees' => ['View employees', 'Open the employee directory and employment details.'],
             'manage-employees' => ['Manage employees', 'Create, update, import, and remove employee records.'],
             'manage-employee-number-settings' => ['Manage employee numbering', 'Configure and reformat employee number generation.'],
+            'view-employee-documents' => ['View employee 201 files', 'View and download personnel documents for all employees.'],
+            'manage-employee-documents' => ['Manage employee 201 files', 'Upload, update, and remove personnel documents for employees.'],
+        ],
+        'Payroll' => [
+            'view-payroll' => ['View company payroll', 'View payroll periods and payslips for all employees.'],
+            'manage-payroll' => ['Manage payroll', 'Create payroll periods and process employee pay.'],
+            'approve-payroll' => ['Approve payroll', 'Approve processed payroll before disbursement.'],
+            'mark-payroll-paid' => ['Record payroll payment', 'Mark an approved payroll period as paid.'],
         ],
         'Attendance' => [
             'view-attendances' => ['View company attendance', 'View attendance records for all employees.'],

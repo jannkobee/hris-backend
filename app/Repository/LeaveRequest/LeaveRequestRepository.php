@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -143,11 +144,14 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
             throw ValidationException::withMessages(['attachment' => 'Attachment not found.']);
         }
 
-        if (! Storage::disk($file->disk)->exists($file->path)) {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::disk($file->disk);
+
+        if (! $storage->exists($file->path)) {
             throw ValidationException::withMessages(['attachment' => 'Attachment file is unavailable.']);
         }
 
-        return Storage::disk($file->disk)->download($file->path, $file->original_name);
+        return $storage->download($file->path, $file->original_name);
     }
 
     private function transition(string $id, string $status, string $remarks = null, bool $releaseCredits = false): JsonResponse
@@ -245,13 +249,16 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
 
     private function ensureCanApprove(): void
     {
-        if (! Auth::user()?->hasPermission('approve-leave-requests')) {
+        $user = Auth::user();
+
+        if (! $user instanceof User || ! $user->hasPermission('approve-leave-requests')) {
             throw new AuthorizationException('You do not have permission to approve or reject leave requests.');
         }
     }
 
     private function canManageAll(): bool
     {
+        /** @var User|null $user */
         $user = Auth::user();
 
         return (bool) ($user?->hasPermission('manage-leave-requests')
@@ -260,7 +267,9 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
 
     private function currentEmployeeId(): string
     {
-        $employeeId = Auth::user()?->employee?->id;
+        /** @var User|null $user */
+        $user = Auth::user();
+        $employeeId = $user?->employee?->id;
         if (! $employeeId) {
             throw new AuthorizationException('This account is not linked to an employee record.');
         }

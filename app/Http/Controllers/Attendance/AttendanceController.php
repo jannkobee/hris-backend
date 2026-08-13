@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Attendance;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AttendanceRequest as ModelRequest;
 use App\Models\Attendance;
+use App\Models\User;
 use App\Repository\Attendance\AttendanceRepositoryInterface;
 use App\Services\AppSettings\AppSettingService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
@@ -95,8 +97,10 @@ class AttendanceController extends Controller
             abort(404);
         }
 
-        $isOwner = $attendance->employee?->user_id === $request->user()?->id;
-        $canViewAll = $request->user()?->hasPermission('view-attendances');
+        $user = $request->user();
+        $isOwner = $attendance->employee?->user_id === $user?->id;
+        $canViewAll = $user instanceof User
+            && $user->hasPermission('view-attendances');
 
         if (! $isOwner && ! $canViewAll) {
             throw new AuthorizationException('You cannot view this attendance photo.');
@@ -106,11 +110,17 @@ class AttendanceController extends Controller
         $disk = $attendance->getAttribute("{$prefix}_photo_disk");
         $path = $attendance->getAttribute("{$prefix}_photo_path");
 
-        if (! $disk || ! $path || ! Storage::disk($disk)->exists($path)) {
+        if (! $disk || ! $path) {
             abort(404, 'Attendance photo not found.');
         }
 
-        return Storage::disk($disk)->download(
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::disk($disk);
+        if (! $storage->exists($path)) {
+            abort(404, 'Attendance photo not found.');
+        }
+
+        return $storage->download(
             $path,
             $attendance->getAttribute("{$prefix}_photo_name") ?: basename($path)
         );

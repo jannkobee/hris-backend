@@ -3,6 +3,7 @@
 namespace App\Repository\Overtime;
 
 use App\Models\Overtime;
+use App\Models\User;
 use App\Repository\Base\BaseRepository;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Utils\ResponseServiceInterface;
@@ -89,7 +90,9 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
      */
     protected function setStatus(string $id, string $status, ?string $remarks): JsonResponse
     {
-        if (! Auth::user()?->hasPermission('approve-overtimes')) {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (! $user?->hasPermission('approve-overtimes')) {
             throw new AuthorizationException('You do not have permission to approve overtime requests.');
         }
 
@@ -128,6 +131,7 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
 
     private function canManageAll(): bool
     {
+        /** @var User|null $user */
         $user = Auth::user();
 
         return (bool) ($user?->hasPermission('manage-overtimes')
@@ -136,7 +140,9 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
 
     private function currentEmployeeId(): string
     {
-        $employeeId = Auth::user()?->employee?->id;
+        /** @var User|null $user */
+        $user = Auth::user();
+        $employeeId = $user?->employee?->id;
 
         if (! $employeeId) {
             throw new AuthorizationException('This account is not linked to an employee record.');

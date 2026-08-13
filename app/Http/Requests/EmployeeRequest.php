@@ -25,13 +25,15 @@ class EmployeeRequest extends FormRequest
 
         return [
             'user_id' => 'required|exists:users,id',
-            'employee_no' => 'required|string|unique:employees,employee_no,' . $id . ',id',
+            'employee_no' => 'required|string|unique:employees,employee_no,'.$id.',id',
             'hire_date' => 'nullable|date|date_format:Y-m-d',
 
             'employment_status_id' => 'nullable|exists:employment_statuses,id',
             'department_id' => 'nullable|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
             'job_grade_id' => 'nullable|exists:job_grades,id',
+            'basic_monthly_salary' => 'nullable|numeric|min:0|max:9999999999.99',
+            'pay_schedule' => 'nullable|in:monthly,semi_monthly',
 
             'meta' => 'nullable|array',
 

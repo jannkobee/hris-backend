@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TimeOfDay;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Overtime extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, HasFilterScope;
+    use HasFactory, HasFilterScope, HasUuids, SoftDeletes;
     // TODO: also add whatever trait your other models use to provide the
     // `filter()` scope — BaseRepository::getList() calls
     // $this->model->filter() and this project doesn't seem to define that
@@ -19,6 +20,7 @@ class Overtime extends Model
 
     // Non-incrementing string (uuid) primary key, matching the rest of the app.
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     // Used by ResponseService for messages.*_success translations
@@ -39,7 +41,9 @@ class Overtime extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
+        'time_start' => TimeOfDay::class,
+        'time_end' => TimeOfDay::class,
         'hours' => 'decimal:2',
         'approved_at' => 'datetime',
     ];

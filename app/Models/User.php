@@ -18,7 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids, HasFilterScope, Importable;
+    use HasApiTokens, HasFactory, HasFilterScope, HasUuids, Importable, Notifiable;
 
     public $model_name = 'User';
 
@@ -31,6 +31,11 @@ class User extends Authenticatable
         'gender',
         'birthday',
         'password',
+        'profile_photo_disk',
+        'profile_photo_path',
+        'profile_photo_name',
+        'profile_photo_mime',
+        'profile_photo_size',
     ];
 
     protected array $filterable = [
@@ -45,20 +50,24 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'profile_photo_disk',
+        'profile_photo_path',
     ];
 
     protected $casts = [
+        'birthday' => 'date:Y-m-d',
         'is_admin' => 'boolean',
         'password' => 'hashed',
     ];
 
-    protected $appends = ['initials', 'full_name'];
+    protected $appends = ['initials', 'full_name', 'profile_photo_url'];
 
     public function getInitialsAttribute(): string
     {
         $firstInitial = $this->first_name[0] ?? '';
         $lastInitial = $this->last_name[0] ?? '';
-        return strtoupper($firstInitial . $lastInitial);
+
+        return strtoupper($firstInitial.$lastInitial);
     }
 
     public function getFullNameAttribute(): string
@@ -66,6 +75,15 @@ class User extends Authenticatable
         return collect([$this->first_name, $this->middle_name, $this->last_name])
             ->filter()
             ->join(' ');
+    }
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if (! $this->profile_photo_path) {
+            return null;
+        }
+
+        return "/users/{$this->id}/profile-photo?v=".($this->updated_at?->timestamp ?? time());
     }
 
     public function role(): BelongsTo
@@ -140,13 +158,13 @@ class User extends Authenticatable
                 'label' => 'Role',
                 'attribute' => 'role_id',
                 'rules' => 'required|exists:roles,name',
-                'resolve' => fn($value) => Role::where('name', $value)->value('id'),
+                'resolve' => fn ($value) => Role::where('name', $value)->value('id'),
             ],
             'password' => [
                 'label' => 'Password (optional)',
                 'attribute' => 'password',
                 'rules' => 'nullable|string|min:8',
-                'default' => fn() => Str::random(12),
+                'default' => fn () => Str::random(12),
             ],
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TimeOfDay;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,7 @@ class ScheduledTask extends Model
     protected $casts = [
         'run_days' => 'array',
         'run_months' => 'array',
+        'run_time' => TimeOfDay::class,
         'is_active' => 'boolean',
         'last_run_at' => 'datetime',
         'next_run_at' => 'datetime',

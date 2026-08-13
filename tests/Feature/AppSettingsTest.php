@@ -42,4 +42,20 @@ class AppSettingsTest extends TestCase
             ['values' => ['attendance.location_capture_enabled' => false]]
         )->assertForbidden();
     }
+
+    public function test_timezone_options_come_from_the_php_timezone_database(): void
+    {
+        $role = Role::create(['name' => 'User']);
+        $user = User::factory()->create(['role_id' => $role->id]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson(route('app-settings.index'))
+            ->assertOk();
+
+        $options = $response->json('data.definitions')['organization.timezone']['options'];
+
+        $this->assertContains('UTC', $options);
+        $this->assertContains('Asia/Manila', $options);
+        $this->assertSame(\DateTimeZone::listIdentifiers(), $options);
+    }
 }
