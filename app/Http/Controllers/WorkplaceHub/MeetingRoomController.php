@@ -25,29 +25,49 @@ class MeetingRoomController extends Controller
             'starts_at' => ['nullable', 'date', 'required_with:ends_at'],
             'ends_at' => ['nullable', 'date', 'after:starts_at', 'required_with:starts_at'],
             'include_inactive' => ['nullable', 'boolean'],
+            'ignore_meeting_id' => ['nullable', 'uuid', 'exists:workplace_meetings,id'],
+            'search' => ['nullable', 'string', 'max:120'],
         ]);
 
         $query = MeetingRoom::query()
             ->withCount(['meetings as upcoming_meetings_count' => fn ($query) => $query
                 ->whereIn('status', ['scheduled', 'in_progress'])
                 ->where('ends_at', '>=', now())])
+            ->withMin(['meetings as next_meeting_starts_at' => fn ($query) => $query
+                ->whereIn('status', ['scheduled', 'in_progress'])
+                ->where('starts_at', '>=', now())], 'starts_at')
             ->orderBy('name');
 
         if (! $request->boolean('include_inactive')) {
             $query->where('status', 'active');
         }
+        if ($request->filled('search')) {
+            $search = '%'.$request->string('search').'%';
+            $query->where(fn ($query) => $query
+                ->where('name', 'like', $search)
+                ->orWhere('code', 'like', $search)
+                ->orWhere('location', 'like', $search)
+                ->orWhere('floor', 'like', $search));
+        }
 
         $rooms = $query->get();
-        if ($request->filled(['starts_at', 'ends_at'])) {
-            $busyRoomIds = WorkplaceMeeting::query()
-                ->whereIn('status', ['scheduled', 'in_progress'])
-                ->whereNotNull('room_id')
-                ->where('starts_at', '<', $request->date('ends_at'))
-                ->where('ends_at', '>', $request->date('starts_at'))
-                ->pluck('room_id')
-                ->unique();
-            $rooms->each(fn (MeetingRoom $room) => $room->setAttribute('is_available', ! $busyRoomIds->contains($room->id)));
-        }
+        $startsAt = $request->filled(['starts_at', 'ends_at']) ? $request->date('starts_at') : now();
+        $endsAt = $request->filled(['starts_at', 'ends_at']) ? $request->date('ends_at') : now()->addSecond();
+        $busyRooms = WorkplaceMeeting::query()
+            ->whereIn('status', ['scheduled', 'in_progress'])
+            ->whereNotNull('room_id')
+            ->where('starts_at', '<', $endsAt)
+            ->where('ends_at', '>', $startsAt)
+            ->when($request->filled('ignore_meeting_id'), fn ($query) => $query->whereKeyNot($request->string('ignore_meeting_id')))
+            ->orderByDesc('ends_at')
+            ->get(['room_id', 'ends_at'])
+            ->keyBy('room_id');
+
+        $rooms->each(function (MeetingRoom $room) use ($busyRooms): void {
+            $busyMeeting = $busyRooms->get($room->id);
+            $room->setAttribute('is_available', $room->status === 'active' && ! $busyMeeting);
+            $room->setAttribute('busy_until', $busyMeeting?->ends_at);
+        });
 
         return response()->json(['data' => $rooms]);
     }

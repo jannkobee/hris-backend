@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
@@ -116,6 +117,26 @@ class DashboardController extends Controller
                 'ends_at' => $announcement->published_at->toDateString().'T23:59:59',
                 'all_day' => true,
                 'color' => '#e49a44',
+            ]);
+        }
+
+        $holidays = Holiday::query()
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->orderBy('date')
+            ->get();
+        foreach ($holidays as $holiday) {
+            $isWorkingDay = $holiday->type === 'special_working_day';
+            $events->push([
+                'id' => 'holiday-'.$holiday->id,
+                'record_id' => $holiday->id,
+                'type' => 'holiday',
+                'title' => $holiday->name,
+                'subtitle' => $holiday->description ?: str($holiday->type)->replace('_', ' ')->title(),
+                'starts_at' => $holiday->date->toDateString().'T00:00:00',
+                'ends_at' => $holiday->date->toDateString().'T23:59:59',
+                'all_day' => true,
+                'color' => $isWorkingDay ? '#2f9e72' : '#e05d6f',
+                'holiday_type' => $holiday->type,
             ]);
         }
 

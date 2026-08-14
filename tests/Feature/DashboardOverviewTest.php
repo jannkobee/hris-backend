@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Permission;
@@ -60,6 +61,11 @@ class DashboardOverviewTest extends TestCase
             'is_active' => true,
             'created_by' => $otherUser->id,
         ]);
+        Holiday::create([
+            'name' => 'Ninoy Aquino Day',
+            'date' => '2026-08-21',
+            'type' => 'special_non_working_day',
+        ]);
 
         $response = $this->actingAs($user, 'sanctum')->getJson(route('dashboard.overview', [
             'from' => '2026-08-01',
@@ -70,6 +76,8 @@ class DashboardOverviewTest extends TestCase
         $this->assertSame(1, $events->where('type', 'meeting')->count());
         $this->assertSame(2, $events->where('type', 'leave')->count());
         $this->assertSame(1, $events->where('type', 'announcement')->count());
+        $this->assertSame(1, $events->where('type', 'holiday')->count());
+        $this->assertTrue($events->contains('title', 'Ninoy Aquino Day'));
         $this->assertTrue($events->contains('title', 'Team planning'));
         $this->assertFalse($events->contains('title', 'Private meeting'));
         $this->assertNotEmpty($response->json('data.quote.text'));

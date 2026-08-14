@@ -27,17 +27,12 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
 
     public function create(array $attributes): JsonResponse
     {
-        $date = $attributes['date'] ?? Carbon::today()->toDateString();
+        return parent::create($this->normalizeManualTimes($attributes));
+    }
 
-        $attributes['time_in'] = isset($attributes['time_in'])
-            ? Carbon::parse($date . ' ' . $attributes['time_in'])->toDateTimeString()
-            : null;
-
-        $attributes['time_out'] = isset($attributes['time_out'])
-            ? Carbon::parse($date . ' ' . $attributes['time_out'])->toDateTimeString()
-            : null;
-
-        return parent::create($attributes);
+    public function update(array $attributes, string|int $id): JsonResponse
+    {
+        return parent::update($this->normalizeManualTimes($attributes), $id);
     }
 
     public function timeIn(string $employeeId, array $data): JsonResponse
@@ -58,7 +53,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
             $attendance = $this->model->create(array_merge([
                 'employee_id' => $employeeId,
                 'date' => $now->toDateString(),
-                'time_in' => $now,
+                'time_in' => $now->copy()->utc(),
                 'time_in_notes' => $this->settings->get('attendance.notes_enabled', true) ? ($data['notes'] ?? null) : null,
                 'time_in_latitude' => $data['latitude'] ?? null,
                 'time_in_longitude' => $data['longitude'] ?? null,
@@ -83,7 +78,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
             ->whereDate('date', $now->toDateString())
             ->first();
 
-        if (!$attendance) {
+        if (! $attendance) {
             return $this->responseService->rejectResponse('No time in record found for today.', null, 400);
         }
 
@@ -95,7 +90,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
 
         try {
             $attendance->update(array_merge([
-                'time_out' => $now,
+                'time_out' => $now->copy()->utc(),
                 'time_out_notes' => $this->settings->get('attendance.notes_enabled', true) ? ($data['notes'] ?? null) : null,
                 'time_out_latitude' => $data['latitude'] ?? null,
                 'time_out_longitude' => $data['longitude'] ?? null,
@@ -139,7 +134,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
 
         $query = $this->model->whereDate('date', $date);
 
-        if (!empty($filters['relations'])) {
+        if (! empty($filters['relations'])) {
             $query->with(explode(',', $filters['relations']));
         }
 
@@ -151,6 +146,22 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
     private function companyNow(): Carbon
     {
         return Carbon::now($this->settings->get('organization.timezone', config('app.timezone')));
+    }
+
+    private function normalizeManualTimes(array $attributes): array
+    {
+        $timezone = (string) $this->settings->get('organization.timezone', config('app.timezone'));
+        $date = $attributes['date'] ?? Carbon::now($timezone)->toDateString();
+
+        foreach (['time_in', 'time_out'] as $field) {
+            $attributes[$field] = filled($attributes[$field] ?? null)
+                ? Carbon::createFromFormat('Y-m-d H:i', $date.' '.$attributes[$field], $timezone)
+                    ->utc()
+                    ->toDateTimeString()
+                : null;
+        }
+
+        return $attributes;
     }
 
     private function storeCapturePhoto(?UploadedFile $file, string $employeeId, string $action, Carbon $now): array

@@ -116,6 +116,49 @@ class WorkplaceHubTest extends TestCase
         $this->assertDatabaseMissing('workplace_meetings', ['series_id' => null]);
     }
 
+    public function test_room_availability_and_capacity_are_enforced(): void
+    {
+        $admin = $this->userWithRole('Admin');
+        $attendee = $this->workplaceUser('Capacity attendee');
+
+        $roomId = $this->actingAs($admin, 'sanctum')->postJson(route('workplace.rooms.store'), [
+            'name' => 'Focus Room',
+            'code' => 'FR-01',
+            'capacity' => 1,
+            'status' => 'active',
+        ])->assertCreated()->json('data.id');
+
+        $meetingId = $this->actingAs($admin, 'sanctum')->postJson(route('workplace.meetings.store'), [
+            'title' => 'Private review',
+            'type' => 'review',
+            'room_id' => $roomId,
+            'starts_at' => '2026-08-14T01:00:00.000Z',
+            'ends_at' => '2026-08-14T01:30:00.000Z',
+            'recurrence' => 'none',
+        ])->assertCreated()->json('data.id');
+
+        $this->actingAs($admin, 'sanctum')->getJson(route('workplace.rooms.index', [
+            'starts_at' => '2026-08-14T01:15:00.000Z',
+            'ends_at' => '2026-08-14T01:45:00.000Z',
+        ]))->assertOk()->assertJsonPath('data.0.is_available', false);
+
+        $this->actingAs($admin, 'sanctum')->getJson(route('workplace.rooms.index', [
+            'starts_at' => '2026-08-14T01:15:00.000Z',
+            'ends_at' => '2026-08-14T01:45:00.000Z',
+            'ignore_meeting_id' => $meetingId,
+        ]))->assertOk()->assertJsonPath('data.0.is_available', true);
+
+        $this->actingAs($admin, 'sanctum')->postJson(route('workplace.meetings.store'), [
+            'title' => 'Over-capacity meeting',
+            'type' => 'team_meeting',
+            'room_id' => $roomId,
+            'starts_at' => '2026-08-14T02:00:00.000Z',
+            'ends_at' => '2026-08-14T02:30:00.000Z',
+            'attendee_ids' => [$attendee->id],
+            'recurrence' => 'none',
+        ])->assertUnprocessable()->assertJsonValidationErrors('room_id');
+    }
+
     private function workplaceUser(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName]);

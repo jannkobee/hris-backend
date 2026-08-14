@@ -102,6 +102,7 @@ class MeetingController extends Controller
         $seriesId = $occurrences->count() > 1 ? (string) Str::uuid() : null;
         $meetings = DB::transaction(function () use ($data, $occurrences, $seriesId, $user): Collection {
             $this->lockActiveRoom($data['room_id'] ?? null);
+            $this->ensureRoomCapacity($data['room_id'] ?? null, $data, $user);
             foreach ($occurrences as [$startsAt, $endsAt]) {
                 $this->ensureRoomAvailable($data['room_id'] ?? null, $startsAt, $endsAt);
             }
@@ -157,6 +158,7 @@ class MeetingController extends Controller
 
         DB::transaction(function () use ($meeting, $data, $user, $startsAt, $endsAt): void {
             $this->lockActiveRoom($data['room_id'] ?? null);
+            $this->ensureRoomCapacity($data['room_id'] ?? null, $data, $user);
             $this->ensureRoomAvailable($data['room_id'] ?? null, $startsAt, $endsAt, $meeting);
             $meeting->update([
                 'room_id' => $data['room_id'] ?? null,
@@ -321,6 +323,21 @@ class MeetingController extends Controller
 
         if (! MeetingRoom::query()->whereKey($roomId)->where('status', 'active')->lockForUpdate()->exists()) {
             throw ValidationException::withMessages(['room_id' => 'The selected meeting room is not active.']);
+        }
+    }
+
+    private function ensureRoomCapacity(?string $roomId, array $data, User $organizer): void
+    {
+        if (! $roomId) {
+            return;
+        }
+
+        $requiredCapacity = count($this->attendeeIds($data, $organizer)) + 1;
+        $room = MeetingRoom::query()->find($roomId);
+        if ($room && $room->capacity < $requiredCapacity) {
+            throw ValidationException::withMessages([
+                'room_id' => "{$room->name} fits {$room->capacity} people, but this meeting has {$requiredCapacity} participants.",
+            ]);
         }
     }
 

@@ -18,21 +18,20 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
         parent::__construct($model, $responseService, $auditLogService);
     }
 
-    // public function getList(): JsonResponse
-    // {
-    //     $withoutEmployee = request()->boolean('without_employee', false);
-
-    //     if ($withoutEmployee) {
-    //         $query = $this->model->whereDoesntHave('employee');
-
-    //         return $this->responseService->successResponse(
-    //             $this->model->model_name,
-    //             $query->get()
-    //         );
-    //     } else {
-    //         return parent::getList();
-    //     }
-    // }
+    protected function applyVisibilityScope(Builder $query): Builder
+    {
+        return $query
+            ->when(
+                request()->boolean('without_employee'),
+                fn (Builder $query) => $query->whereDoesntHave('employee')
+            )
+            ->when(
+                request()->boolean('require_email'),
+                fn (Builder $query) => $query
+                    ->whereNotNull('email')
+                    ->where('email', '!=', '')
+            );
+    }
 
     public function getUserByEmail(string $email, $relation = null): User
     {
@@ -41,7 +40,7 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
                 $query->with($relation);
             })->first();
 
-        if (!$user) {
+        if (! $user) {
             throw ValidationException::withMessages([
                 'user_not_found' => 'User not found',
             ]);
