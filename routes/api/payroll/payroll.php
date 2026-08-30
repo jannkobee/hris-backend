@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\Payroll\StatutoryRuleController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('plan:payroll')->group(function (): void {
@@ -12,6 +13,7 @@ Route::middleware('plan:payroll')->group(function (): void {
         Route::post('/{period}/process', 'process')->name('process');
         Route::post('/{period}/acknowledge-exceptions', 'acknowledgeAllExceptions')->name('acknowledge-exceptions');
         Route::post('/{period}/approve', 'approve')->name('approve');
+        Route::post('/{period}/lock', 'lock')->name('lock');
         Route::post('/{period}/mark-paid', 'markPaid')->name('mark-paid');
         Route::get('/{period}/export/csv', 'exportCsv')->name('export.csv');
     });
@@ -20,4 +22,6 @@ Route::middleware('plan:payroll')->group(function (): void {
         Route::put('payroll-items/{item}', 'updateItem')->name('payroll-items.update');
         Route::post('payroll-items/{item}/acknowledge-exceptions', 'acknowledgeExceptions')->name('payroll-items.acknowledge-exceptions');
     });
+
+    Route::apiResource('statutory-rules', StatutoryRuleController::class)->except('show');
 });

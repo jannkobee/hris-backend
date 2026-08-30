@@ -9,7 +9,9 @@ use App\Services\Utils\ResponseServiceInterface;
 class RolePermissionRepository implements RolePermissionRepositoryInterface
 {
     protected Role $model;
+
     protected ResponseServiceInterface $responseService;
+
     protected AuditLogServiceInterface $auditLogService;
 
     public function __construct(Role $model, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)

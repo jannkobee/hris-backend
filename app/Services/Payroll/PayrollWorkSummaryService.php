@@ -94,6 +94,31 @@ class PayrollWorkSummaryService
             }
 
             $summary['days_worked'] += max(0, 1 - $paidLeave - $unpaidLeave);
+
+            // Roster-aware exceptions are calculated at attendance capture time.
+            // Prefer that immutable daily result over the legacy company-wide
+            // schedule fallback, which cannot represent individual shifts.
+            if ($attendance->shift_assignment_id || ! empty($attendance->exception_codes)) {
+                $summary['late_minutes'] += $attendance->late_minutes;
+                $summary['undertime_minutes'] += $attendance->undertime_minutes;
+
+                foreach ($attendance->exception_codes ?? [] as $code) {
+                    $summary['exceptions'][] = [
+                        'code' => $code,
+                        'date' => $dateKey,
+                        'message' => match ($code) {
+                            'late' => "Late arrival: {$attendance->late_minutes} minute(s).",
+                            'undertime' => "Undertime: {$attendance->undertime_minutes} minute(s).",
+                            'missing_clock_out' => 'Attendance record has no time out.',
+                            'unscheduled_attendance' => 'Attendance has no assigned shift.',
+                            default => 'Attendance requires review.',
+                        },
+                    ];
+                }
+
+                continue;
+            }
+
             if (! $attendance->time_in) {
                 $summary['exceptions'][] = [
                     'code' => 'missing_time_in',

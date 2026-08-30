@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Traits\HasFilterScope;
 use App\Traits\BelongsToOrganization;
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +25,7 @@ class PayrollPeriod extends Model
         'processed_at',
         'approved_at',
         'paid_at',
+        'locked_at', 'locked_by',
         'total_gross',
         'total_deductions',
         'total_net',
@@ -39,6 +40,7 @@ class PayrollPeriod extends Model
         'processed_at' => 'datetime',
         'approved_at' => 'datetime',
         'paid_at' => 'datetime',
+        'locked_at' => 'datetime',
         'total_gross' => 'decimal:2',
         'total_deductions' => 'decimal:2',
         'total_net' => 'decimal:2',
@@ -57,5 +59,15 @@ class PayrollPeriod extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function locker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'locked_by');
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->locked_at !== null;
     }
 }

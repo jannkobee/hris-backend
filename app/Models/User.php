@@ -52,6 +52,8 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
         'remember_token',
         'profile_photo_disk',
         'profile_photo_path',
@@ -61,6 +63,9 @@ class User extends Authenticatable
         'birthday' => 'date:Y-m-d',
         'is_admin' => 'boolean',
         'password' => 'hashed',
+        'two_factor_secret' => 'encrypted',
+        'two_factor_recovery_codes' => 'encrypted:array',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     protected $appends = ['initials', 'full_name', 'profile_photo_url'];

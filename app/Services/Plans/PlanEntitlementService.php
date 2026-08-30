@@ -8,7 +8,7 @@ class PlanEntitlementService
 {
     public function allows(?Organization $organization, string $feature): bool
     {
-        if (! $organization || ! array_key_exists($feature, config('plans.features', []))) {
+        if (! $organization || ! $organization->subscriptionAllowsAccess() || ! array_key_exists($feature, config('plans.features', []))) {
             return false;
         }
 
@@ -37,7 +37,18 @@ class PlanEntitlementService
                     $feature => $featureDefinitions[$feature],
                 ])
                 ->all(),
+            'limits' => $this->limits($organization),
         ];
+    }
+
+    public function employeeLimit(Organization $organization): ?int
+    {
+        return $organization->employee_limit ?? $this->limits($organization)['employees'] ?? null;
+    }
+
+    private function limits(Organization $organization): array
+    {
+        return config('plans.plans.'.$this->normalizedPlanCode($organization->plan_code).'.limits', []);
     }
 
     public function planExists(string $planCode): bool

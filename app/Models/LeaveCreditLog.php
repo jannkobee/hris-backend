@@ -20,6 +20,7 @@ class LeaveCreditLog extends Model
         'year',
         'month',
         'credited_amount',
+        'accrual_type',
     ];
 
     protected $casts = [

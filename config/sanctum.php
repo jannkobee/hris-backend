@@ -46,7 +46,7 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => env('AUTH_TOKEN_LIFETIME_MINUTES', 480),
 
     /*
     |--------------------------------------------------------------------------

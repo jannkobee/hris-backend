@@ -5,7 +5,9 @@ namespace App\Repository\Overtime;
 use App\Models\Overtime;
 use App\Models\User;
 use App\Repository\Base\BaseRepository;
+use App\Services\Approvals\DelegatedApproverResolver;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use App\Services\Overtime\OvertimePolicyEvaluator;
 use App\Services\Utils\ResponseServiceInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,12 +17,20 @@ use Illuminate\Validation\ValidationException;
 
 class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInterface
 {
+    private DelegatedApproverResolver $delegates;
+
+    private OvertimePolicyEvaluator $policyEvaluator;
+
     public function __construct(
         Overtime $model,
         ResponseServiceInterface $responseService,
-        AuditLogServiceInterface $auditLogService
+        AuditLogServiceInterface $auditLogService,
+        DelegatedApproverResolver $delegates,
+        OvertimePolicyEvaluator $policyEvaluator,
     ) {
         parent::__construct($model, $responseService, $auditLogService);
+        $this->delegates = $delegates;
+        $this->policyEvaluator = $policyEvaluator;
     }
 
     protected function applyVisibilityScope(Builder $query): Builder
@@ -34,6 +44,7 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
     {
         $this->ensureCanActForEmployee($attributes['employee_id']);
         $attributes['status'] = 'pending';
+        $attributes = [...$attributes, ...$this->policyEvaluator->evaluate($attributes['date'], (float) $attributes['hours'])];
 
         return parent::create($attributes);
     }
@@ -57,6 +68,10 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
             ]);
         }
 
+        $date = $attributes['date'] ?? $overtime->date->toDateString();
+        $hours = $attributes['hours'] ?? $overtime->hours;
+        $attributes = [...$attributes, ...$this->policyEvaluator->evaluate($date, (float) $hours)];
+
         return parent::update($attributes, $id);
     }
 
@@ -74,12 +89,12 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
         return parent::delete($id);
     }
 
-    public function approve(string $id, ?string $remarks = null): JsonResponse
+    public function approve(string $id, string $remarks = null): JsonResponse
     {
         return $this->setStatus($id, 'approved', $remarks);
     }
 
-    public function reject(string $id, ?string $remarks = null): JsonResponse
+    public function reject(string $id, string $remarks = null): JsonResponse
     {
         return $this->setStatus($id, 'rejected', $remarks);
     }
@@ -92,7 +107,7 @@ class OvertimeRepository extends BaseRepository implements OvertimeRepositoryInt
     {
         /** @var User|null $user */
         $user = Auth::user();
-        if (! $user?->hasPermission('approve-overtimes')) {
+        if (! $user || ! $this->delegates->canApprove($user, 'approve-overtimes')) {
             throw new AuthorizationException('You do not have permission to approve overtime requests.');
         }
 

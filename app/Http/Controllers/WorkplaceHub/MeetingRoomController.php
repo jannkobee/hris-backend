@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MeetingRoom;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
-use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Rules\TenantRule;
+use App\Services\AuditLog\AuditLogServiceInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,8 +16,11 @@ use Illuminate\Validation\ValidationException;
 
 class MeetingRoomController extends Controller
 {
-    public function __construct(private readonly AuditLogServiceInterface $auditLogService)
+    private AuditLogServiceInterface $auditLogService;
+
+    public function __construct(AuditLogServiceInterface $auditLogService)
     {
+        $this->auditLogService = $auditLogService;
     }
 
     public function index(Request $request): JsonResponse

@@ -23,6 +23,7 @@ Route::middleware([])->group(function () {
     $routes = [
         'auth/auth',
         'public_api/public_api',
+        'platform/platform',
         'realtime/realtime',
     ];
 
@@ -58,6 +59,7 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'leave_type/leave_type',
         'leave_credit/leave_credit',
         'leave_credit_setting/leave_credit_setting',
+        'leave_blackout/leave_blackout',
         'leave_conversion_request/leave_conversion_request',
         'overtime/overtime',
         'audit_log/audit_log',
@@ -65,6 +67,11 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'payroll/payroll',
         'workplace_hub/workplace_hub',
         'holiday/holiday',
+        'approval/approval',
+        'approval_delegation/approval_delegation',
+        'notification/notification',
+        'reporting/reporting',
+        'integration/integration',
     ];
 
     foreach ($routes as $route) {

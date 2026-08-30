@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Overtime\OvertimeController;
+use App\Http\Controllers\Overtime\OvertimePolicyController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('overtime')->name('overtime.')->controller(OvertimeController::class)->group(function () {
@@ -12,3 +13,5 @@ Route::prefix('overtime')->name('overtime.')->controller(OvertimeController::cla
     Route::post('/{id}/approve', 'approve')->name('approve');
     Route::post('/{id}/reject', 'reject')->name('reject');
 });
+
+Route::apiResource('overtime-policies', OvertimePolicyController::class)->except('show');

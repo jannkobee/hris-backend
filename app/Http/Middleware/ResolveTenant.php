@@ -20,7 +20,7 @@ class ResolveTenant
 
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('health', 'public-apis.*')) {
+        if ($request->routeIs('health', 'public-apis.*', 'platform.*')) {
             return $next($request);
         }
 

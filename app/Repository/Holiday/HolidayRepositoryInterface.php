@@ -4,4 +4,6 @@ namespace App\Repository\Holiday;
 
 use App\Repository\Base\BaseRepositoryInterface;
 
-interface HolidayRepositoryInterface extends BaseRepositoryInterface {}
+interface HolidayRepositoryInterface extends BaseRepositoryInterface
+{
+}

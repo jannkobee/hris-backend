@@ -13,10 +13,16 @@ use Illuminate\Validation\ValidationException;
 
 class AppSettingController extends Controller
 {
+    private AppSettingService $settings;
+
+    private PlanEntitlementService $entitlements;
+
     public function __construct(
-        private readonly AppSettingService $settings,
-        private readonly PlanEntitlementService $entitlements
+        AppSettingService $settings,
+        PlanEntitlementService $entitlements
     ) {
+        $this->settings = $settings;
+        $this->entitlements = $entitlements;
         $this->middleware(
             'permission:manage-app-settings,manage-organization-settings,manage-attendance-settings,manage-feature-settings,manage-payroll-settings'
         )->only('update');

@@ -25,7 +25,18 @@ class LeaveCreditAccrualService
             $this->eligibleEmployees($setting, $asOfDate)
                 ->chunkById(200, function ($employees) use ($setting, $month, $year, $asOfDate, &$result) {
                     foreach ($employees as $employee) {
-                        $this->mergeResult($result, $this->accrueSettingForEmployee($employee, $setting, $month, $year, $asOfDate));
+                        $this->mergeResult(
+                            $result,
+                            $this->accrueSettingForEmployee(
+                                $employee,
+                                $setting,
+                                $month,
+                                $year,
+                                $asOfDate,
+                                (float) $setting->credit_amount,
+                                'recurring'
+                            )
+                        );
                     }
                 });
         }
@@ -42,8 +53,19 @@ class LeaveCreditAccrualService
         $employee->loadMissing('employmentStatus');
         $result = $this->emptyResult();
 
-        foreach ($this->settingsForNewEmployee($month) as $setting) {
-            $this->mergeResult($result, $this->accrueSettingForEmployee($employee, $setting, $month, $year, $asOfDate));
+        foreach ($this->settingsForNewEmployee() as $setting) {
+            $this->mergeResult(
+                $result,
+                $this->accrueSettingForEmployee(
+                    $employee,
+                    $setting,
+                    $month,
+                    $year,
+                    $asOfDate,
+                    (float) $setting->initial_credit_amount,
+                    'initial'
+                )
+            );
         }
 
         return $result;
@@ -57,14 +79,12 @@ class LeaveCreditAccrualService
             ->get();
     }
 
-    private function settingsForNewEmployee(int $month)
+    private function settingsForNewEmployee()
     {
         return LeaveCreditSetting::query()
             ->where('is_active', true)
-            ->where(function (Builder $query) use ($month): void {
-                $query->where('grant_on_hire', true)
-                    ->orWhereJsonContains('run_months', $month);
-            })
+            ->where('grant_on_hire', true)
+            ->where('initial_credit_amount', '>', 0)
             ->get();
     }
 
@@ -94,21 +114,30 @@ class LeaveCreditAccrualService
     }
 
     /** @return array{credited: int, skipped: int, ineligible: int, failed: int} */
-    private function accrueSettingForEmployee(Employee $employee, LeaveCreditSetting $setting, int $month, int $year, Carbon $asOfDate): array
+    private function accrueSettingForEmployee(
+        Employee $employee,
+        LeaveCreditSetting $setting,
+        int $month,
+        int $year,
+        Carbon $asOfDate,
+        float $amount,
+        string $accrualType,
+    ): array
     {
         if (! $this->isEligible($employee, $setting, $asOfDate)) {
             return ['credited' => 0, 'skipped' => 0, 'ineligible' => 1, 'failed' => 0];
         }
 
         try {
-            DB::transaction(function () use ($employee, $setting, $month, $year) {
+            DB::transaction(function () use ($employee, $setting, $month, $year, $amount, $accrualType) {
                 LeaveCreditLog::create([
                     'leave_credit_setting_id' => $setting->id,
                     'employee_id' => $employee->id,
                     'leave_type_id' => $setting->leave_type_id,
                     'year' => $year,
                     'month' => $month,
-                    'credited_amount' => $setting->credit_amount,
+                    'credited_amount' => $amount,
+                    'accrual_type' => $accrualType,
                 ]);
 
                 $ledger = LeaveCredit::query()->where([
@@ -123,14 +152,14 @@ class LeaveCreditAccrualService
                         'leave_type_id' => $setting->leave_type_id,
                         'year' => $year,
                         'used' => 0,
-                        'total_earned' => $setting->credit_amount,
+                        'total_earned' => $amount,
                     ]);
                     $ledger->save();
 
                     return;
                 }
 
-                $ledger->increment('total_earned', (float) $setting->credit_amount);
+                $ledger->increment('total_earned', $amount);
             });
         } catch (QueryException $exception) {
             if ((string) $exception->getCode() === '23000') {

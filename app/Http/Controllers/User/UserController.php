@@ -69,7 +69,7 @@ class UserController extends Controller
         return $this->modelRepository->import($request->file('file'));
     }
 
-    private function ensureAdministratorRemains(User $user, ?string $replacementRoleId = null): void
+    private function ensureAdministratorRemains(User $user, string $replacementRoleId = null): void
     {
         $adminRoleId = Role::query()->where('name', 'Admin')->value('id');
 

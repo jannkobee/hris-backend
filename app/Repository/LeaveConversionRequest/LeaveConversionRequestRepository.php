@@ -18,13 +18,16 @@ use Illuminate\Validation\ValidationException;
 
 class LeaveConversionRequestRepository extends BaseRepository implements LeaveConversionRequestRepositoryInterface
 {
+    private LeaveCreditRepositoryInterface $creditRepository;
+
     public function __construct(
         LeaveConversionRequest $model,
         ResponseServiceInterface $responseService,
         AuditLogServiceInterface $auditLogService,
-        private readonly LeaveCreditRepositoryInterface $creditRepository,
+        LeaveCreditRepositoryInterface $creditRepository,
     ) {
         parent::__construct($model, $responseService, $auditLogService);
+        $this->creditRepository = $creditRepository;
     }
 
     public function getList(): JsonResponse
@@ -116,7 +119,7 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
         return DB::transaction(function () use ($id) {
             $conversion = $this->model->newQuery()->lockForUpdate()->find($id);
 
-            if (!$conversion) {
+            if (! $conversion) {
                 throw ValidationException::withMessages([
                     'record_not_found' => 'Record not found',
                 ]);
@@ -130,7 +133,7 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
 
             $credit = $conversion->leaveCredit()->lockForUpdate()->first();
 
-            if (!$credit || (float) $conversion->credits_requested > $credit->remaining) {
+            if (! $credit || (float) $conversion->credits_requested > $credit->remaining) {
                 throw ValidationException::withMessages([
                     'credits_requested' => 'Employee no longer has sufficient remaining credits.',
                 ]);
@@ -153,12 +156,12 @@ class LeaveConversionRequestRepository extends BaseRepository implements LeaveCo
         });
     }
 
-    public function reject(string $id, ?string $remarks = null): JsonResponse
+    public function reject(string $id, string $remarks = null): JsonResponse
     {
         $this->ensureCanApprove();
         $conversion = $this->model->find($id);
 
-        if (!$conversion) {
+        if (! $conversion) {
             throw ValidationException::withMessages([
                 'record_not_found' => 'Record not found',
             ]);

@@ -31,5 +31,4 @@ class NoteRepository extends BaseRepository implements NoteRepositoryInterface
                 ->paginate(request()->integer('limit', 12))
         );
     }
-
 }

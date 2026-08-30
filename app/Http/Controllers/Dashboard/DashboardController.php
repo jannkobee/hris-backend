@@ -8,6 +8,8 @@ use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Holiday;
 use App\Models\LeaveRequest;
+use App\Models\Overtime;
+use App\Models\PayrollPeriod;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AppSettings\AppSettingService;
@@ -22,11 +24,20 @@ use Illuminate\Validation\ValidationException;
 
 class DashboardController extends Controller
 {
+    private AppSettingService $settings;
+
+    private DailyInspirationService $inspiration;
+
+    private PlanEntitlementService $planEntitlements;
+
     public function __construct(
-        private readonly AppSettingService $settings,
-        private readonly DailyInspirationService $inspiration,
-        private readonly PlanEntitlementService $planEntitlements,
+        AppSettingService $settings,
+        DailyInspirationService $inspiration,
+        PlanEntitlementService $planEntitlements,
     ) {
+        $this->settings = $settings;
+        $this->inspiration = $inspiration;
+        $this->planEntitlements = $planEntitlements;
     }
 
     public function overview(Request $request): JsonResponse
@@ -155,6 +166,46 @@ class DashboardController extends Controller
                     ->get(['id', 'title', 'content', 'published_at', 'created_at']),
             ],
         ]);
+    }
+
+    public function analytics(Request $request): JsonResponse
+    {
+        $timezone = (string) $this->settings->get('organization.timezone', config('app.timezone'));
+        $to = Carbon::now($timezone)->endOfDay();
+        $from = $to->copy()->subDays(29)->startOfDay();
+
+        $approvedLeave = LeaveRequest::query()->where('status', 'approved')
+            ->whereDate('start_date', '<=', $to)->whereDate('end_date', '>=', $from)->get();
+        $trendFrom = $to->copy()->subDays(13)->startOfDay();
+        $exceptionsByDate = Attendance::query()->whereBetween('date', [$trendFrom, $to])
+            ->whereNotNull('exception_codes')->get()->groupBy(fn (Attendance $attendance) => $attendance->date->toDateString())
+            ->map(fn ($records) => $records->sum(fn (Attendance $attendance) => count($attendance->exception_codes ?? [])));
+        $overtimeByDate = Overtime::query()->where('status', 'approved')->whereBetween('date', [$trendFrom, $to])
+            ->get()->groupBy(fn (Overtime $overtime) => $overtime->date->toDateString())
+            ->map(fn ($records) => round((float) $records->sum('premium_hours'), 2));
+
+        return response()->json(['data' => [
+            'range' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+            'headcount' => Employee::query()->whereHas('user')->count(),
+            'attendance_exceptions' => Attendance::query()->whereBetween('date', [$from, $to])
+                ->whereNotNull('exception_codes')->get()->sum(fn (Attendance $attendance) => count($attendance->exception_codes ?? [])),
+            'leave_days' => $approvedLeave->sum(fn (LeaveRequest $leave) => Carbon::parse($leave->start_date)->max($from)->diffInDays(Carbon::parse($leave->end_date)->min($to)) + 1
+            ),
+            'overtime_premium_hours' => (float) Overtime::query()->where('status', 'approved')
+                ->whereBetween('date', [$from, $to])->sum('premium_hours'),
+            'payroll_net' => (float) PayrollPeriod::query()->whereIn('status', ['approved', 'paid'])
+                ->whereBetween('date_to', [$from, $to])->sum('total_net'),
+            'trends' => collect(CarbonPeriod::create($trendFrom, $to))->map(function (Carbon $date) use ($exceptionsByDate, $overtimeByDate): array {
+                $key = $date->toDateString();
+
+                return [
+                    'date' => $key,
+                    'label' => $date->format('M j'),
+                    'attendance_exceptions' => (int) ($exceptionsByDate[$key] ?? 0),
+                    'overtime_hours' => (float) ($overtimeByDate[$key] ?? 0),
+                ];
+            })->values(),
+        ]]);
     }
 
     private function companyPresence(string $timezone): array

@@ -10,15 +10,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
-use PDOException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use PDOException;
 
 abstract class BaseRepository implements BaseRepositoryInterface
 {
     protected Model $model;
+
     protected ResponseServiceInterface $responseService;
+
     protected AuditLogServiceInterface $auditLogService;
 
     public function __construct(Model $model, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)
@@ -100,7 +102,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         }
 
         throw ValidationException::withMessages([
-            'record_not_found' => "Record not found",
+            'record_not_found' => 'Record not found',
         ]);
     }
 
@@ -132,7 +134,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
             );
         }
         throw ValidationException::withMessages([
-            'record_not_found' => "Record not found",
+            'record_not_found' => 'Record not found',
         ]);
     }
 
@@ -155,10 +157,10 @@ abstract class BaseRepository implements BaseRepositoryInterface
                     true
                 );
             } catch (QueryException $e) {
-                logger()->error('Error deleting record.' . $e->getMessage());
+                logger()->error('Error deleting record.'.$e->getMessage());
 
                 if ($e->getPrevious() instanceof PDOException && $e->errorInfo) {
-                    if ($e->errorInfo[0] === "23000" && $e->errorInfo[1] === 1451) {
+                    if ($e->errorInfo[0] === '23000' && $e->errorInfo[1] === 1451) {
                         throw ValidationException::withMessages([
                             'invalid_delete' => 'Cannot delete. Record is referenced to other table.',
                         ]);
@@ -169,7 +171,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
                     'error' => 'Something went wrong deleting a record.',
                 ]);
             } catch (Exception $e) {
-                logger()->error('Error deleting record.' . $e->getMessage());
+                logger()->error('Error deleting record.'.$e->getMessage());
 
                 throw ValidationException::withMessages([
                     'error' => 'Something went wrong deleting a record.',
@@ -178,14 +180,14 @@ abstract class BaseRepository implements BaseRepositoryInterface
         }
 
         throw ValidationException::withMessages([
-            'record_not_found' => "Record not found",
+            'record_not_found' => 'Record not found',
         ]);
     }
 
     public function downloadTemplate()
     {
         $modelClass = get_class($this->model);
-        $filename = Str::snake(class_basename($modelClass)) . '_template.xlsx';
+        $filename = Str::snake(class_basename($modelClass)).'_template.xlsx';
 
         return Excel::download($modelClass::importTemplate(), $filename);
     }

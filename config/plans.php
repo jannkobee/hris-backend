@@ -72,11 +72,13 @@ return [
                 'messaging',
                 'notes',
             ],
+            'limits' => ['employees' => 50],
         ],
         'enterprise' => [
             'name' => 'Enterprise',
             'description' => 'Every available HRIS module and enterprise control.',
             'features' => ['*'],
+            'limits' => ['employees' => null],
         ],
     ],
 ];

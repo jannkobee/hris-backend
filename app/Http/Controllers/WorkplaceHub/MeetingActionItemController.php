@@ -7,8 +7,8 @@ use App\Http\Controllers\WorkplaceHub\Concerns\AuthorizesWorkplaceMeetings;
 use App\Models\MeetingActionItem;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
-use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Rules\TenantRule;
+use App\Services\AuditLog\AuditLogServiceInterface;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,8 +19,11 @@ class MeetingActionItemController extends Controller
 {
     use AuthorizesWorkplaceMeetings;
 
-    public function __construct(private readonly AuditLogServiceInterface $auditLogService)
+    private AuditLogServiceInterface $auditLogService;
+
+    public function __construct(AuditLogServiceInterface $auditLogService)
     {
+        $this->auditLogService = $auditLogService;
     }
 
     public function store(Request $request, WorkplaceMeeting $meeting): JsonResponse

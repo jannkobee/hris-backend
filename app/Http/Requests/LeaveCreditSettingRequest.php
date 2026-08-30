@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class LeaveCreditSettingRequest extends FormRequest
 {
@@ -32,7 +33,24 @@ class LeaveCreditSettingRequest extends FormRequest
             'eligible_job_grade_ids.*' => ['uuid', TenantRule::exists('job_grades')],
             'minimum_service_months' => ['nullable', 'integer', 'min:0', 'max:600'],
             'grant_on_hire' => ['boolean'],
+            'initial_credit_amount' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
             'is_active' => ['boolean'],
+            'allow_negative_balance' => ['boolean'],
+            'negative_balance_limit' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
+            'carry_over_limit' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
+            'carry_over_expiry_month' => ['nullable', 'integer', 'between:1,12'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator): void {
+            if ($this->boolean('grant_on_hire') && (float) $this->input('initial_credit_amount', 0) <= 0) {
+                $validator->errors()->add(
+                    'initial_credit_amount',
+                    'Enter an initial credit amount when Grant Initial Credit on Hire is enabled.'
+                );
+            }
+        });
     }
 }

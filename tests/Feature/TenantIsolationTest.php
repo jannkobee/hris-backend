@@ -123,8 +123,8 @@ class TenantIsolationTest extends TestCase
             'password' => 'alpha-password',
         ])
             ->assertOk()
-            ->assertJsonPath('user.organization.slug', 'alpha')
-            ->assertJsonPath('user.organization.plan.code', 'basic');
+            ->assertJsonPath('data.user.organization.slug', 'alpha')
+            ->assertJsonPath('data.user.organization.plan.code', 'basic');
 
         $this->postJson($this->tenantUrl('beta', 'auth.login'), [
             'email' => 'person@example.test',

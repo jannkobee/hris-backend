@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Traits\HasFilterScope;
 use App\Traits\BelongsToOrganization;
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -95,5 +95,10 @@ class Employee extends Model
     public function leaveCredits(): HasMany
     {
         return $this->hasMany(LeaveCredit::class);
+    }
+
+    public function shiftAssignments(): HasMany
+    {
+        return $this->hasMany(ShiftAssignment::class);
     }
 }

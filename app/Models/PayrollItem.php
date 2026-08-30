@@ -45,6 +45,7 @@ class PayrollItem extends Model
         'exceptions_acknowledged_at',
         'exceptions_acknowledged_by',
         'calculation_snapshot',
+        'locked_snapshot',
     ];
 
     protected $casts = [
@@ -77,6 +78,7 @@ class PayrollItem extends Model
         'exceptions' => 'array',
         'exceptions_acknowledged_at' => 'datetime',
         'calculation_snapshot' => 'array',
+        'locked_snapshot' => 'array',
     ];
 
     public function period(): BelongsTo

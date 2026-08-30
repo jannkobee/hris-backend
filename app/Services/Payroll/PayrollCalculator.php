@@ -7,8 +7,10 @@ use App\Services\AppSettings\AppSettingService;
 
 class PayrollCalculator
 {
-    public function __construct(private readonly AppSettingService $settings)
-    {
+    public function __construct(
+        private readonly AppSettingService $settings,
+        private readonly StatutoryRuleResolver $statutoryRules,
+    ) {
     }
 
     public function calculate(
@@ -16,8 +18,12 @@ class PayrollCalculator
         string $frequency,
         float $overtimePay = 0,
         array $adjustments = [],
-        array $workSummary = []
+        array $workSummary = [],
+        string $effectiveDate = null,
     ): array {
+        $statutoryRule = $effectiveDate ? $this->statutoryRules->effectiveFor($effectiveDate) : null;
+        $statutorySettings = $statutoryRule?->rules ?? [];
+        $statutorySetting = fn (string $key, mixed $fallback): mixed => $statutorySettings[$key] ?? $this->settings->get($key, $fallback);
         $monthlySalary = (float) $employee->basic_monthly_salary;
         $divisor = $frequency === 'semi_monthly' ? 2 : 1;
         $basicPay = $monthlySalary / $divisor;
@@ -38,27 +44,27 @@ class PayrollCalculator
             ? (float) ($workSummary['unpaid_leave_days'] ?? 0) * $dailyRate
             : 0;
 
-        $sssMsc = $this->sssMonthlySalaryCredit($monthlySalary);
-        $sssEmployee = $sssMsc * (float) $this->settings->get('payroll.sss_employee_rate', 0.05) / $divisor;
-        $sssEmployer = $sssMsc * (float) $this->settings->get('payroll.sss_employer_rate', 0.10) / $divisor;
-        $sssEc = ($sssMsc <= (float) $this->settings->get('payroll.sss_ec_threshold', 14500)
-            ? (float) $this->settings->get('payroll.sss_ec_low', 10)
-            : (float) $this->settings->get('payroll.sss_ec_high', 30)) / $divisor;
+        $sssMsc = $this->sssMonthlySalaryCredit($monthlySalary, $statutorySettings);
+        $sssEmployee = $sssMsc * (float) $statutorySetting('payroll.sss_employee_rate', 0.05) / $divisor;
+        $sssEmployer = $sssMsc * (float) $statutorySetting('payroll.sss_employer_rate', 0.10) / $divisor;
+        $sssEc = ($sssMsc <= (float) $statutorySetting('payroll.sss_ec_threshold', 14500)
+            ? (float) $statutorySetting('payroll.sss_ec_low', 10)
+            : (float) $statutorySetting('payroll.sss_ec_high', 30)) / $divisor;
 
         $philhealthBasis = min(
-            max($monthlySalary, (float) $this->settings->get('payroll.philhealth_salary_floor', 10000)),
-            (float) $this->settings->get('payroll.philhealth_salary_ceiling', 100000)
+            max($monthlySalary, (float) $statutorySetting('payroll.philhealth_salary_floor', 10000)),
+            (float) $statutorySetting('payroll.philhealth_salary_ceiling', 100000)
         );
-        $philhealthMonthly = $philhealthBasis * (float) $this->settings->get('payroll.philhealth_rate', 0.05);
+        $philhealthMonthly = $philhealthBasis * (float) $statutorySetting('payroll.philhealth_rate', 0.05);
         $philhealthEmployee = $philhealthMonthly / 2 / $divisor;
         $philhealthEmployer = $philhealthMonthly / 2 / $divisor;
 
-        $pagibigBasis = min($monthlySalary, (float) $this->settings->get('payroll.pagibig_max_salary', 10000));
-        $pagibigEmployeeRate = $monthlySalary <= (float) $this->settings->get('payroll.pagibig_rate_threshold', 1500)
-            ? (float) $this->settings->get('payroll.pagibig_employee_rate_low', 0.01)
-            : (float) $this->settings->get('payroll.pagibig_employee_rate', 0.02);
+        $pagibigBasis = min($monthlySalary, (float) $statutorySetting('payroll.pagibig_max_salary', 10000));
+        $pagibigEmployeeRate = $monthlySalary <= (float) $statutorySetting('payroll.pagibig_rate_threshold', 1500)
+            ? (float) $statutorySetting('payroll.pagibig_employee_rate_low', 0.01)
+            : (float) $statutorySetting('payroll.pagibig_employee_rate', 0.02);
         $pagibigEmployee = $pagibigBasis * $pagibigEmployeeRate / $divisor;
-        $pagibigEmployer = $pagibigBasis * (float) $this->settings->get('payroll.pagibig_employer_rate', 0.02) / $divisor;
+        $pagibigEmployer = $pagibigBasis * (float) $statutorySetting('payroll.pagibig_employer_rate', 0.02) / $divisor;
 
         $workDeductions = $absenceDeduction + $lateUndertimeDeduction + $unpaidLeaveDeduction;
         $taxablePay = max(0, $grossPay - $workDeductions - $sssEmployee - $philhealthEmployee - $pagibigEmployee);
@@ -137,8 +143,11 @@ class PayrollCalculator
                 'attendance_records' => $workSummary['attendance_records'] ?? 0,
                 'approved_leave_requests' => $workSummary['approved_leave_requests'] ?? 0,
                 'tax_table' => 'BIR revised withholding tax table effective 2023-01-01',
+                'statutory_rule_id' => $statutoryRule?->id,
+                'statutory_rule_name' => $statutoryRule?->name,
+                'statutory_rule_effective_from' => $statutoryRule?->effective_from?->toDateString(),
                 'settings' => collect($snapshotKeys)->mapWithKeys(
-                    fn (string $key) => [$key => $this->settings->get($key)]
+                    fn (string $key) => [$key => $statutorySettings[$key] ?? $this->settings->get($key)]
                 )->all(),
             ],
         ];
@@ -148,15 +157,14 @@ class PayrollCalculator
     {
         $days = max(1, (float) $this->settings->get('payroll.work_days_per_month', 22));
         $hoursPerDay = max(1, (float) $this->settings->get('payroll.hours_per_day', 8));
-        $multiplier = (float) $this->settings->get('payroll.overtime_multiplier', 1.25);
 
-        return $this->money(((float) $employee->basic_monthly_salary / $days / $hoursPerDay) * $hours * $multiplier);
+        return $this->money(((float) $employee->basic_monthly_salary / $days / $hoursPerDay) * $hours);
     }
 
-    private function sssMonthlySalaryCredit(float $monthlySalary): float
+    private function sssMonthlySalaryCredit(float $monthlySalary, array $statutorySettings = []): float
     {
-        $minimum = (float) $this->settings->get('payroll.sss_min_msc', 5000);
-        $maximum = (float) $this->settings->get('payroll.sss_max_msc', 35000);
+        $minimum = (float) ($statutorySettings['payroll.sss_min_msc'] ?? $this->settings->get('payroll.sss_min_msc', 5000));
+        $maximum = (float) ($statutorySettings['payroll.sss_max_msc'] ?? $this->settings->get('payroll.sss_max_msc', 35000));
         $bounded = min(max($monthlySalary, $minimum), $maximum);
 
         return min($maximum, max($minimum, floor(($bounded + 250) / 500) * 500));

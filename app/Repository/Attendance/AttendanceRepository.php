@@ -5,6 +5,7 @@ namespace App\Repository\Attendance;
 use App\Models\Attendance;
 use App\Repository\Base\BaseRepository;
 use App\Services\AppSettings\AppSettingService;
+use App\Services\Attendance\AttendanceExceptionService;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Utils\ResponseServiceInterface;
 use Carbon\Carbon;
@@ -16,23 +17,42 @@ use Throwable;
 
 class AttendanceRepository extends BaseRepository implements AttendanceRepositoryInterface
 {
+    private AppSettingService $settings;
+
+    private AttendanceExceptionService $exceptions;
+
     public function __construct(
         Attendance $model,
         ResponseServiceInterface $responseService,
         AuditLogServiceInterface $auditLogService,
-        private readonly AppSettingService $settings
+        AppSettingService $settings,
+        AttendanceExceptionService $exceptions
     ) {
         parent::__construct($model, $responseService, $auditLogService);
+        $this->settings = $settings;
+        $this->exceptions = $exceptions;
     }
 
     public function create(array $attributes): JsonResponse
     {
-        return parent::create($this->normalizeManualTimes($attributes));
+        $response = parent::create($this->normalizeManualTimes($attributes));
+        $attendance = $this->model->find($response->getData()->data->id);
+        if ($attendance) {
+            $this->exceptions->apply($attendance);
+        }
+
+        return $response;
     }
 
     public function update(array $attributes, string|int $id): JsonResponse
     {
-        return parent::update($this->normalizeManualTimes($attributes), $id);
+        $response = parent::update($this->normalizeManualTimes($attributes), $id);
+        $attendance = $this->model->find($id);
+        if ($attendance) {
+            $this->exceptions->apply($attendance);
+        }
+
+        return $response;
     }
 
     public function timeIn(string $employeeId, array $data): JsonResponse
@@ -60,6 +80,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
                 'time_in_accuracy' => $data['accuracy'] ?? null,
                 'ip_address' => $this->settings->get('attendance.capture_ip_enabled', true) ? ($data['source_ip'] ?? null) : null,
             ], $photo))->fresh();
+            $this->exceptions->apply($attendance);
         } catch (Throwable $exception) {
             $this->deleteStoredPhoto($photo['time_in_photo_disk'] ?? null, $photo['time_in_photo_path'] ?? null);
             throw $exception;
@@ -103,6 +124,7 @@ class AttendanceRepository extends BaseRepository implements AttendanceRepositor
         }
 
         $this->auditLogService->insertLog($this->model, 'Time Out', $attendance->toArray());
+        $this->exceptions->apply($attendance);
 
         return $this->responseService->updateResponse('Attendance', $attendance->fresh());
     }

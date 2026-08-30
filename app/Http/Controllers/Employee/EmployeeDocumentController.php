@@ -18,10 +18,16 @@ use Illuminate\Validation\Rule;
 
 class EmployeeDocumentController extends Controller
 {
+    private AppSettingService $settings;
+
+    private AuditLogServiceInterface $auditLogService;
+
     public function __construct(
-        private readonly AppSettingService $settings,
-        private readonly AuditLogServiceInterface $auditLogService,
+        AppSettingService $settings,
+        AuditLogServiceInterface $auditLogService,
     ) {
+        $this->settings = $settings;
+        $this->auditLogService = $auditLogService;
     }
 
     public function categories(): JsonResponse

@@ -7,8 +7,8 @@ use App\Http\Controllers\WorkplaceHub\Concerns\AuthorizesWorkplaceMeetings;
 use App\Models\MeetingRoom;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
-use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Rules\TenantRule;
+use App\Services\AuditLog\AuditLogServiceInterface;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,8 +34,11 @@ class MeetingController extends Controller
         'actionItems.creator:id,first_name,middle_name,last_name',
     ];
 
-    public function __construct(private readonly AuditLogServiceInterface $auditLogService)
+    private AuditLogServiceInterface $auditLogService;
+
+    public function __construct(AuditLogServiceInterface $auditLogService)
     {
+        $this->auditLogService = $auditLogService;
     }
 
     public function index(Request $request): JsonResponse

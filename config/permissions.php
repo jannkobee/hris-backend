@@ -32,6 +32,10 @@ $catalog = [
     'Attendance' => [
         'view-attendances' => ['View company attendance', 'View attendance records for all employees.'],
         'manage-attendances' => ['Manage attendance', 'Create, correct, and remove manual attendance records.'],
+        'view-shifts' => ['View shifts and rosters', 'View shift templates and employee work schedules.'],
+        'manage-shifts' => ['Manage shifts and rosters', 'Create shift templates and assign employee work schedules.'],
+        'view-attendance-corrections' => ['View attendance corrections', 'View submitted attendance correction requests.'],
+        'approve-attendance-corrections' => ['Approve attendance corrections', 'Approve or reject attendance correction requests.'],
     ],
     'Leave Requests' => [
         'view-leave-requests' => ['View leave requests', 'View permitted leave requests; employees remain limited to their own.'],
@@ -87,11 +91,15 @@ $catalog = [
     ],
     'Audit and Settings' => [
         'view-audit-logs' => ['View audit logs', 'Search and inspect the company audit trail.'],
+        'view-reports' => ['View reports', 'Run operational workforce and payroll reports.'],
+        'manage-reports' => ['Manage reports', 'Create, update, and remove saved report definitions.'],
         'manage-app-settings' => ['Manage all app settings', 'Change every company-wide application policy.'],
         'manage-organization-settings' => ['Manage organization settings', 'Change the company name, timezone, and regional defaults.'],
         'manage-attendance-settings' => ['Manage attendance settings', 'Configure attendance photos, location, notes, IP capture, and manual entries.'],
         'manage-feature-settings' => ['Manage feature settings', 'Enable or configure shared features such as 201 files, leave attachments, messaging, and alerts.'],
         'manage-payroll-settings' => ['Manage payroll settings', 'Change payroll calculation and statutory contribution policies.'],
+        'manage-integrations' => ['Manage integrations', 'Create and revoke API tokens and webhook subscriptions.'],
+        'manage-sso' => ['Manage SSO and SCIM', 'Configure enterprise sign-in and provisioning credentials.'],
     ],
 ];
 
@@ -153,6 +161,8 @@ return [
                 'manage-employee-documents',
                 'view-attendances',
                 'manage-attendances',
+                'view-shifts',
+                'manage-shifts',
                 'manage-leave-requests',
                 'approve-leave-requests',
                 'manage-leave-conversion-requests',
@@ -188,6 +198,7 @@ return [
                 ...$employeeSelfServicePermissionSlugs,
                 'view-employees',
                 'view-attendances',
+                'view-shifts',
                 'view-leave-types',
                 'approve-leave-requests',
                 'approve-leave-conversion-requests',

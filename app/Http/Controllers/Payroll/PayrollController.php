@@ -22,12 +22,24 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PayrollController extends Controller
 {
+    private AppSettingService $settings;
+
+    private PayrollCalculator $calculator;
+
+    private PayrollWorkSummaryService $workSummaryService;
+
+    private AuditLogServiceInterface $auditLogService;
+
     public function __construct(
-        private readonly AppSettingService $settings,
-        private readonly PayrollCalculator $calculator,
-        private readonly PayrollWorkSummaryService $workSummaryService,
-        private readonly AuditLogServiceInterface $auditLogService,
+        AppSettingService $settings,
+        PayrollCalculator $calculator,
+        PayrollWorkSummaryService $workSummaryService,
+        AuditLogServiceInterface $auditLogService,
     ) {
+        $this->settings = $settings;
+        $this->calculator = $calculator;
+        $this->workSummaryService = $workSummaryService;
+        $this->auditLogService = $auditLogService;
     }
 
     public function index(Request $request): JsonResponse
@@ -112,6 +124,11 @@ class PayrollController extends Controller
     {
         $this->ensureEnabled();
         $this->authorizePermission($request, 'manage-payroll');
+        if ($period->isLocked()) {
+            throw ValidationException::withMessages([
+                'status' => 'Locked payroll periods cannot be regenerated.',
+            ]);
+        }
         if (! in_array($period->status, ['draft', 'processed'], true)) {
             throw ValidationException::withMessages(['status' => 'Only draft or processed payroll periods can be generated.']);
         }
@@ -151,7 +168,7 @@ class PayrollController extends Controller
                     ->where('employee_id', $employee->id)
                     ->where('status', 'approved')
                     ->whereBetween('date', [$period->date_from, $period->date_to])
-                    ->sum('hours');
+                    ->sum('premium_hours');
                 $workSummary = $this->settings->get('payroll.attendance_calculation_enabled', true)
                     ? $this->workSummaryService->summarize($employee, $period->date_from, $period->date_to)
                     : [];
@@ -161,7 +178,8 @@ class PayrollController extends Controller
                     $period->frequency,
                     $this->calculator->overtimePay($employee, $overtimeHours),
                     $adjustments->get($employee->id, []),
-                    $workSummary
+                    $workSummary,
+                    $period->date_to->toDateString(),
                 );
                 $calculation['calculation_snapshot']['approved_overtime_hours'] = $overtimeHours;
                 $period->items()->create(array_merge($calculation, ['employee_id' => $employee->id]));
@@ -186,6 +204,11 @@ class PayrollController extends Controller
         $this->ensureEnabled();
         $this->authorizePermission($request, 'manage-payroll');
         $item->loadMissing('period', 'employee');
+        if ($item->period->isLocked()) {
+            throw ValidationException::withMessages([
+                'status' => 'Locked payroll items cannot be adjusted.',
+            ]);
+        }
         if ($item->period->status !== 'processed') {
             throw ValidationException::withMessages(['status' => 'Adjustments are only allowed before payroll approval.']);
         }
@@ -208,7 +231,8 @@ class PayrollController extends Controller
             $item->period->frequency,
             (float) $item->overtime_pay,
             $adjustments,
-            $this->workSummaryFromItem($item)
+            $this->workSummaryFromItem($item),
+            $item->period->date_to->toDateString(),
         );
         $calculation['calculation_snapshot']['approved_overtime_hours'] =
             $item->calculation_snapshot['approved_overtime_hours'] ?? null;
@@ -301,12 +325,34 @@ class PayrollController extends Controller
         return response()->json(['message' => 'Payroll approved successfully.', 'data' => $period->fresh()], 202);
     }
 
+    public function lock(Request $request, PayrollPeriod $period): JsonResponse
+    {
+        $this->ensureEnabled();
+        $this->authorizePermission($request, 'approve-payroll');
+        if ($period->status !== 'approved' || $period->isLocked()) {
+            throw ValidationException::withMessages(['status' => 'Only an unlocked approved payroll can be locked.']);
+        }
+        DB::transaction(function () use ($period, $request): void {
+            $period->items()->each(function (PayrollItem $item): void {
+                $snapshot = $item->toArray();
+                unset($snapshot['locked_snapshot'], $snapshot['created_at'], $snapshot['updated_at']);
+
+                $item->update(['locked_snapshot' => $snapshot]);
+            });
+
+            $period->update(['locked_at' => now(), 'locked_by' => $request->user()->id]);
+        });
+        $this->auditLogService->insertLog($period, 'lock', ['record_id' => $period->id]);
+
+        return response()->json(['message' => 'Payroll locked successfully.', 'data' => $period->fresh()], 202);
+    }
+
     public function markPaid(Request $request, PayrollPeriod $period): JsonResponse
     {
         $this->ensureEnabled();
         $this->authorizePermission($request, 'mark-payroll-paid');
-        if ($period->status !== 'approved') {
-            throw ValidationException::withMessages(['status' => 'Only approved payroll can be marked as paid.']);
+        if ($period->status !== 'approved' || ! $period->isLocked()) {
+            throw ValidationException::withMessages(['status' => 'Only locked approved payroll can be marked as paid.']);
         }
 
         $period->update(['status' => 'paid', 'paid_at' => now()]);

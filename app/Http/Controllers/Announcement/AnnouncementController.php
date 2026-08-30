@@ -8,8 +8,11 @@ use App\Repository\Announcement\AnnouncementRepositoryInterface;
 
 class AnnouncementController extends Controller
 {
-    public function __construct(private AnnouncementRepositoryInterface $modelRepository)
+    private AnnouncementRepositoryInterface $modelRepository;
+
+    public function __construct(AnnouncementRepositoryInterface $modelRepository)
     {
+        $this->modelRepository = $modelRepository;
         $this->middleware('permission:view-announcements')->only(['index', 'show']);
         $this->middleware('permission:manage-announcements')->only(['store', 'update', 'destroy']);
     }

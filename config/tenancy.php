@@ -12,6 +12,7 @@ return [
     'default_slug' => env('TENANT_DEFAULT_SLUG', 'legacy'),
     'default_name' => env('TENANT_DEFAULT_NAME', 'Legacy Organization'),
     'default_timezone' => env('TENANT_DEFAULT_TIMEZONE', env('APP_TIMEZONE', 'UTC')),
+    'default_country_code' => env('TENANT_DEFAULT_COUNTRY_CODE', 'PH'),
 
     // Applies only when this pre-SaaS installation is adopted as its first
     // organization. New tenants should use the plan selected at checkout.
@@ -30,7 +31,8 @@ return [
         'leave_credits', 'leave_credit_logs', 'leave_credit_settings', 'leave_requests',
         'leave_request_attachments', 'meeting_action_items', 'meeting_attachments',
         'meeting_attendees', 'meeting_rooms', 'messages', 'message_attachments',
-        'notes', 'overtimes', 'payroll_items', 'payroll_periods', 'positions',
+        'notes', 'overtimes', 'payroll_items', 'payroll_periods', 'positions', 'saved_reports', 'scim_tokens', 'sso_configurations', 'statutory_rules', 'webhook_subscriptions',
         'scheduled_tasks', 'user_settings', 'workplace_meetings', 'audit_logs',
+        'password_reset_requests', 'shift_templates', 'shift_assignments', 'attendance_correction_requests', 'app_notifications', 'leave_blackout_dates', 'approval_delegations', 'leave_credit_carryovers',
     ],
 ];

@@ -4,20 +4,23 @@ namespace App\Repository\LeaveRequest;
 
 use App\Mail\LeaveRequestSubmitted;
 use App\Models\Employee;
+use App\Models\LeaveBlackoutDate;
 use App\Models\LeaveCredit;
+use App\Models\LeaveCreditSetting;
 use App\Models\LeaveRequest;
 use App\Models\LeaveRequestAttachment;
 use App\Models\User;
 use App\Repository\Base\BaseRepository;
+use App\Services\Approvals\DelegatedApproverResolver;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Leave\LeaveDurationCalculator;
 use App\Services\Utils\ResponseServiceInterface;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -26,13 +29,20 @@ use Illuminate\Validation\ValidationException;
 
 class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepositoryInterface
 {
+    private LeaveDurationCalculator $durationCalculator;
+
+    private DelegatedApproverResolver $delegates;
+
     public function __construct(
         LeaveRequest $model,
         ResponseServiceInterface $responseService,
         AuditLogServiceInterface $auditLogService,
-        private readonly LeaveDurationCalculator $durationCalculator,
+        LeaveDurationCalculator $durationCalculator,
+        DelegatedApproverResolver $delegates,
     ) {
         parent::__construct($model, $responseService, $auditLogService);
+        $this->durationCalculator = $durationCalculator;
+        $this->delegates = $delegates;
     }
 
     public function getList(): JsonResponse
@@ -55,6 +65,7 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
 
         $this->ensureCanActForEmployee($attributes['employee_id']);
         $this->ensureEmployeeIsEligible($attributes['employee_id']);
+        $this->ensureNotBlackout($attributes);
 
         $created = DB::transaction(function () use ($attributes, $attachments) {
             $this->reserveCredits($attributes);
@@ -196,7 +207,9 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
                 'year' => $year,
             ])->lockForUpdate()->first();
 
-            if (! $credit || $credit->remaining < $days) {
+            $policy = LeaveCreditSetting::query()->where('leave_type_id', $attributes['leave_type_id'])->where('is_active', true)->first();
+            $negativeLimit = $policy?->allow_negative_balance ? (float) $policy->negative_balance_limit : 0;
+            if (! $credit || $credit->remaining - $days < -$negativeLimit) {
                 $available = $credit?->remaining ?? 0;
                 throw ValidationException::withMessages([
                     'leave_type_id' => "Insufficient leave balance for {$year}. Available: {$available} day(s).",
@@ -207,6 +220,14 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
 
         foreach ($credits as [$credit, $days]) {
             $credit->increment('used', $days);
+        }
+    }
+
+    private function ensureNotBlackout(array $attributes): void
+    {
+        $blocked = LeaveBlackoutDate::query()->whereDate('start_date', '<=', $attributes['end_date'])->whereDate('end_date', '>=', $attributes['start_date'])->where(fn ($query) => $query->whereNull('leave_type_id')->orWhere('leave_type_id', $attributes['leave_type_id']))->first();
+        if ($blocked) {
+            throw ValidationException::withMessages(['start_at' => "Leave cannot be requested during blackout period: {$blocked->name}."]);
         }
     }
 
@@ -251,7 +272,7 @@ class LeaveRequestRepository extends BaseRepository implements LeaveRequestRepos
     {
         $user = Auth::user();
 
-        if (! $user instanceof User || ! $user->hasPermission('approve-leave-requests')) {
+        if (! $user instanceof User || ! $this->delegates->canApprove($user, 'approve-leave-requests')) {
             throw new AuthorizationException('You do not have permission to approve or reject leave requests.');
         }
     }

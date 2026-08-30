@@ -2,20 +2,24 @@
 
 namespace App\Models;
 
-use App\Traits\HasFilterScope;
 use App\Traits\BelongsToOrganization;
+use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    use BelongsToOrganization, HasUuids, HasFilterScope;
+    use BelongsToOrganization, HasFilterScope, HasUuids;
 
     public $model_name = 'Attendance';
 
     protected $fillable = [
         'employee_id',
+        'shift_assignment_id',
+        'late_minutes',
+        'undertime_minutes',
+        'exception_codes',
         'date',
         'time_in',
         'time_in_notes',
@@ -63,6 +67,9 @@ class Attendance extends Model
         'time_out_latitude' => 'float',
         'time_out_longitude' => 'float',
         'time_out_accuracy' => 'float',
+        'late_minutes' => 'integer',
+        'undertime_minutes' => 'integer',
+        'exception_codes' => 'array',
     ];
 
     protected array $filterable = [

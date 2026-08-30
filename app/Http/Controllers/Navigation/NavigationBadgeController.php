@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Navigation;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppNotification;
+use App\Models\AttendanceCorrectionRequest;
 use App\Models\LeaveConversionRequest;
 use App\Models\LeaveRequest;
 use App\Models\MeetingActionItem;
@@ -17,8 +19,11 @@ use Illuminate\Support\Facades\DB;
 
 class NavigationBadgeController extends Controller
 {
-    public function __construct(private readonly PlanEntitlementService $planEntitlements)
+    private PlanEntitlementService $planEntitlements;
+
+    public function __construct(PlanEntitlementService $planEntitlements)
     {
+        $this->planEntitlements = $planEntitlements;
     }
 
     public function __invoke(Request $request): JsonResponse
@@ -27,6 +32,7 @@ class NavigationBadgeController extends Controller
         $user = $request->user();
         $badges = [
             'messages' => $this->unreadMessages($user->id),
+            'notifications' => AppNotification::query()->where('user_id', $user->id)->whereNull('read_at')->count(),
         ];
 
         if ($user->hasPermission('approve-leave-requests')) {
@@ -40,6 +46,10 @@ class NavigationBadgeController extends Controller
 
         if ($user->hasPermission('approve-overtimes')) {
             $badges['overtime-management'] = Overtime::query()->where('status', 'pending')->count();
+        }
+
+        if ($user->hasPermission('approve-attendance-corrections')) {
+            $badges['approval-inbox'] = AttendanceCorrectionRequest::query()->where('status', 'pending')->count();
         }
 
         if ($this->planEntitlements->allows($user->organization, 'payroll')

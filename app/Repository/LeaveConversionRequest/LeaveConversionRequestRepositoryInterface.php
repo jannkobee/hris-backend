@@ -9,5 +9,5 @@ interface LeaveConversionRequestRepositoryInterface extends BaseRepositoryInterf
 {
     public function approve(string $id): JsonResponse;
 
-    public function reject(string $id, ?string $remarks = null): JsonResponse;
+    public function reject(string $id, string $remarks = null): JsonResponse;
 }

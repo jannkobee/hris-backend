@@ -14,8 +14,11 @@ use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
-    public function __construct(private readonly AuditLogServiceInterface $auditLogService)
+    private AuditLogServiceInterface $auditLogService;
+
+    public function __construct(AuditLogServiceInterface $auditLogService)
     {
+        $this->auditLogService = $auditLogService;
     }
 
     public function show(Request $request): JsonResponse

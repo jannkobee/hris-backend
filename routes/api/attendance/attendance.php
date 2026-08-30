@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Attendance\AttendanceController;
+use App\Http\Controllers\Attendance\AttendanceCorrectionController;
+use App\Http\Controllers\Shift\ShiftAssignmentController;
+use App\Http\Controllers\Shift\ShiftTemplateController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('attendances')
@@ -15,3 +18,10 @@ Route::prefix('attendances')
     });
 
 Route::apiResource('attendances', AttendanceController::class);
+Route::prefix('attendance-corrections')->name('attendance-corrections.')->controller(AttendanceCorrectionController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::post('/', 'store')->name('store');
+    Route::patch('{attendanceCorrection}/review', 'review')->name('review');
+});
+Route::apiResource('shift-templates', ShiftTemplateController::class);
+Route::apiResource('shift-assignments', ShiftAssignmentController::class);

@@ -51,7 +51,7 @@ class LeaveCreditRepository extends BaseRepository implements LeaveCreditReposit
         return DB::transaction(function () use ($attributes, $id) {
             $credit = $this->model->newQuery()->lockForUpdate()->find($id);
 
-            if (!$credit) {
+            if (! $credit) {
                 throw ValidationException::withMessages([
                     'record_not_found' => 'Record not found',
                 ]);

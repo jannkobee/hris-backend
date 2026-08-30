@@ -9,21 +9,24 @@ use App\Models\User;
 use App\Repository\Attendance\AttendanceRepositoryInterface;
 use App\Services\AppSettings\AppSettingService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AttendanceController extends Controller
 {
-    private $modelRepository;
+    private AttendanceRepositoryInterface $modelRepository;
+
+    private AppSettingService $settings;
 
     public function __construct(
         AttendanceRepositoryInterface $modelRepository,
-        private readonly AppSettingService $settings
+        AppSettingService $settings
     ) {
         $this->modelRepository = $modelRepository;
+        $this->settings = $settings;
         $this->middleware('permission:view-attendances')->only(['index', 'show']);
         $this->middleware('permission:manage-attendances')->only(['store', 'update', 'destroy']);
     }

@@ -8,8 +8,11 @@ use App\Repository\Note\NoteRepositoryInterface;
 
 class NoteController extends Controller
 {
-    public function __construct(private readonly NoteRepositoryInterface $notes)
+    private NoteRepositoryInterface $notes;
+
+    public function __construct(NoteRepositoryInterface $notes)
     {
+        $this->notes = $notes;
         $this->requireResourcePermissions('notes');
     }
 

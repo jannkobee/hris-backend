@@ -19,8 +19,11 @@ class MeetingAttachmentController extends Controller
 {
     use AuthorizesWorkplaceMeetings;
 
-    public function __construct(private readonly AuditLogServiceInterface $auditLogService)
+    private AuditLogServiceInterface $auditLogService;
+
+    public function __construct(AuditLogServiceInterface $auditLogService)
     {
+        $this->auditLogService = $auditLogService;
     }
 
     public function store(Request $request, WorkplaceMeeting $meeting): JsonResponse

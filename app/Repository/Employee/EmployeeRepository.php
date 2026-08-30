@@ -6,8 +6,11 @@ use App\Models\Employee;
 use App\Repository\Base\BaseRepository;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\EmployeeNumber\EmployeeNumberServiceInterface;
+use App\Services\Integrations\WebhookDispatcher;
 use App\Services\LeaveAccrual\LeaveCreditAccrualService;
+use App\Services\Plans\PlanEntitlementService;
 use App\Services\Utils\ResponseServiceInterface;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -16,19 +19,36 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
 {
     protected EmployeeNumberServiceInterface $employeeNumberService;
 
+    private LeaveCreditAccrualService $leaveCreditAccrualService;
+
+    private PlanEntitlementService $planEntitlements;
+
+    private TenantContext $tenantContext;
+
+    private WebhookDispatcher $webhooks;
+
     public function __construct(
         Employee $model,
         ResponseServiceInterface $responseService,
         AuditLogServiceInterface $auditLogService,
         EmployeeNumberServiceInterface $employeeNumberService,
-        private readonly LeaveCreditAccrualService $leaveCreditAccrualService,
+        LeaveCreditAccrualService $leaveCreditAccrualService,
+        PlanEntitlementService $planEntitlements,
+        TenantContext $tenantContext,
+        WebhookDispatcher $webhooks,
     ) {
         parent::__construct($model, $responseService, $auditLogService);
         $this->employeeNumberService = $employeeNumberService;
+        $this->leaveCreditAccrualService = $leaveCreditAccrualService;
+        $this->planEntitlements = $planEntitlements;
+        $this->tenantContext = $tenantContext;
+        $this->webhooks = $webhooks;
     }
 
     public function create(array $attributes): JsonResponse
     {
+        $this->ensureEmployeeCapacity();
+
         $attributes['user_id'] = $attributes['user_id'] ?? data_get($attributes, 'user.id');
         $attributes['employment_status_id'] = $attributes['employment_status_id'] ?? data_get($attributes, 'employmentStatus.id');
         $attributes['department_id'] = $attributes['department_id'] ?? data_get($attributes, 'department.id');
@@ -61,11 +81,24 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             $employee->setAttribute('leave_credits_accrued', $accrual['credited']);
 
             $employee->load(['addresses', 'contacts', 'leaveCredits.leaveType']);
+            $this->webhooks->dispatch('employee.created', $this->webhookPayload($employee));
 
             return $this->responseService->resolveResponse('Employee created successfully', $employee);
         }
 
         return $response;
+    }
+
+    private function ensureEmployeeCapacity(): void
+    {
+        $organization = $this->tenantContext->organization();
+        $limit = $this->planEntitlements->employeeLimit($organization);
+
+        if ($limit !== null && Employee::query()->count() >= $limit) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'organization' => "Your {$organization->plan_code} plan is limited to {$limit} employees. Upgrade your plan or increase its employee limit to add another employee.",
+            ]);
+        }
     }
 
     public function update(array $attributes, $id): JsonResponse
@@ -99,11 +132,25 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             }
 
             $employee->load(['addresses', 'contacts']);
+            $this->webhooks->dispatch('employee.updated', $this->webhookPayload($employee));
 
             return $this->responseService->resolveResponse('Employee updated successfully', $employee);
         }
 
         return $response;
+    }
+
+    private function webhookPayload(Employee $employee): array
+    {
+        return [
+            'id' => $employee->id,
+            'employee_no' => $employee->employee_no,
+            'user_id' => $employee->user_id,
+            'department_id' => $employee->department_id,
+            'position_id' => $employee->position_id,
+            'employment_status_id' => $employee->employment_status_id,
+            'updated_at' => $employee->updated_at?->toIso8601String(),
+        ];
     }
 
     public function generateEmployeeNo(): JsonResponse
