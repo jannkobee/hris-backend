@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class MeetingAttendee extends Pivot
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     public $incrementing = false;
 

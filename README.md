@@ -168,6 +168,10 @@ php artisan migrate:fresh
 - Roles and permissions stored in the database
 - Repositories abstract all data access
 
+### SaaS tenancy and plans
+
+The application runs as a shared-codebase, multi-tenant HRIS. Company-owned records are scoped to an organization, and each organization has a Basic or Enterprise plan that controls enabled modules. Roles and permissions control what a user can do inside their own organization; a subscription plan is not a permission.
+
 ---
 
 ## 🧰 Requirements
@@ -268,6 +272,20 @@ php artisan schedule:work
 ```bash
 php artisan test
 ```
+
+The project uses Laravel 10.50 with PHPUnit 10. The suite includes focused unit tests for calculations and services, plus Laravel feature tests for API workflows, authorization, tenant isolation, and settings.
+
+`AllModulesSmokeTest` checks every authenticated module entry point against a fresh tenant database, while `ModuleContractTest` verifies that module routes, controllers, tenant models, permissions, and plan features remain consistent.
+
+On Windows/Laragon, use the included runner when SQLite extensions are not enabled globally:
+
+```powershell
+.\scripts\test.ps1
+.\scripts\test.ps1 Unit
+.\scripts\test.ps1 Feature
+```
+
+The test environment uses an in-memory SQLite database and does not use the local MySQL development database.
 
 ---
 

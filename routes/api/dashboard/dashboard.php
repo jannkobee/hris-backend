@@ -3,4 +3,6 @@
 use App\Http\Controllers\Dashboard\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/dashboard/overview', [DashboardController::class, 'overview'])->name('dashboard.overview');
+Route::controller(DashboardController::class)->group(function (): void {
+    Route::get('/dashboard/overview', 'overview')->name('dashboard.overview');
+});

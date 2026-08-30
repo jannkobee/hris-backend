@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkplaceMeeting extends Model
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'series_id',
@@ -52,7 +53,8 @@ class WorkplaceMeeting extends Model
     {
         return $this->belongsToMany(User::class, 'meeting_attendees', 'meeting_id', 'user_id')
             ->using(MeetingAttendee::class)
-            ->withPivot(['id', 'is_required', 'response'])
+            ->wherePivot('organization_id', app(\App\Tenancy\TenantContext::class)->id())
+            ->withPivot(['id', 'organization_id', 'is_required', 'response'])
             ->withTimestamps();
     }
 

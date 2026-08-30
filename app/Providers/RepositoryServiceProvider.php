@@ -38,6 +38,8 @@ use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepository;
 use App\Repository\LeaveConversionRequest\LeaveConversionRequestRepositoryInterface;
 use App\Repository\Message\MessageRepository;
 use App\Repository\Message\MessageRepositoryInterface;
+use App\Repository\Note\NoteRepository;
+use App\Repository\Note\NoteRepositoryInterface;
 use App\Repository\ScheduledTask\ScheduledTaskRepository;
 use App\Repository\ScheduledTask\ScheduledTaskRepositoryInterface;
 use App\Repository\Overtime\OvertimeRepository;
@@ -70,6 +72,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OvertimeRepositoryInterface::class, OvertimeRepository::class);
         $this->app->bind(ConversationRepositoryInterface::class, ConversationRepository::class);
         $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
+        $this->app->bind(NoteRepositoryInterface::class, NoteRepository::class);
         $this->app->bind(HolidayRepositoryInterface::class, HolidayRepository::class);
     }
 

@@ -42,7 +42,7 @@ class LeaveCreditAccrualService
         $employee->loadMissing('employmentStatus');
         $result = $this->emptyResult();
 
-        foreach ($this->dueSettings($month) as $setting) {
+        foreach ($this->settingsForNewEmployee($month) as $setting) {
             $this->mergeResult($result, $this->accrueSettingForEmployee($employee, $setting, $month, $year, $asOfDate));
         }
 
@@ -54,6 +54,17 @@ class LeaveCreditAccrualService
         return LeaveCreditSetting::query()
             ->where('is_active', true)
             ->whereJsonContains('run_months', $month)
+            ->get();
+    }
+
+    private function settingsForNewEmployee(int $month)
+    {
+        return LeaveCreditSetting::query()
+            ->where('is_active', true)
+            ->where(function (Builder $query) use ($month): void {
+                $query->where('grant_on_hire', true)
+                    ->orWhereJsonContains('run_months', $month);
+            })
             ->get();
     }
 

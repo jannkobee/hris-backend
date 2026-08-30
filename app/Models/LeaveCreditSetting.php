@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Traits\HasFilterScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveCreditSetting extends Model
 {
-    use HasFilterScope, HasUuids;
+    use BelongsToOrganization, HasFilterScope, HasUuids;
 
     public $model_name = 'Leave Credit Setting';
 
@@ -25,6 +26,7 @@ class LeaveCreditSetting extends Model
         'eligible_position_ids',
         'eligible_job_grade_ids',
         'minimum_service_months',
+        'grant_on_hire',
         'is_active',
     ];
 
@@ -43,6 +45,7 @@ class LeaveCreditSetting extends Model
         'eligible_position_ids' => 'array',
         'eligible_job_grade_ids' => 'array',
         'minimum_service_months' => 'integer',
+        'grant_on_hire' => 'boolean',
         'is_active' => 'boolean',
     ];
 

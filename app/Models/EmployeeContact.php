@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Employee;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class EmployeeContact extends Model
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'employee_id',

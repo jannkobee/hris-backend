@@ -3,6 +3,7 @@
 namespace App\Services\AppSettings;
 
 use App\Models\AppSetting;
+use App\Tenancy\TenantContext;
 use DateTimeZone;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -11,14 +12,22 @@ use InvalidArgumentException;
 
 class AppSettingService
 {
-    private const VALUES_CACHE_KEY = 'app-settings.values.v1';
+    private const VALUES_CACHE_KEY_PREFIX = 'app-settings.values.v2.';
 
     private const CACHE_TTL_SECONDS = 300;
 
+    public function __construct(private readonly TenantContext $tenantContext)
+    {
+    }
+
     public function all(): array
     {
+        if (! $this->tenantContext->hasOrganization()) {
+            return $this->defaultValues();
+        }
+
         return Cache::remember(
-            self::VALUES_CACHE_KEY,
+            $this->cacheKey(),
             self::CACHE_TTL_SECONDS,
             fn (): array => $this->loadValues()
         );
@@ -26,9 +35,7 @@ class AppSettingService
 
     private function loadValues(): array
     {
-        $values = collect(config('app_settings', []))
-            ->mapWithKeys(fn (array $definition, string $key) => [$key => $definition['default']])
-            ->all();
+        $values = $this->defaultValues();
 
         if (! Schema::hasTable('app_settings')) {
             return $values;
@@ -73,6 +80,7 @@ class AppSettingService
 
     public function update(array $values): array
     {
+        $this->tenantContext->organization();
         $definitions = config('app_settings', []);
 
         DB::transaction(function () use ($values, $definitions): void {
@@ -88,7 +96,7 @@ class AppSettingService
             }
         });
 
-        Cache::forget(self::VALUES_CACHE_KEY);
+        Cache::forget($this->cacheKey());
 
         return $this->all();
     }
@@ -119,5 +127,17 @@ class AppSettingService
         } catch (\JsonException) {
             return config('app_settings', [])[$key]['default'] ?? null;
         }
+    }
+
+    private function defaultValues(): array
+    {
+        return collect(config('app_settings', []))
+            ->mapWithKeys(fn (array $definition, string $key) => [$key => $definition['default']])
+            ->all();
+    }
+
+    private function cacheKey(): string
+    {
+        return self::VALUES_CACHE_KEY_PREFIX.$this->tenantContext->organization()->getKey();
     }
 }

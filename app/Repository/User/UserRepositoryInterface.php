@@ -7,5 +7,5 @@ use App\Repository\Base\BaseRepositoryInterface;
 
 interface UserRepositoryInterface extends BaseRepositoryInterface
 {
-    public function getUserByEmail(string $email, $relation = null): User;
+    public function getUserByEmail(string $email, $relation = null): ?User;
 }

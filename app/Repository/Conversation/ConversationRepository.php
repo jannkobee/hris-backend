@@ -4,6 +4,7 @@ namespace App\Repository\Conversation;
 
 use App\Models\Conversation;
 use App\Models\User;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -100,7 +101,10 @@ class ConversationRepository implements ConversationRepositoryInterface
 
             $conversation->participants()->attach(
                 $allParticipants
-                    ->mapWithKeys(fn (string $userId) => [$userId => ['id' => (string) Str::uuid()]])
+                    ->mapWithKeys(fn (string $userId) => [$userId => [
+                        'id' => (string) Str::uuid(),
+                        'organization_id' => app(TenantContext::class)->id(),
+                    ]])
                     ->all()
             );
 
@@ -116,6 +120,7 @@ class ConversationRepository implements ConversationRepositoryInterface
         DB::table('conversation_participants')
             ->where('conversation_id', $conversationId)
             ->where('user_id', $userId)
+            ->where('organization_id', app(TenantContext::class)->id())
             ->update(['last_read_at' => now()]);
     }
 

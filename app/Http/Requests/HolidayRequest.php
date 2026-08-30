@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Holiday;
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -23,7 +24,7 @@ class HolidayRequest extends FormRequest
             'date' => [
                 'required',
                 'date_format:Y-m-d',
-                Rule::unique('holidays', 'date')->ignore($holidayId),
+                TenantRule::unique('holidays', 'date')->ignore($holidayId),
             ],
             'type' => ['required', Rule::in(Holiday::TYPES)],
             'description' => ['nullable', 'string', 'max:1000'],

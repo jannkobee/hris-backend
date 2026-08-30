@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AppSetting;
 
 use App\Http\Controllers\Controller;
 use App\Services\AppSettings\AppSettingService;
+use App\Services\Plans\PlanEntitlementService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,19 +13,21 @@ use Illuminate\Validation\ValidationException;
 
 class AppSettingController extends Controller
 {
-    public function __construct(private readonly AppSettingService $settings)
-    {
+    public function __construct(
+        private readonly AppSettingService $settings,
+        private readonly PlanEntitlementService $entitlements
+    ) {
         $this->middleware(
             'permission:manage-app-settings,manage-organization-settings,manage-attendance-settings,manage-feature-settings,manage-payroll-settings'
         )->only('update');
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         return response()->json([
             'data' => [
-                'values' => $this->settings->all(),
-                'definitions' => $this->settings->definitions(),
+                'values' => $this->settingsVisibleToPlan($request, $this->settings->all()),
+                'definitions' => $this->settingsVisibleToPlan($request, $this->settings->definitions()),
             ],
         ]);
     }
@@ -89,8 +92,8 @@ class AppSettingController extends Controller
         return response()->json([
             'message' => 'App settings updated successfully.',
             'data' => [
-                'values' => $values,
-                'definitions' => $this->settings->definitions(),
+                'values' => $this->settingsVisibleToPlan($request, $values),
+                'definitions' => $this->settingsVisibleToPlan($request, $this->settings->definitions()),
             ],
         ], 202);
     }
@@ -98,6 +101,25 @@ class AppSettingController extends Controller
     private function authorizeSettingKeys(Request $request, array $keys): void
     {
         $user = $request->user();
+
+        $unavailable = collect($keys)
+            ->filter(function (string $key) use ($user): bool {
+                $feature = match (true) {
+                    str_starts_with($key, 'payroll.') => 'payroll',
+                    str_starts_with($key, 'employee_documents.') => 'employee_documents',
+                    default => null,
+                };
+
+                return $feature !== null
+                    && ! $this->entitlements->allows($user?->organization, $feature);
+            })
+            ->values();
+
+        if ($unavailable->isNotEmpty()) {
+            throw new AuthorizationException(
+                'Your organization\'s subscription plan does not include: '.$unavailable->join(', ').'.'
+            );
+        }
 
         if ($user?->hasPermission('manage-app-settings')) {
             return;
@@ -112,5 +134,22 @@ class AppSettingController extends Controller
                 'You do not have permission to update: '.$unauthorized->join(', ').'.'
             );
         }
+    }
+
+    private function settingsVisibleToPlan(Request $request, array $settings): array
+    {
+        $organization = $request->user()?->organization;
+
+        return collect($settings)
+            ->reject(function (mixed $_value, string $key) use ($organization): bool {
+                $feature = match (true) {
+                    str_starts_with($key, 'payroll.') => 'payroll',
+                    str_starts_with($key, 'employee_documents.') => 'employee_documents',
+                    default => null,
+                };
+
+                return $feature !== null && ! $this->entitlements->allows($organization, $feature);
+            })
+            ->all();
     }
 }

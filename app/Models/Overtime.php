@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\TimeOfDay;
+use App\Traits\BelongsToOrganization;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Overtime extends Model
 {
-    use HasFactory, HasFilterScope, HasUuids, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasFilterScope, HasUuids, SoftDeletes;
     // TODO: also add whatever trait your other models use to provide the
     // `filter()` scope — BaseRepository::getList() calls
     // $this->model->filter() and this project doesn't seem to define that

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasFilterScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use HasFilterScope, HasUuids;
+    use BelongsToOrganization, HasFilterScope, HasUuids;
 
     public $model_name = 'Employee';
 

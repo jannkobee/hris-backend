@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class DepartmentRequest extends FormRequest
 {
@@ -32,7 +32,7 @@ class DepartmentRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('departments', 'name')->ignore($departmentId),
+                TenantRule::unique('departments', 'name')->ignore($departmentId),
             ],
             'description' => ['nullable', 'string'],
         ];

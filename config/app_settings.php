@@ -137,6 +137,14 @@ return [
         'description' => 'Enable payroll periods, calculation, approval, and employee payslips.',
         'rules' => ['required', 'boolean'],
     ],
+    'payroll.country' => [
+        'default' => 'PH',
+        'type' => 'string',
+        'group' => 'payroll',
+        'label' => 'Payroll country',
+        'description' => 'Selects the statutory payroll ruleset. Philippines is the only supported ruleset for now.',
+        'rules' => ['required', 'in:PH'],
+    ],
     'payroll.currency' => [
         'default' => 'PHP',
         'type' => 'string',

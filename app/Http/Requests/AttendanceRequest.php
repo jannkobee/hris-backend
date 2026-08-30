@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use App\Services\AppSettings\AppSettingService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ class AttendanceRequest extends FormRequest
         }
 
         return [
-            'employee_id' => 'required|exists:employees,id',
+            'employee_id' => ['required', TenantRule::exists('employees')],
             'date' => 'required|date',
             'time_in' => 'required|date_format:H:i',
             'time_in_notes' => 'nullable|string|max:255',

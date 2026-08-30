@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Models\UserSetting;
 use App\Repository\User\UserRepositoryInterface;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use App\Services\Plans\PlanEntitlementService;
 use App\Services\Utils\ResponseServiceInterface;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -21,8 +23,13 @@ class AuthService implements AuthServiceInterface
 
     private AuditLogServiceInterface $auditLogService;
 
-    public function __construct(UserRepositoryInterface $userRepository, ResponseServiceInterface $responseService, AuditLogServiceInterface $auditLogService)
-    {
+    public function __construct(
+        UserRepositoryInterface $userRepository,
+        ResponseServiceInterface $responseService,
+        AuditLogServiceInterface $auditLogService,
+        private readonly TenantContext $tenantContext,
+        private readonly PlanEntitlementService $planEntitlements
+    ) {
         $this->userRepository = $userRepository;
         $this->responseService = $responseService;
         $this->auditLogService = $auditLogService;
@@ -42,12 +49,13 @@ class AuthService implements AuthServiceInterface
     {
         $user = $this->userRepository->getUserByEmail($params['email']);
 
-        // if (!$user->is_admin) {
-        //     throw ValidationException::withMessages(['login_error' => 'User must be an admin to login.']);
-        // }
-
-        if (Hash::check(Arr::get($params, 'password'), $user->password)) {
+        if ($user
+            && $this->tenantContext->belongsToCurrentOrganization($user->organization_id)
+            && Hash::check(Arr::get($params, 'password'), $user->password)) {
             $this->auditLogService->loginLog('login', ['email' => $params['email']]);
+
+            $user->loadMissing('organization');
+            $this->attachOrganizationPlan($user);
 
             return [
                 'token' => $user->createToken('UserLogin')->plainTextToken,
@@ -79,7 +87,16 @@ class AuthService implements AuthServiceInterface
             return $this->responseService->resolveResponse('Unauthenticated', null, 401);
         }
 
-        $user = User::withoutGlobalScopes()->find($authUser->id)->load('role.permissions', 'settings', 'employee.department', 'employee.position');
+        $user = User::query()
+            ->with('organization', 'role.permissions', 'settings', 'employee.department', 'employee.position')
+            ->find($authUser->id);
+
+        if (! $user || ! $this->tenantContext->belongsToCurrentOrganization($user->organization_id)) {
+            return $this->responseService->resolveResponse('Unauthenticated', null, 401);
+        }
+
+        $this->attachOrganizationPlan($user);
+
         $settings = $user->settings
             ->mapWithKeys(function ($setting) {
                 return [$setting->setting_key => $this->normalizeSettingValue($setting->setting_value)];
@@ -164,5 +181,17 @@ class AuthService implements AuthServiceInterface
         }
 
         return ['response' => $this->responseService->resolveResponse('Settings updated', $settings)];
+    }
+
+    private function attachOrganizationPlan(User $user): void
+    {
+        if (! $user->organization) {
+            return;
+        }
+
+        $user->organization->setAttribute(
+            'plan',
+            $this->planEntitlements->payload($user->organization)
+        );
     }
 }

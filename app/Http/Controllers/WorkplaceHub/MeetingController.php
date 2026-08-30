@@ -8,6 +8,7 @@ use App\Models\MeetingRoom;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use App\Rules\TenantRule;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,7 +44,7 @@ class MeetingController extends Controller
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'status' => ['nullable', Rule::in(['scheduled', 'in_progress', 'completed', 'cancelled'])],
-            'room_id' => ['nullable', 'uuid', 'exists:meeting_rooms,id'],
+            'room_id' => ['nullable', 'uuid', TenantRule::exists('meeting_rooms')],
             'search' => ['nullable', 'string', 'max:120'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -240,7 +241,7 @@ class MeetingController extends Controller
         $rules = [
             'title' => ['required', 'string', 'max:180'],
             'type' => ['required', Rule::in(['daily_standup', 'team_meeting', 'planning', 'review', 'one_on_one', 'training', 'other'])],
-            'room_id' => ['nullable', 'uuid', Rule::exists('meeting_rooms', 'id')->where('status', 'active')],
+            'room_id' => ['nullable', 'uuid', TenantRule::exists('meeting_rooms')->where('status', 'active')],
             'agenda' => ['nullable', 'string', 'max:10000'],
             'minutes' => ['nullable', 'string', 'max:100000'],
             'decisions' => ['nullable', 'array', 'max:100'],
@@ -252,7 +253,7 @@ class MeetingController extends Controller
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'attendee_ids' => ['nullable', 'array', 'max:500'],
-            'attendee_ids.*' => ['uuid', 'distinct', 'exists:users,id'],
+            'attendee_ids.*' => ['uuid', 'distinct', TenantRule::exists('users')],
         ];
         if ($creating) {
             $rules['recurrence'] = ['nullable', Rule::in(['none', 'daily', 'weekdays', 'weekly'])];

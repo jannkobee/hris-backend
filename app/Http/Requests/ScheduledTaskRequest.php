@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Cron\CronExpression;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Artisan;
@@ -33,7 +34,7 @@ class ScheduledTaskRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('scheduled_tasks', 'name')->ignore($taskId),
+                TenantRule::unique('scheduled_tasks', 'name')->ignore($taskId),
             ],
             'description' => ['nullable', 'string'],
             'command' => [

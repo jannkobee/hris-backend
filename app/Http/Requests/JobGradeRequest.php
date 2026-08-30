@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class JobGradeRequest extends FormRequest
 {
@@ -22,7 +22,7 @@ class JobGradeRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('job_grades', 'name')->ignore($modelId),
+                TenantRule::unique('job_grades', 'name')->ignore($modelId),
             ],
             'description' => ['nullable', 'string'],
         ];

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmployeeDocument extends Model
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     public const CATEGORIES = [
         'personal' => 'Personal records',

@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class EmploymentStatusRequest extends FormRequest
 {
@@ -22,7 +22,7 @@ class EmploymentStatusRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('employment_statuses', 'name')->ignore($modelId),
+                TenantRule::unique('employment_statuses', 'name')->ignore($modelId),
             ],
             'description' => ['nullable', 'string'],
         ];

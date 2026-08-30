@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasFilterScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class Holiday extends Model
 {
-    use HasFilterScope, HasUuids;
+    use BelongsToOrganization, HasFilterScope, HasUuids;
 
     public const TYPES = [
         'regular_holiday',

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\LeaveType;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class LeaveTypeSeeder extends Seeder
 {
@@ -71,7 +70,6 @@ class LeaveTypeSeeder extends Seeder
             LeaveType::updateOrCreate(
                 ['name' => $type['name']],
                 [
-                    'id' => Str::uuid(),
                     'default_days' => $type['default_days'],
                     'is_paid' => $type['is_paid'],
                     // If you added a description column to your migration

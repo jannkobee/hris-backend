@@ -7,6 +7,7 @@ use App\Models\MeetingRoom;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use App\Rules\TenantRule;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class MeetingRoomController extends Controller
             'starts_at' => ['nullable', 'date', 'required_with:ends_at'],
             'ends_at' => ['nullable', 'date', 'after:starts_at', 'required_with:starts_at'],
             'include_inactive' => ['nullable', 'boolean'],
-            'ignore_meeting_id' => ['nullable', 'uuid', 'exists:workplace_meetings,id'],
+            'ignore_meeting_id' => ['nullable', 'uuid', TenantRule::exists('workplace_meetings')],
             'search' => ['nullable', 'string', 'max:120'],
         ]);
 
@@ -117,7 +118,7 @@ class MeetingRoomController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'code' => ['nullable', 'string', 'max:40', Rule::unique('meeting_rooms', 'code')->ignore($room?->id)],
+            'code' => ['nullable', 'string', 'max:40', TenantRule::unique('meeting_rooms', 'code')->ignore($room?->id)],
             'location' => ['nullable', 'string', 'max:255'],
             'floor' => ['nullable', 'string', 'max:80'],
             'capacity' => ['required', 'integer', 'min:1', 'max:10000'],

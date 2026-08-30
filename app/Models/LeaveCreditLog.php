@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveCreditLog extends Model
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     public $model_name = 'Leave Credit Log';
 

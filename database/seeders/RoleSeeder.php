@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Organization;
 use App\Models\Role;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
@@ -23,8 +25,14 @@ class RoleSeeder extends Seeder
             ],
         ];
 
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role['name']], $role);
-        }
+        $context = app(TenantContext::class);
+
+        Organization::query()->get()->each(function (Organization $organization) use ($context, $roles): void {
+            $context->run($organization, function () use ($roles): void {
+                foreach ($roles as $role) {
+                    Role::firstOrCreate(['name' => $role['name']], $role);
+                }
+            });
+        });
     }
 }

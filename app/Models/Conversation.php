@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Pivots\ConversationParticipant;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToOrganization, HasFactory, HasUuids;
 
     protected $keyType = 'string';
 
@@ -36,7 +37,8 @@ class Conversation extends Model
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
             ->using(ConversationParticipant::class)
-            ->withPivot('id', 'last_read_at')
+            ->wherePivot('organization_id', app(\App\Tenancy\TenantContext::class)->id())
+            ->withPivot('id', 'organization_id', 'last_read_at')
             ->withTimestamps();
     }
 

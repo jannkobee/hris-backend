@@ -5,7 +5,9 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\HasFilterScope;
+use App\Traits\BelongsToOrganization;
 use App\Traits\Importable;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,11 +16,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasFilterScope, HasUuids, Importable, Notifiable;
+    use BelongsToOrganization, HasApiTokens, HasFactory, HasFilterScope, HasUuids, Importable, Notifiable;
 
     public $model_name = 'User';
 
@@ -123,6 +126,8 @@ class User extends Authenticatable
 
     public static function importColumns(): array
     {
+        $organizationId = app(TenantContext::class)->organization()->getKey();
+
         return [
             'first_name' => [
                 'label' => 'First Name',
@@ -142,7 +147,12 @@ class User extends Authenticatable
             'email' => [
                 'label' => 'Email',
                 'attribute' => 'email',
-                'rules' => 'required|email|unique:users,email',
+                'rules' => [
+                    'required',
+                    'email',
+                    Rule::unique('users', 'email')
+                        ->where(fn ($query) => $query->where('organization_id', $organizationId)),
+                ],
             ],
             'gender' => [
                 'label' => 'Gender',
@@ -157,7 +167,11 @@ class User extends Authenticatable
             'role' => [
                 'label' => 'Role',
                 'attribute' => 'role_id',
-                'rules' => 'required|exists:roles,name',
+                'rules' => [
+                    'required',
+                    Rule::exists('roles', 'name')
+                        ->where(fn ($query) => $query->where('organization_id', $organizationId)),
+                ],
                 'resolve' => fn ($value) => Role::where('name', $value)->value('id'),
             ],
             'password' => [

@@ -9,7 +9,6 @@ use App\Services\Utils\ResponseServiceInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class UserRepository extends BaseRepository implements UserRepositoryInterface
 {
@@ -33,20 +32,12 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
             );
     }
 
-    public function getUserByEmail(string $email, $relation = null): User
+    public function getUserByEmail(string $email, $relation = null): ?User
     {
-        $user = User::where('email', $email)
+        return User::where('email', $email)
             ->when($relation, function (Builder $query) use ($relation) {
                 $query->with($relation);
             })->first();
-
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'user_not_found' => 'User not found',
-            ]);
-        }
-
-        return $user;
     }
 
     public function create(array $attributes): JsonResponse

@@ -9,12 +9,18 @@ use App\Models\MeetingActionItem;
 use App\Models\Overtime;
 use App\Models\PayrollPeriod;
 use App\Models\User;
+use App\Services\Plans\PlanEntitlementService;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class NavigationBadgeController extends Controller
 {
+    public function __construct(private readonly PlanEntitlementService $planEntitlements)
+    {
+    }
+
     public function __invoke(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -36,7 +42,8 @@ class NavigationBadgeController extends Controller
             $badges['overtime-management'] = Overtime::query()->where('status', 'pending')->count();
         }
 
-        if ($user->hasAnyPermission(['approve-payroll', 'mark-payroll-paid'])) {
+        if ($this->planEntitlements->allows($user->organization, 'payroll')
+            && $user->hasAnyPermission(['approve-payroll', 'mark-payroll-paid'])) {
             $statuses = [];
             if ($user->hasPermission('approve-payroll')) {
                 $statuses[] = 'processed';
@@ -47,7 +54,8 @@ class NavigationBadgeController extends Controller
             $badges['payroll-management'] = PayrollPeriod::query()->whereIn('status', $statuses)->count();
         }
 
-        if ($user->hasPermission('view-workplace-hub')) {
+        if ($this->planEntitlements->allows($user->organization, 'workplace_hub')
+            && $user->hasPermission('view-workplace-hub')) {
             $badges['workplace-hub'] = MeetingActionItem::query()
                 ->where('assigned_to', $user->id)
                 ->where('status', '!=', 'completed')
@@ -59,11 +67,15 @@ class NavigationBadgeController extends Controller
 
     private function unreadMessages(string $userId): int
     {
+        $organizationId = app(TenantContext::class)->id();
+
         return DB::table('messages')
-            ->join('conversation_participants', function ($join) use ($userId): void {
+            ->join('conversation_participants', function ($join) use ($userId, $organizationId): void {
                 $join->on('conversation_participants.conversation_id', '=', 'messages.conversation_id')
-                    ->where('conversation_participants.user_id', '=', $userId);
+                    ->where('conversation_participants.user_id', '=', $userId)
+                    ->where('conversation_participants.organization_id', '=', $organizationId);
             })
+            ->where('messages.organization_id', $organizationId)
             ->where('messages.sender_id', '!=', $userId)
             ->where(function ($query): void {
                 $query->whereNull('conversation_participants.last_read_at')

@@ -2,13 +2,14 @@
 
 namespace App\Models\Logs;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
 {
-    use HasUuids;
+    use BelongsToOrganization, HasUuids;
 
     protected $fillable = [
         'user_id',

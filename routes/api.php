@@ -32,7 +32,7 @@ Route::middleware([])->group(function () {
 });
 
 // Authenticated
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
     Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate']);
 
     $routes = [
@@ -41,6 +41,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         'dashboard/dashboard',
         'navigation/navigation',
         'conversation/conversation',
+        'note/note',
         'role/role',
         'permission/permission',
         'role_permission/role_permission',

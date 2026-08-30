@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class OvertimeRequest extends FormRequest
@@ -21,7 +22,7 @@ class OvertimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => ['required', 'exists:employees,id'],
+            'employee_id' => ['required', TenantRule::exists('employees')],
             'date' => ['required', 'date'],
             'time_start' => ['required', 'date_format:H:i'],
             'time_end' => ['required', 'date_format:H:i', 'after:time_start'],

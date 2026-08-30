@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\EmploymentStatus;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class EmploymentStatusSeeder extends Seeder
 {
@@ -49,7 +48,6 @@ class EmploymentStatusSeeder extends Seeder
             EmploymentStatus::updateOrCreate(
                 ['name' => $status['name']],
                 [
-                    'id' => Str::uuid(),
                     'description' => $status['description'],
                 ]
             );

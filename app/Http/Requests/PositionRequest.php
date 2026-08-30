@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TenantRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class PositionRequest extends FormRequest
 {
@@ -31,7 +31,7 @@ class PositionRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('positions', 'name')->ignore($positionId),
+                TenantRule::unique('positions', 'name')->ignore($positionId),
             ],
             'description' => ['nullable', 'string'],
         ];

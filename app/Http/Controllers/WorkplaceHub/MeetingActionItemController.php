@@ -8,6 +8,7 @@ use App\Models\MeetingActionItem;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use App\Rules\TenantRule;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -87,7 +88,7 @@ class MeetingActionItemController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:220'],
             'description' => ['nullable', 'string', 'max:5000'],
-            'assigned_to' => ['nullable', 'uuid', 'exists:users,id'],
+            'assigned_to' => ['nullable', 'uuid', TenantRule::exists('users')],
             'priority' => ['required', Rule::in(['low', 'normal', 'high', 'urgent'])],
             'status' => ['required', Rule::in(['open', 'in_progress', 'completed'])],
             'due_at' => ['nullable', 'date'],

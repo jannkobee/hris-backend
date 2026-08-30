@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AppSettings\AppSettingService;
 use App\Services\Dashboard\DailyInspirationService;
+use App\Services\Plans\PlanEntitlementService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,6 +25,7 @@ class DashboardController extends Controller
     public function __construct(
         private readonly AppSettingService $settings,
         private readonly DailyInspirationService $inspiration,
+        private readonly PlanEntitlementService $planEntitlements,
     ) {
     }
 
@@ -44,7 +46,8 @@ class DashboardController extends Controller
         $user = $request->user();
         $events = collect();
 
-        if ($user->hasPermission('view-workplace-hub')) {
+        if ($this->planEntitlements->allows($user->organization, 'workplace_hub')
+            && $user->hasPermission('view-workplace-hub')) {
             $meetings = WorkplaceMeeting::query()
                 ->with('room:id,name')
                 ->where('status', '!=', 'cancelled')

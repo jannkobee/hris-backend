@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Conversation;
 
 use App\Http\Controllers\Controller;
 use App\Repository\Conversation\ConversationRepositoryInterface;
+use App\Rules\TenantRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -25,7 +26,7 @@ class ConversationController extends Controller
     {
         $validated = $request->validate([
             'participant_ids' => ['required', 'array', 'min:1'],
-            'participant_ids.*' => ['uuid', 'distinct', 'exists:users,id'],
+            'participant_ids.*' => ['uuid', 'distinct', TenantRule::exists('users')],
             'name' => ['nullable', 'string', 'max:255'],
         ]);
 

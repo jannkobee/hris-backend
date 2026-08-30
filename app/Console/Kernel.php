@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Models\Organization;
 use App\Models\ScheduledTask;
 use App\Services\Scheduling\ScheduledTaskScheduleService;
 use Illuminate\Console\Scheduling\Schedule;
@@ -23,24 +24,37 @@ class Kernel extends ConsoleKernel
     {
         $scheduleService = app(ScheduledTaskScheduleService::class);
 
-        ScheduledTask::query()->where('is_active', true)->get()->each(function (ScheduledTask $task) use ($schedule, $scheduleService) {
-            $event = $schedule->command($task->command)
-                ->name($task->name)
+        $context = app(\App\Tenancy\TenantContext::class);
+
+        Organization::query()->where('status', Organization::STATUS_ACTIVE)->get()->each(function (Organization $organization) use ($context, $schedule, $scheduleService): void {
+            $context->run($organization, function () use ($organization, $schedule, $scheduleService, $context): void {
+                ScheduledTask::query()->where('is_active', true)->get()->each(function (ScheduledTask $task) use ($organization, $schedule, $scheduleService, $context) {
+            $command = $task->command === 'leave-credits:accrue'
+                ? $task->command.' --organization='.$organization->slug
+                : $task->command;
+
+            $event = $schedule->command($command)
+                ->appendOutputTo(storage_path("logs/scheduled-task-{$organization->slug}.log"))
+                ->name($organization->slug.'-'.$task->name)
                 ->timezone($task->timezone ?: config('app.timezone'))
                 ->withoutOverlapping(120)
-                ->onSuccess(function (Stringable $output) use ($task, $scheduleService) {
-                    $task->update([
+                ->onSuccess(function (Stringable $output) use ($organization, $task, $scheduleService, $context) {
+                    $context->run($organization, function () use ($task, $output, $scheduleService): void {
+                        $task->update([
                         'last_run_at' => now(),
                         'last_run_output' => trim((string) $output) ?: 'Success',
                         'next_run_at' => $scheduleService->nextRunAt($task),
-                    ]);
+                        ]);
+                    });
                 })
-                ->onFailure(function (Stringable $output) use ($task, $scheduleService) {
-                    $task->update([
+                ->onFailure(function (Stringable $output) use ($organization, $task, $scheduleService, $context) {
+                    $context->run($organization, function () use ($task, $output, $scheduleService): void {
+                        $task->update([
                         'last_run_at' => now(),
                         'last_run_output' => trim((string) $output) ?: 'Failed',
                         'next_run_at' => $scheduleService->nextRunAt($task),
-                    ]);
+                        ]);
+                    });
                 });
 
             $event->cron($scheduleService->cronExpression($task));
@@ -49,6 +63,8 @@ class Kernel extends ConsoleKernel
             if (! $task->next_run_at || ! $task->next_run_at->equalTo($nextRunAt)) {
                 $task->update(['next_run_at' => $nextRunAt]);
             }
+                });
+            });
         });
     }
 
