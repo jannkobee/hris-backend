@@ -57,6 +57,7 @@ class AuthService implements AuthServiceInterface
 
         if ($user
             && $this->tenantContext->belongsToCurrentOrganization($user->organization_id)
+            && $user->is_active
             && Hash::check(Arr::get($params, 'password'), $user->password)) {
             $user->loadMissing('organization');
 
@@ -73,6 +74,22 @@ class AuthService implements AuthServiceInterface
         throw ValidationException::withMessages([
             'invalid_user_name_or_password' => 'Invalid E-mail or Password',
         ]);
+    }
+
+    public function loginForSso(User $user): array
+    {
+        if (! $user->is_active || ! $this->tenantContext->belongsToCurrentOrganization($user->organization_id)) {
+            throw ValidationException::withMessages(['email' => 'This account is not available for SSO login.']);
+        }
+
+        if ($this->mfaEnabled($user)) {
+            return [
+                'mfa_required' => true,
+                'challenge' => $this->createMfaChallenge($user),
+            ];
+        }
+
+        return $this->issueToken($user);
     }
 
     public function logout(): JsonResponse

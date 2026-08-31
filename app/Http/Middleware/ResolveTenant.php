@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Organization;
 use App\Services\Tenancy\TenantResolver;
 use App\Tenancy\TenantContext;
 use Closure;
@@ -20,7 +19,7 @@ class ResolveTenant
 
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->routeIs('health', 'public-apis.*', 'platform.*')) {
+        if ($request->routeIs('health', 'public-apis.*', 'platform.*', 'scim.*', 'oidc.*', 'billing.*')) {
             return $next($request);
         }
 

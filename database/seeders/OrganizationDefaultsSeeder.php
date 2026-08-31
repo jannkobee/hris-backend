@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Organization;
+use App\Services\LeaveAccrual\LeaveAccrualScheduleSyncer;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 
@@ -23,8 +24,8 @@ class OrganizationDefaultsSeeder extends Seeder
                 PositionSeeder::class,
                 JobGradeSeeder::class,
                 LeaveTypeSeeder::class,
-                ScheduledTaskSeeder::class,
             ]);
+            app(LeaveAccrualScheduleSyncer::class)->sync();
         });
     }
 }

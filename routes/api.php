@@ -25,6 +25,8 @@ Route::middleware([])->group(function () {
         'public_api/public_api',
         'platform/platform',
         'realtime/realtime',
+        'scim/scim',
+        'billing/billing',
     ];
 
     foreach ($routes as $route) {

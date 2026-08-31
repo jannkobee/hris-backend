@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Organization;
 use App\Models\Role;
+use App\Models\SubscriptionEvent;
 use App\Models\User;
 use App\Services\Plans\PlanEntitlementService;
 use App\Tenancy\TenantContext;
@@ -28,6 +29,11 @@ class OrganizationProvisioningTest extends TestCase
 
         $organization = Organization::query()->where('slug', 'acme')->firstOrFail();
         $this->assertNotNull($organization->trial_ends_at);
+
+        $this->withHeader('X-Platform-Provisioning-Key', 'platform-test-key')
+            ->getJson(route('platform.organizations.show', $organization))
+            ->assertOk()
+            ->assertJsonPath('data.webhooks', []);
 
         app(TenantContext::class)->run($organization, function (): void {
             $adminRole = Role::query()->where('name', 'Admin')->firstOrFail();
@@ -69,6 +75,14 @@ class OrganizationProvisioningTest extends TestCase
 
         $organization->refresh();
         $this->assertSame(200, app(PlanEntitlementService::class)->employeeLimit($organization));
+
+        app(TenantContext::class)->run($organization, function (): void {
+            $event = SubscriptionEvent::query()->latest()->firstOrFail();
+
+            $this->assertSame('plan_changed', $event->event_type);
+            $this->assertSame(Organization::PLAN_BASIC, $event->from_plan_code);
+            $this->assertSame(Organization::PLAN_ENTERPRISE, $event->to_plan_code);
+        });
     }
 
     private function payload(): array

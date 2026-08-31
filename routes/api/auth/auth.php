@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\OidcController;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(function () {
@@ -21,4 +22,10 @@ Route::controller(AuthController::class)->name('auth.')->prefix('auth')->group(f
     Route::get('/sessions', 'sessions')->middleware(['auth:sanctum', 'tenant.auth'])->name('sessions.index');
     Route::delete('/sessions/others', 'revokeOtherSessions')->middleware(['auth:sanctum', 'tenant.auth'])->name('sessions.others.destroy');
     Route::delete('/sessions/{token}', 'revokeSession')->whereNumber('token')->middleware(['auth:sanctum', 'tenant.auth'])->name('sessions.destroy');
+});
+
+Route::controller(OidcController::class)->name('oidc.')->prefix('auth/oidc')->group(function () {
+    Route::get('{organizationSlug}/redirect', 'redirect')->name('redirect');
+    Route::get('callback', 'callback')->name('callback');
+    Route::post('exchange', 'exchange')->middleware('throttle:login')->name('exchange');
 });

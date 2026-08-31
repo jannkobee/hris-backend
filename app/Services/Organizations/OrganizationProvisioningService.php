@@ -15,10 +15,20 @@ use Illuminate\Validation\ValidationException;
 
 class OrganizationProvisioningService
 {
+    private TenantContext $tenantContext;
+
+    private OrganizationDefaultsSeeder $defaults;
+
+    private SubscriptionLifecycleService $subscriptions;
+
     public function __construct(
-        private readonly TenantContext $tenantContext,
-        private readonly OrganizationDefaultsSeeder $defaults,
+        TenantContext $tenantContext,
+        OrganizationDefaultsSeeder $defaults,
+        SubscriptionLifecycleService $subscriptions,
     ) {
+        $this->tenantContext = $tenantContext;
+        $this->defaults = $defaults;
+        $this->subscriptions = $subscriptions;
     }
 
     public function provision(array $attributes): Organization
@@ -69,20 +79,15 @@ class OrganizationProvisioningService
 
             $this->defaults->seed($organization);
 
-            return $organization->fresh();
+            $organization = $organization->fresh();
+            $this->subscriptions->recordProvisioned($organization);
+
+            return $organization;
         });
     }
 
     public function updateSubscription(Organization $organization, array $attributes): Organization
     {
-        $organization->update([
-            'plan_code' => $attributes['plan_code'],
-            'subscription_status' => $attributes['subscription_status'],
-            'trial_ends_at' => $attributes['trial_ends_at'] ?? null,
-            'current_period_ends_at' => $attributes['current_period_ends_at'] ?? null,
-            'employee_limit' => $attributes['employee_limit'] ?? null,
-        ]);
-
-        return $organization->fresh();
+        return $this->subscriptions->update($organization, $attributes);
     }
 }

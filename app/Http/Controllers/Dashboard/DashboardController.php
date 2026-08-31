@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DashboardAnalyticsRequest;
 use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Employee;
@@ -13,6 +14,7 @@ use App\Models\PayrollPeriod;
 use App\Models\User;
 use App\Models\WorkplaceMeeting;
 use App\Services\AppSettings\AppSettingService;
+use App\Services\AuditLog\AuditLogServiceInterface;
 use App\Services\Dashboard\DailyInspirationService;
 use App\Services\Plans\PlanEntitlementService;
 use Carbon\Carbon;
@@ -21,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
@@ -30,14 +33,18 @@ class DashboardController extends Controller
 
     private PlanEntitlementService $planEntitlements;
 
+    private AuditLogServiceInterface $auditLogs;
+
     public function __construct(
         AppSettingService $settings,
         DailyInspirationService $inspiration,
         PlanEntitlementService $planEntitlements,
+        AuditLogServiceInterface $auditLogs,
     ) {
         $this->settings = $settings;
         $this->inspiration = $inspiration;
         $this->planEntitlements = $planEntitlements;
+        $this->auditLogs = $auditLogs;
     }
 
     public function overview(Request $request): JsonResponse
@@ -168,15 +175,49 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function analytics(Request $request): JsonResponse
+    public function analytics(DashboardAnalyticsRequest $request): JsonResponse
+    {
+        return response()->json(['data' => $this->analyticsData($request->validated())]);
+    }
+
+    public function exportAnalytics(DashboardAnalyticsRequest $request): StreamedResponse
+    {
+        $analytics = $this->analyticsData($request->validated());
+        $this->auditLogs->insertLog($request->user(), 'export dashboard analytics', $analytics['range']);
+
+        return response()->streamDownload(function () use ($analytics): void {
+            $handle = fopen('php://output', 'wb');
+            fputcsv($handle, ['Metric', 'Value']);
+            foreach ([
+                'Headcount' => $analytics['headcount'],
+                'Attendance exceptions' => $analytics['attendance_exceptions'],
+                'Approved leave days' => $analytics['leave_days'],
+                'Premium overtime hours' => $analytics['overtime_premium_hours'],
+                'Approved payroll net' => $analytics['payroll_net'],
+            ] as $metric => $value) {
+                fputcsv($handle, [$metric, $value]);
+            }
+            fputcsv($handle, []);
+            fputcsv($handle, ['Date', 'Attendance exceptions', 'Premium overtime hours']);
+            foreach ($analytics['trends'] as $trend) {
+                fputcsv($handle, [$trend['date'], $trend['attendance_exceptions'], $trend['overtime_hours']]);
+            }
+            fclose($handle);
+        }, 'dashboard-analytics-'.$analytics['range']['from'].'-to-'.$analytics['range']['to'].'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    private function analyticsData(array $filters): array
     {
         $timezone = (string) $this->settings->get('organization.timezone', config('app.timezone'));
-        $to = Carbon::now($timezone)->endOfDay();
-        $from = $to->copy()->subDays(29)->startOfDay();
+        $to = isset($filters['to']) ? Carbon::parse($filters['to'], $timezone)->endOfDay() : Carbon::now($timezone)->endOfDay();
+        $from = isset($filters['from']) ? Carbon::parse($filters['from'], $timezone)->startOfDay() : $to->copy()->subDays(29)->startOfDay();
+        if ($from->diffInDays($to) > 366) {
+            throw ValidationException::withMessages(['to' => 'Dashboard analytics can cover at most 366 days.']);
+        }
 
         $approvedLeave = LeaveRequest::query()->where('status', 'approved')
             ->whereDate('start_date', '<=', $to)->whereDate('end_date', '>=', $from)->get();
-        $trendFrom = $to->copy()->subDays(13)->startOfDay();
+        $trendFrom = $from->copy()->max($to->copy()->subDays(13)->startOfDay());
         $exceptionsByDate = Attendance::query()->whereBetween('date', [$trendFrom, $to])
             ->whereNotNull('exception_codes')->get()->groupBy(fn (Attendance $attendance) => $attendance->date->toDateString())
             ->map(fn ($records) => $records->sum(fn (Attendance $attendance) => count($attendance->exception_codes ?? [])));
@@ -184,7 +225,7 @@ class DashboardController extends Controller
             ->get()->groupBy(fn (Overtime $overtime) => $overtime->date->toDateString())
             ->map(fn ($records) => round((float) $records->sum('premium_hours'), 2));
 
-        return response()->json(['data' => [
+        return [
             'range' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
             'headcount' => Employee::query()->whereHas('user')->count(),
             'attendance_exceptions' => Attendance::query()->whereBetween('date', [$from, $to])
@@ -205,7 +246,7 @@ class DashboardController extends Controller
                     'overtime_hours' => (float) ($overtimeByDate[$key] ?? 0),
                 ];
             })->values(),
-        ]]);
+        ];
     }
 
     private function companyPresence(string $timezone): array

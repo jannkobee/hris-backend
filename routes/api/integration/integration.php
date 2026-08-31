@@ -15,7 +15,7 @@ Route::prefix('integrations')->name('integrations.')->controller(IntegrationCont
     Route::delete('webhooks/{webhookSubscription}', 'destroyWebhook')->name('webhooks.destroy');
 });
 
-Route::prefix('identity')->name('identity.')->controller(IdentityProvisioningController::class)->group(function (): void {
+Route::prefix('identity')->name('identity.')->middleware('plan:sso_scim')->controller(IdentityProvisioningController::class)->group(function (): void {
     Route::get('sso', 'showSso')->name('sso.show');
     Route::put('sso', 'updateSso')->name('sso.update');
     Route::get('scim-tokens', 'indexScimTokens')->name('scim-tokens.index');

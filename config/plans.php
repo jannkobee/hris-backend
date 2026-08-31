@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => env('DEFAULT_ORGANIZATION_PLAN', 'basic'),
+    'default' => env('DEFAULT_ORGANIZATION_PLAN', 'growth'),
 
     'features' => [
         'core_hr' => [
@@ -56,12 +56,36 @@ return [
             'name' => 'Automation',
             'description' => 'Managed scheduled tasks and automated HR operations.',
         ],
+        'shift_rosters' => [
+            'name' => 'Shift Rosters',
+            'description' => 'Shift templates, roster assignments, and attendance exception detection.',
+        ],
+        'attendance_corrections' => [
+            'name' => 'Attendance Corrections',
+            'description' => 'Employee correction requests, manager review, and audit trail.',
+        ],
+        'reports' => [
+            'name' => 'Operational Reports',
+            'description' => 'Attendance, leave, overtime, payroll, and workforce-cost reports.',
+        ],
+        'scheduled_reports' => [
+            'name' => 'Scheduled Reports',
+            'description' => 'Saved reports and scheduled CSV delivery by email.',
+        ],
+        'integrations' => [
+            'name' => 'Integrations',
+            'description' => 'API tokens and signed webhook subscriptions.',
+        ],
+        'sso_scim' => [
+            'name' => 'SSO and SCIM',
+            'description' => 'Enterprise identity configuration and provisioning credentials.',
+        ],
     ],
 
     'plans' => [
-        'basic' => [
-            'name' => 'Basic',
-            'description' => 'Core employee records and day-to-day HR self-service.',
+        'starter' => [
+            'name' => 'Starter',
+            'description' => 'Essential HR operations for small teams.',
             'features' => [
                 'core_hr',
                 'attendance',
@@ -69,15 +93,49 @@ return [
                 'overtime',
                 'workforce_calendar',
                 'announcements',
-                'messaging',
-                'notes',
+            ],
+            'limits' => ['employees' => 25],
+        ],
+        'growth' => [
+            'name' => 'Growth',
+            'description' => 'Manager workflows and operational visibility for growing organizations.',
+            'features' => [
+                'core_hr', 'attendance', 'leave', 'overtime', 'workforce_calendar',
+                'announcements', 'messaging', 'notes', 'employee_documents',
+                'shift_rosters', 'attendance_corrections', 'reports',
+            ],
+            'limits' => ['employees' => 100],
+        ],
+        'business' => [
+            'name' => 'Business',
+            'description' => 'Payroll, automation, and controls for multi-team operations.',
+            'features' => [
+                'core_hr', 'attendance', 'leave', 'overtime', 'workforce_calendar',
+                'announcements', 'messaging', 'notes', 'employee_documents',
+                'shift_rosters', 'attendance_corrections', 'reports', 'payroll',
+                'workplace_hub', 'audit_logs', 'automation', 'scheduled_reports',
+            ],
+            'limits' => ['employees' => 500],
+        ],
+        'basic' => [
+            'name' => 'Basic (Legacy)',
+            'description' => 'Legacy plan retained for existing organizations. Migrate to Growth when ready.',
+            'features' => [
+                'core_hr', 'attendance', 'leave', 'overtime', 'workforce_calendar',
+                'announcements', 'messaging', 'notes',
             ],
             'limits' => ['employees' => 50],
         ],
         'enterprise' => [
             'name' => 'Enterprise',
-            'description' => 'Every available HRIS module and enterprise control.',
-            'features' => ['*'],
+            'description' => 'Advanced identity, integrations, and governance for large organizations.',
+            'features' => [
+                'core_hr', 'attendance', 'leave', 'overtime', 'workforce_calendar',
+                'announcements', 'messaging', 'notes', 'employee_documents',
+                'shift_rosters', 'attendance_corrections', 'reports', 'payroll',
+                'workplace_hub', 'audit_logs', 'automation', 'scheduled_reports',
+                'integrations', 'sso_scim',
+            ],
             'limits' => ['employees' => null],
         ],
     ],

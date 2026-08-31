@@ -32,7 +32,7 @@ return [
         'leave_request_attachments', 'meeting_action_items', 'meeting_attachments',
         'meeting_attendees', 'meeting_rooms', 'messages', 'message_attachments',
         'notes', 'overtimes', 'payroll_items', 'payroll_periods', 'positions', 'saved_reports', 'scim_tokens', 'sso_configurations', 'statutory_rules', 'webhook_subscriptions',
-        'scheduled_tasks', 'user_settings', 'workplace_meetings', 'audit_logs',
+        'scheduled_tasks', 'user_settings', 'workplace_meetings', 'audit_logs', 'subscription_events',
         'password_reset_requests', 'shift_templates', 'shift_assignments', 'attendance_correction_requests', 'app_notifications', 'leave_blackout_dates', 'approval_delegations', 'leave_credit_carryovers',
     ],
 ];

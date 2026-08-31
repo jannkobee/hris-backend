@@ -42,6 +42,18 @@ class PublicAPIController extends Controller
         }
     }
 
+    public function pricing(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $countryCode = strtoupper((string) $request->query('country_code', 'PH'));
+        $pricing = config('billing.regional_prices.'.$countryCode, [
+            'currency' => config('billing.currency'),
+            'locale' => 'en-US',
+            'prices' => config('billing.stripe.prices'),
+        ]);
+
+        return $this->responseService->successResponse('Pricing', ['country_code' => $countryCode, ...$pricing]);
+    }
+
     /**
      * Get all states of a specific country by Country Name
      * GET /countries/{countryName}/states

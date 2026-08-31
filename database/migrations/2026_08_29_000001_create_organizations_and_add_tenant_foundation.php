@@ -18,8 +18,8 @@ return new class extends Migration
             $legacySlug = 'legacy';
         }
 
-        if (! in_array($legacyPlan, ['basic', 'enterprise'], true)) {
-            $legacyPlan = 'basic';
+        if (! array_key_exists($legacyPlan, config('plans.plans', []))) {
+            $legacyPlan = config('plans.default', 'growth');
         }
 
         Schema::create('organizations', function (Blueprint $table): void {
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->string('name');
             $table->string('timezone')->default('UTC');
-            $table->string('plan_code')->default('basic');
+            $table->string('plan_code')->default(config('plans.default', 'growth'));
             $table->enum('status', ['active', 'suspended'])->default('active');
             $table->timestamps();
         });

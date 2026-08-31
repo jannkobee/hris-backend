@@ -4,10 +4,10 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Traits\HasFilterScope;
-use App\Traits\BelongsToOrganization;
-use App\Traits\Importable;
 use App\Tenancy\TenantContext;
+use App\Traits\BelongsToOrganization;
+use App\Traits\HasFilterScope;
+use App\Traits\Importable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +31,8 @@ class User extends Authenticatable
         'middle_name',
         'last_name',
         'email',
+        'scim_external_id',
+        'is_active',
         'gender',
         'birthday',
         'password',
@@ -62,6 +64,7 @@ class User extends Authenticatable
     protected $casts = [
         'birthday' => 'date:Y-m-d',
         'is_admin' => 'boolean',
+        'is_active' => 'boolean',
         'password' => 'hashed',
         'two_factor_secret' => 'encrypted',
         'two_factor_recovery_codes' => 'encrypted:array',

@@ -2,9 +2,13 @@
 
 namespace App\Services\Auth;
 
+use App\Models\User;
+
 interface AuthServiceInterface
 {
     public function login(array $params);
+
+    public function loginForSso(User $user): array;
 
     public function logout();
 

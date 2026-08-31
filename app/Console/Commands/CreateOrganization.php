@@ -18,7 +18,7 @@ class CreateOrganization extends Command
     protected $signature = 'organizations:create
         {slug : Unique URL-safe organization slug, such as acme}
         {name : Organization display name}
-        {--plan=basic : Subscription plan (basic or enterprise)}
+        {--plan=growth : Subscription plan (starter, growth, business, enterprise, or legacy basic)}
         {--admin-email= : Initial administrator email}
         {--admin-password= : Initial administrator password}';
 
@@ -37,8 +37,8 @@ class CreateOrganization extends Command
             return self::FAILURE;
         }
 
-        if (! in_array($plan, [Organization::PLAN_BASIC, Organization::PLAN_ENTERPRISE], true)) {
-            $this->error('Plan must be basic or enterprise.');
+        if (! array_key_exists($plan, config('plans.plans', []))) {
+            $this->error('Plan must be a configured plan code.');
 
             return self::FAILURE;
         }

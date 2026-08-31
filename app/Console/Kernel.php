@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     {
         $this->scheduleDatabaseTasks($schedule);
         $schedule->command('reports:deliver')->hourly()->withoutOverlapping(120);
+        $schedule->command('subscriptions:reconcile')->dailyAt('01:00')->withoutOverlapping(30);
     }
 
     /**

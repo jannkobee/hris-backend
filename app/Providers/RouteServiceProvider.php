@@ -48,6 +48,10 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->ip());
         });
 
+        RateLimiter::for('trial-signup', function (Request $request) {
+            return Limit::perHour(3)->by($request->ip().'|'.strtolower((string) $request->input('email')));
+        });
+
         $this->routes(function () {
             Route::prefix(self::HOME)
                 ->group(function () {

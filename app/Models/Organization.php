@@ -35,6 +35,12 @@ class Organization extends Model
 
     public const PLAN_BASIC = 'basic';
 
+    public const PLAN_STARTER = 'starter';
+
+    public const PLAN_GROWTH = 'growth';
+
+    public const PLAN_BUSINESS = 'business';
+
     public const PLAN_ENTERPRISE = 'enterprise';
 
     protected $fillable = [
@@ -48,6 +54,7 @@ class Organization extends Model
         'trial_ends_at',
         'current_period_ends_at',
         'employee_limit',
+        'billing_provider', 'billing_customer_id', 'billing_subscription_id', 'billing_interval',
     ];
 
     protected $casts = [
