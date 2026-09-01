@@ -27,6 +27,7 @@ Route::middleware([])->group(function () {
         'realtime/realtime',
         'scim/scim',
         'billing/billing',
+        'onboarding/onboarding',
     ];
 
     foreach ($routes as $route) {
@@ -51,6 +52,7 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'department/department',
         'position/position',
         'employee/employee',
+        'employee_lifecycle/employee_lifecycle',
         'employee_document/employee_document',
         'employment_status/employment_status',
         'job_grade/job_grade',
@@ -67,6 +69,13 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'audit_log/audit_log',
         'app_setting/app_setting',
         'payroll/payroll',
+        'payroll_adjustment/payroll_adjustment',
+        'payslip_archive/payslip_archive',
+        'performance/performance',
+        'training/training',
+        'benefit/benefit',
+        'expense/expense',
+        'statutory_report/statutory_report',
         'workplace_hub/workplace_hub',
         'holiday/holiday',
         'approval/approval',
@@ -74,6 +83,8 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'notification/notification',
         'reporting/reporting',
         'integration/integration',
+        'billing_portal/billing_portal',
+        'organization_data_export/organization_data_export',
     ];
 
     foreach ($routes as $route) {

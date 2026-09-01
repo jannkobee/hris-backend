@@ -4,7 +4,7 @@ use App\Http\Controllers\Integration\IdentityProvisioningController;
 use App\Http\Controllers\Integration\IntegrationController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('integrations')->name('integrations.')->controller(IntegrationController::class)->group(function (): void {
+Route::prefix('integrations')->name('integrations.')->middleware('plan:integrations')->controller(IntegrationController::class)->group(function (): void {
     Route::get('tokens', 'indexTokens')->name('tokens.index');
     Route::post('tokens', 'storeToken')->name('tokens.store');
     Route::delete('tokens/{tokenId}', 'destroyToken')->name('tokens.destroy');

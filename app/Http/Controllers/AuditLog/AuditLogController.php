@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AuditLog;
 use App\Http\Controllers\Controller;
 use App\Services\AuditLog\AuditLogServiceInterface;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
@@ -26,6 +27,19 @@ class AuditLogController extends Controller
         ]);
 
         return $this->auditLogService->getLogsByDate(
+            $filters['from'] ?? null,
+            $filters['to'] ?? null,
+        );
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filters = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        ]);
+
+        return $this->auditLogService->exportComplianceLogs(
             $filters['from'] ?? null,
             $filters['to'] ?? null,
         );

@@ -48,7 +48,7 @@ class NavigationBadgeTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.messages', 1);
 
-        $this->assertSame(['messages'], array_keys($response->json('data')));
+        $this->assertSame(['messages', 'notifications'], array_keys($response->json('data')));
 
         $conversation->participants()->updateExistingPivot($user->id, ['last_read_at' => now()->addSecond()]);
         $this->actingAs($user, 'sanctum')

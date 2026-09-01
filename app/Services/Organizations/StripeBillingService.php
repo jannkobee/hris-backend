@@ -54,6 +54,27 @@ class StripeBillingService
         return ['id' => $response['id'] ?? null, 'url' => $response['url'] ?? null];
     }
 
+    public function portal(Organization $organization, string $returnUrl): array
+    {
+        if ((string) config('billing.stripe.secret_key') === '') {
+            throw ValidationException::withMessages(['billing' => 'Stripe billing is not configured.']);
+        }
+        if (! $organization->billing_customer_id) {
+            throw ValidationException::withMessages(['billing' => 'No Stripe customer is linked to this organization yet.']);
+        }
+
+        $response = Http::asForm()->acceptJson()->timeout(20)
+            ->withBasicAuth((string) config('billing.stripe.secret_key'), '')
+            ->post(rtrim((string) config('billing.stripe.api_base'), '/').'/v1/billing_portal/sessions', [
+                'customer' => $organization->billing_customer_id,
+                'return_url' => $returnUrl,
+            ])
+            ->throw()
+            ->json();
+
+        return ['url' => $response['url'] ?? null];
+    }
+
     public function handleWebhook(Request $request): void
     {
         $payload = $request->getContent();

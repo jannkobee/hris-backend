@@ -29,7 +29,8 @@ class ProvisionOrganizationRequest extends FormRequest
             'admin_first_name' => ['nullable', 'string', 'max:255'],
             'admin_last_name' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'max:255'],
-            'admin_password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'send_owner_invitation' => ['nullable', 'boolean'],
+            'admin_password' => ['required_without:send_owner_invitation', 'nullable', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
         ];
     }
 }

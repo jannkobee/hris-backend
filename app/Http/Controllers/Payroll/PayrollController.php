@@ -307,6 +307,7 @@ class PayrollController extends Controller
     {
         $this->ensureEnabled();
         $this->authorizePermission($request, 'approve-payroll');
+        $this->ensureMakerChecker($request, $period, 'approve');
         if ($period->status !== 'processed') {
             throw ValidationException::withMessages(['status' => 'Only processed payroll can be approved.']);
         }
@@ -329,6 +330,7 @@ class PayrollController extends Controller
     {
         $this->ensureEnabled();
         $this->authorizePermission($request, 'approve-payroll');
+        $this->ensureMakerChecker($request, $period, 'lock');
         if ($period->status !== 'approved' || $period->isLocked()) {
             throw ValidationException::withMessages(['status' => 'Only an unlocked approved payroll can be locked.']);
         }
@@ -351,6 +353,7 @@ class PayrollController extends Controller
     {
         $this->ensureEnabled();
         $this->authorizePermission($request, 'mark-payroll-paid');
+        $this->ensureMakerChecker($request, $period, 'mark paid');
         if ($period->status !== 'approved' || ! $period->isLocked()) {
             throw ValidationException::withMessages(['status' => 'Only locked approved payroll can be marked as paid.']);
         }
@@ -458,6 +461,20 @@ class PayrollController extends Controller
             ->where('date_to', '>=', $from)
             ->exists()) {
             throw ValidationException::withMessages(['date_from' => 'This range overlaps an existing payroll period.']);
+        }
+    }
+
+    private function ensureMakerChecker(Request $request, PayrollPeriod $period, string $action): void
+    {
+        $actorId = (string) $request->user()?->getKey();
+        $makerIds = array_filter([(string) $period->created_by]);
+
+        if (in_array($actorId, $makerIds, true)) {
+            throw new AuthorizationException("The payroll maker cannot {$action} the same payroll period.");
+        }
+
+        if ($action === 'mark paid' && (string) $period->approved_by === $actorId) {
+            throw new AuthorizationException('The payroll approver cannot mark the same payroll period as paid.');
         }
     }
 

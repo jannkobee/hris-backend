@@ -70,6 +70,8 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             $employeeId = $responseData['data']['id'];
             $employee = Employee::find($employeeId);
 
+            $this->ensureNotOwnManager($employee);
+
             if (! empty($addresses)) {
                 $this->syncAddresses($employee, $addresses);
             }
@@ -124,6 +126,8 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
         if ($response->isSuccessful()) {
             $employee = Employee::find($id);
 
+            $this->ensureNotOwnManager($employee);
+
             if ($addresses !== null) {
                 $this->syncAddresses($employee, $addresses);
             }
@@ -151,6 +155,13 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
             'employment_status_id' => $employee->employment_status_id,
             'updated_at' => $employee->updated_at?->toIso8601String(),
         ];
+    }
+
+    private function ensureNotOwnManager(Employee $employee): void
+    {
+        if ($employee->manager_id !== null && $employee->manager_id === $employee->getKey()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['manager_id' => 'An employee cannot report to themselves.']);
+        }
     }
 
     public function generateEmployeeNo(): JsonResponse

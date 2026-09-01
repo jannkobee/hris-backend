@@ -14,8 +14,10 @@ class UserSetting extends \Illuminate\Database\Eloquent\Model
     protected $fillable = [
         'user_id',
         'setting_key',
-        'setting_value'
+        'setting_value',
     ];
+
+    protected $casts = ['setting_value' => 'array'];
 
     public function user(): BelongsTo
     {

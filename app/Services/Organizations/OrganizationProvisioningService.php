@@ -65,7 +65,7 @@ class OrganizationProvisioningService
                 );
                 $admin->permissions()->sync(Permission::query()->pluck('id'));
 
-                if (filled($attributes['admin_email'] ?? null)) {
+                if (filled($attributes['admin_email'] ?? null) && filled($attributes['admin_password'] ?? null)) {
                     User::create([
                         'role_id' => $admin->id,
                         'first_name' => $attributes['admin_first_name'] ?? 'Administrator',

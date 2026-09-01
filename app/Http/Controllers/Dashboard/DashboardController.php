@@ -12,6 +12,7 @@ use App\Models\LeaveRequest;
 use App\Models\Overtime;
 use App\Models\PayrollPeriod;
 use App\Models\User;
+use App\Models\UserSetting;
 use App\Models\WorkplaceMeeting;
 use App\Services\AppSettings\AppSettingService;
 use App\Services\AuditLog\AuditLogServiceInterface;
@@ -173,6 +174,27 @@ class DashboardController extends Controller
                     ->get(['id', 'title', 'content', 'published_at', 'created_at']),
             ],
         ]);
+    }
+
+    public function layout(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $role = $user->role?->name ?? 'Employee';
+        $defaultWidgets = $role === 'Admin'
+            ? ['headcount', 'attendance', 'leave_pending', 'payroll_status', 'approvals']
+            : ['attendance', 'leave_balance', 'upcoming_leave', 'announcements'];
+        $setting = UserSetting::query()->where('user_id', $user->getKey())->where('setting_key', 'dashboard.layout')->first();
+
+        return response()->json(['data' => ['role' => $role, 'widgets' => $setting?->setting_value ?: $defaultWidgets, 'default_widgets' => $defaultWidgets]]);
+    }
+
+    public function updateLayout(Request $request): JsonResponse
+    {
+        $data = $request->validate(['widgets' => ['required', 'array', 'min:1', 'max:12'], 'widgets.*' => ['string', 'max:80']]);
+        UserSetting::query()->updateOrCreate(['user_id' => $request->user()->getKey(), 'setting_key' => 'dashboard.layout'], ['setting_value' => $data['widgets']]);
+
+        return response()->json(['message' => 'Dashboard layout updated successfully.', 'data' => ['widgets' => $data['widgets']]], 202);
     }
 
     public function analytics(DashboardAnalyticsRequest $request): JsonResponse

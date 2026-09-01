@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('last_name')->nullable();
             $table->string('email')->unique();
             $table->string('gender')->nullable();
-            $table->date('birthday');
+            $table->date('birthday')->nullable();
             $table->string('password');
             $table->boolean('is_admin')->default(false);
             $table->timestamps();

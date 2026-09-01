@@ -9,4 +9,8 @@ interface AuditLogServiceInterface
     public function loginLog(string $action, array $attr);
 
     public function getLogsByDate(?string $from, ?string $to);
+
+    public function exportComplianceLogs(?string $from, ?string $to): \Symfony\Component\HttpFoundation\StreamedResponse;
+
+    public function verifyIntegrity(): array;
 }

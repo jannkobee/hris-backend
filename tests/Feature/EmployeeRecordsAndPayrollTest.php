@@ -24,6 +24,8 @@ class EmployeeRecordsAndPayrollTest extends TestCase
     {
         Storage::fake('local');
         $admin = $this->userWithRole('Admin');
+        $checker = $this->userWithRole('Admin');
+        $payor = $this->userWithRole('Admin');
         $employeeUser = $this->userWithRole('User');
         $employee = Employee::create([
             'user_id' => $employeeUser->id,
@@ -72,6 +74,8 @@ class EmployeeRecordsAndPayrollTest extends TestCase
     public function test_admin_can_process_approve_and_mark_payroll_paid(): void
     {
         $admin = $this->userWithRole('Admin');
+        $checker = $this->userWithRole('Admin');
+        $payor = $this->userWithRole('Admin');
         $employeeUser = $this->userWithRole('User');
         $employee = Employee::create([
             'user_id' => $employeeUser->id,
@@ -112,8 +116,9 @@ class EmployeeRecordsAndPayrollTest extends TestCase
             ->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('EMP-PAY', $export->streamedContent());
 
-        $this->actingAs($admin, 'sanctum')->postJson(route('payroll.approve', $periodId))->assertAccepted();
-        $this->actingAs($admin, 'sanctum')->postJson(route('payroll.mark-paid', $periodId))->assertAccepted();
+        $this->actingAs($checker, 'sanctum')->postJson(route('payroll.approve', $periodId))->assertAccepted();
+        $this->actingAs($checker, 'sanctum')->postJson(route('payroll.lock', $periodId))->assertAccepted();
+        $this->actingAs($payor, 'sanctum')->postJson(route('payroll.mark-paid', $periodId))->assertAccepted();
 
         $this->assertSame('paid', PayrollPeriod::findOrFail($periodId)->status);
         $this->actingAs($employeeUser, 'sanctum')
@@ -162,6 +167,7 @@ class EmployeeRecordsAndPayrollTest extends TestCase
     public function test_payroll_approval_requires_attendance_exceptions_to_be_acknowledged(): void
     {
         $admin = $this->userWithRole('Admin');
+        $checker = $this->userWithRole('Admin');
         $employeeUser = $this->userWithRole('User');
         Employee::create([
             'user_id' => $employeeUser->id,
@@ -187,7 +193,7 @@ class EmployeeRecordsAndPayrollTest extends TestCase
             ->getJson(route('payroll.show', $periodId))
             ->assertForbidden();
 
-        $this->actingAs($admin, 'sanctum')
+        $this->actingAs($checker, 'sanctum')
             ->postJson(route('payroll.approve', $periodId))
             ->assertUnprocessable()
             ->assertJsonValidationErrors('exceptions');
@@ -197,7 +203,7 @@ class EmployeeRecordsAndPayrollTest extends TestCase
             ->assertAccepted()
             ->assertJsonPath('data.acknowledged', 1);
 
-        $this->actingAs($admin, 'sanctum')
+        $this->actingAs($checker, 'sanctum')
             ->postJson(route('payroll.approve', $periodId))
             ->assertAccepted();
 

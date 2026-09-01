@@ -26,8 +26,11 @@ class EmployeeRequest extends FormRequest
 
         return [
             'user_id' => ['required', TenantRule::exists('users')],
+            'manager_id' => ['nullable', TenantRule::exists('employees')],
             'employee_no' => ['required', 'string', TenantRule::unique('employees', 'employee_no')->ignore($id)],
             'hire_date' => 'nullable|date|date_format:Y-m-d',
+            'employment_effective_from' => 'nullable|date|date_format:Y-m-d',
+            'employment_effective_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:employment_effective_from',
 
             'employment_status_id' => ['nullable', TenantRule::exists('employment_statuses')],
             'department_id' => ['nullable', TenantRule::exists('departments')],

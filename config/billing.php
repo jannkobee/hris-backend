@@ -6,6 +6,7 @@ return [
     // after a paid billing period expires.
     'past_due_grace_days' => (int) env('BILLING_PAST_DUE_GRACE_DAYS', 7),
     'currency' => env('BILLING_CURRENCY', 'usd'),
+    'portal_return_hosts' => array_filter(array_map('trim', explode(',', (string) env('BILLING_PORTAL_RETURN_HOSTS', 'localhost')))),
     'regional_prices' => [
         'PH' => [
             'currency' => 'php',

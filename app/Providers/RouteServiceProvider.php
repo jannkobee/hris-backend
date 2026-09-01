@@ -52,6 +52,10 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perHour(3)->by($request->ip().'|'.strtolower((string) $request->input('email')));
         });
 
+        RateLimiter::for('owner-invitation', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip().'|'.hash('sha256', (string) $request->input('token')));
+        });
+
         $this->routes(function () {
             Route::prefix(self::HOME)
                 ->group(function () {

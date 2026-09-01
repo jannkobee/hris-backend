@@ -1,0 +1,91 @@
+name: hris-production
+
+x-env: &env
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: https://${DOMAIN}
+  APP_KEY: ${APP_KEY}
+  LOG_CHANNEL: stderr
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_DATABASE: ${DB_DATABASE}
+  DB_USERNAME: ${DB_USERNAME}
+  DB_PASSWORD: ${DB_PASSWORD}
+  CACHE_DRIVER: redis
+  SESSION_DRIVER: redis
+  QUEUE_CONNECTION: redis
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  FRONTEND_URL: https://${DOMAIN}
+  TENANT_BASE_DOMAIN: ${TENANT_BASE_DOMAIN}
+  MAIL_MAILER: ${MAIL_MAILER}
+  MAIL_HOST: ${MAIL_HOST}
+  MAIL_PORT: ${MAIL_PORT}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_ENCRYPTION: ${MAIL_ENCRYPTION}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+
+services:
+  mysql:
+    image: ${MYSQL_IMAGE}
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: ${REDIS_IMAGE}
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+  migrate:
+    build: { context: ., dockerfile: deploy/Dockerfile.production }
+    environment: *env
+    command: php artisan migrate --force
+    depends_on: { mysql: { condition: service_healthy } }
+    restart: "no"
+  app:
+    build: { context: ., dockerfile: deploy/Dockerfile.production }
+    environment: *env
+    volumes: [backend-storage:/var/www/html/storage/app]
+    depends_on: { migrate: { condition: service_completed_successfully }, redis: { condition: service_started } }
+    restart: unless-stopped
+  api:
+    image: nginx:1.27-alpine
+    volumes: [./deploy/nginx-api.conf:/etc/nginx/conf.d/default.conf:ro, ./:/var/www/html:ro]
+    depends_on: [app]
+    restart: unless-stopped
+  queue:
+    build: { context: ., dockerfile: deploy/Dockerfile.production }
+    environment: *env
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    restart: unless-stopped
+  scheduler:
+    build: { context: ., dockerfile: deploy/Dockerfile.production }
+    environment: *env
+    command: php artisan schedule:work
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ../hris-frontend
+      args:
+        VITE_API_URL: "https://${DOMAIN}/backend/api/v1"
+    volumes:
+      - ./deploy/frontend-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+volumes: { mysql-data: {}, redis-data: {}, backend-storage: {} }

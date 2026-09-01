@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SubscriptionEvent;
 use App\Models\User;
@@ -18,6 +19,11 @@ class OrganizationProvisioningTest extends TestCase
     public function test_platform_can_provision_an_isolated_trial_organization_with_an_administrator(): void
     {
         config()->set('platform.provisioning_key', 'platform-test-key');
+        Permission::create([
+            'model' => 'organizations',
+            'name' => 'Manage organization',
+            'slug' => 'manage-organization',
+        ]);
 
         $response = $this->withHeader('X-Platform-Provisioning-Key', 'platform-test-key')
             ->postJson(route('platform.organizations.store'), $this->payload());
@@ -40,7 +46,7 @@ class OrganizationProvisioningTest extends TestCase
             $admin = User::query()->where('email', 'admin@acme.test')->firstOrFail();
 
             $this->assertSame($adminRole->id, $admin->role_id);
-            $this->assertNotEmpty($adminRole->permissions);
+            $this->assertNotEmpty($adminRole->load('permissions')->permissions);
         });
     }
 
@@ -55,6 +61,7 @@ class OrganizationProvisioningTest extends TestCase
             'slug' => 'existing',
             'name' => 'Existing Organization',
             'timezone' => 'Asia/Manila',
+            'country_code' => 'PH',
             'plan_code' => Organization::PLAN_BASIC,
             'status' => Organization::STATUS_ACTIVE,
             'subscription_status' => Organization::SUBSCRIPTION_TRIALING,
@@ -92,6 +99,7 @@ class OrganizationProvisioningTest extends TestCase
             'name' => 'Acme HR',
             'timezone' => 'Asia/Manila',
             'plan_code' => Organization::PLAN_BASIC,
+            'country_code' => 'PH',
             'admin_first_name' => 'Ada',
             'admin_last_name' => 'Admin',
             'admin_email' => 'admin@acme.test',

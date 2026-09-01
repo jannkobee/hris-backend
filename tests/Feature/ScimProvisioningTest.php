@@ -22,9 +22,11 @@ class ScimProvisioningTest extends TestCase
 
         app(TenantContext::class)->run($organization, function () use ($token): void {
             Role::create(['name' => 'User', 'slug' => 'user']);
+            $creator = User::factory()->create();
             ScimToken::create([
                 'name' => 'Okta',
                 'token_hash' => hash('sha256', $token),
+                'created_by' => $creator->getKey(),
             ]);
         });
 
@@ -35,6 +37,7 @@ class ScimProvisioningTest extends TestCase
                 'first_name' => 'Other',
                 'last_name' => 'Employee',
                 'email' => 'other@example.test',
+                'birthday' => '1990-01-01',
                 'password' => 'password',
             ]);
         });
@@ -79,7 +82,7 @@ class ScimProvisioningTest extends TestCase
             'slug' => $slug,
             'name' => ucfirst($slug),
             'timezone' => 'Asia/Manila',
-            'plan_code' => Organization::PLAN_GROWTH,
+            'plan_code' => Organization::PLAN_ENTERPRISE,
             'status' => Organization::STATUS_ACTIVE,
             'subscription_status' => Organization::SUBSCRIPTION_ACTIVE,
         ]);

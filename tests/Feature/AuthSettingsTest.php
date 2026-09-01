@@ -20,10 +20,6 @@ class AuthSettingsTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.theme', 'dark');
 
-        $this->assertDatabaseHas('user_settings', [
-            'user_id' => $user->id,
-            'setting_key' => 'theme',
-            'setting_value' => 'dark',
-        ]);
+        $this->assertSame('dark', \App\Models\UserSetting::query()->where('user_id', $user->id)->where('setting_key', 'theme')->firstOrFail()->setting_value);
     }
 }

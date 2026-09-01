@@ -2,6 +2,7 @@
 
 namespace App\Services\Payroll;
 
+use App\Models\BenefitEnrollment;
 use App\Models\Employee;
 use App\Services\AppSettings\AppSettingService;
 
@@ -30,6 +31,7 @@ class PayrollCalculator
         $allowances = (float) ($adjustments['allowances'] ?? 0);
         $otherEarnings = (float) ($adjustments['other_earnings'] ?? 0);
         $otherDeductions = (float) ($adjustments['other_deductions'] ?? 0);
+        $benefitDeductions = $this->benefitDeductions($employee, $frequency, $effectiveDate);
         $grossPay = $basicPay + $overtimePay + $allowances + $otherEarnings;
         $dailyRate = $monthlySalary / max(1, (float) $this->settings->get('payroll.work_days_per_month', 22));
         $minuteRate = $dailyRate / max(1, (float) $this->settings->get('payroll.hours_per_day', 8) * 60);
@@ -69,7 +71,7 @@ class PayrollCalculator
         $workDeductions = $absenceDeduction + $lateUndertimeDeduction + $unpaidLeaveDeduction;
         $taxablePay = max(0, $grossPay - $workDeductions - $sssEmployee - $philhealthEmployee - $pagibigEmployee);
         $withholdingTax = $this->withholdingTax($taxablePay, $frequency);
-        $totalDeductions = $workDeductions + $sssEmployee + $philhealthEmployee + $pagibigEmployee + $withholdingTax + $otherDeductions;
+        $totalDeductions = $workDeductions + $sssEmployee + $philhealthEmployee + $pagibigEmployee + $withholdingTax + $otherDeductions + $benefitDeductions;
 
         $snapshotKeys = [
             'payroll.currency',
@@ -126,6 +128,7 @@ class PayrollCalculator
             'pagibig_employer' => $this->money($pagibigEmployer),
             'withholding_tax' => $this->money($withholdingTax),
             'other_deductions' => $this->money($otherDeductions),
+            'benefit_deductions' => $this->money($benefitDeductions),
             'total_deductions' => $this->money($totalDeductions),
             'net_pay' => $this->money(max(0, $grossPay - $totalDeductions)),
             'notes' => $adjustments['notes'] ?? null,
@@ -138,6 +141,7 @@ class PayrollCalculator
                 'philhealth_basis' => $this->money($philhealthBasis),
                 'pagibig_basis' => $this->money($pagibigBasis),
                 'taxable_pay' => $this->money($taxablePay),
+                'benefit_deductions' => $this->money($benefitDeductions),
                 'daily_rate' => $this->money($dailyRate),
                 'minute_rate' => round($minuteRate, 4),
                 'attendance_records' => $workSummary['attendance_records'] ?? 0,
@@ -202,5 +206,24 @@ class PayrollCalculator
     private function money(float $amount): float
     {
         return round($amount, 2);
+    }
+
+    private function benefitDeductions(Employee $employee, string $frequency, ?string $effectiveDate): float
+    {
+        if (! $employee->getKey()) {
+            return 0;
+        }
+
+        $date = $effectiveDate ?? now()->toDateString();
+        $monthlyTotal = (float) BenefitEnrollment::query()
+            ->where('employee_id', $employee->getKey())
+            ->where('status', 'active')
+            ->whereDate('effective_from', '<=', $date)
+            ->where(fn ($query) => $query->whereNull('effective_to')->orWhereDate('effective_to', '>=', $date))
+            ->join('benefit_plans', 'benefit_enrollments.benefit_plan_id', '=', 'benefit_plans.id')
+            ->where('benefit_plans.is_active', true)
+            ->sum('benefit_plans.employee_contribution');
+
+        return $frequency === 'semi_monthly' ? $monthlyTotal / 2 : $monthlyTotal;
     }
 }

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Platform\BillingCheckoutController;
+use App\Http\Controllers\Platform\OrganizationOwnerInvitationController;
 use App\Http\Controllers\Platform\OrganizationProvisioningController;
+use App\Http\Controllers\Platform\PlatformHealthController;
 use App\Http\Controllers\Platform\PlatformSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +13,22 @@ Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
     ->controller(PlatformSessionController::class)
     ->group(function (): void {
         Route::get('session', 'show')->name('session.show');
+    });
+
+Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
+    ->prefix('platform')
+    ->name('platform.')
+    ->controller(PlatformHealthController::class)
+    ->group(function (): void {
+        Route::get('health', 'show')->name('health.show');
+    });
+
+Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
+    ->prefix('platform/organizations')
+    ->name('platform.organizations.')
+    ->controller(OrganizationOwnerInvitationController::class)
+    ->group(function (): void {
+        Route::post('/{organization}/owner-invitations', 'store')->name('owner-invitations.store');
     });
 
 Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])

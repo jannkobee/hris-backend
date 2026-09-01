@@ -40,12 +40,12 @@ class ShiftRosterTest extends TestCase
         ])->assertCreated()->json('data');
 
         $this->assertSame('Day Shift', $assignment['shift_name']);
-        $this->assertSame('08:00:00', $assignment['start_time']);
+        $this->assertSame('08:00', $assignment['start_time']);
         $this->assertSame(60, $assignment['break_minutes']);
 
         ShiftTemplate::query()->findOrFail($template['id'])->update(['start_time' => '09:00']);
 
-        $this->assertSame('08:00:00', ShiftAssignment::query()->findOrFail($assignment['id'])->start_time);
+        $this->assertSame('08:00', ShiftAssignment::query()->findOrFail($assignment['id'])->start_time);
     }
 
     public function test_a_shift_template_from_another_organization_cannot_be_assigned(): void

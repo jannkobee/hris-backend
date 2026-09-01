@@ -15,6 +15,7 @@ use App\Models\SsoConfiguration;
 use App\Models\SubscriptionEvent;
 use App\Models\User;
 use App\Models\WebhookSubscription;
+use App\Services\Organizations\OrganizationOwnerInvitationService;
 use App\Services\Organizations\OrganizationProvisioningService;
 use App\Services\Organizations\PlatformSupportService;
 use App\Services\Organizations\SubscriptionLifecycleService;
@@ -36,6 +37,8 @@ class OrganizationProvisioningController extends Controller
 
     private SubscriptionLifecycleService $subscriptions;
 
+    private OrganizationOwnerInvitationService $ownerInvitations;
+
     public function __construct(
         OrganizationProvisioningService $provisioning,
         PlanEntitlementService $entitlements,
@@ -43,6 +46,7 @@ class OrganizationProvisioningController extends Controller
         TenantContext $tenantContext,
         PlatformSupportService $support,
         SubscriptionLifecycleService $subscriptions,
+        OrganizationOwnerInvitationService $ownerInvitations,
     ) {
         $this->provisioning = $provisioning;
         $this->entitlements = $entitlements;
@@ -50,15 +54,26 @@ class OrganizationProvisioningController extends Controller
         $this->tenantContext = $tenantContext;
         $this->support = $support;
         $this->subscriptions = $subscriptions;
+        $this->ownerInvitations = $ownerInvitations;
     }
 
     public function store(ProvisionOrganizationRequest $request)
     {
-        $organization = $this->provisioning->provision($request->validated());
+        $attributes = $request->validated();
+        $organization = $this->provisioning->provision($attributes);
+        $payload = $this->payload($organization);
+
+        if (($attributes['send_owner_invitation'] ?? false) === true) {
+            $payload['owner_invitation'] = $this->ownerInvitations->invite($organization, [
+                'email' => $attributes['admin_email'],
+                'first_name' => $attributes['admin_first_name'] ?? null,
+                'last_name' => $attributes['admin_last_name'] ?? null,
+            ]);
+        }
 
         return $this->responseService->storeResponse(
             'Organization',
-            $this->payload($organization)
+            $payload
         );
     }
 

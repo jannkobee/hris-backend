@@ -168,6 +168,12 @@ class EmployeeDocumentController extends Controller
             abort(404, 'Personnel document file not found.');
         }
 
+        $this->auditLogService->insertLog($document, 'download', [
+            'record_id' => $document->id,
+            'employee_id' => $document->employee_id,
+            'visibility' => $document->visibility,
+        ]);
+
         return $storage->download($document->path, $document->original_name);
     }
 

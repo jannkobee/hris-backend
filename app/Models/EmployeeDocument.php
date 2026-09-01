@@ -43,6 +43,8 @@ class EmployeeDocument extends Model
     protected $hidden = ['disk', 'path'];
 
     protected $casts = [
+        'document_number' => 'encrypted',
+        'notes' => 'encrypted',
         'issued_at' => 'date:Y-m-d',
         'expires_at' => 'date:Y-m-d',
         'size' => 'integer',

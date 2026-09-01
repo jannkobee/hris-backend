@@ -21,7 +21,7 @@ Route::apiResource('attendances', AttendanceController::class);
 Route::prefix('attendance-corrections')->name('attendance-corrections.')->controller(AttendanceCorrectionController::class)->group(function () {
     Route::get('/', 'index')->name('index');
     Route::post('/', 'store')->name('store');
-    Route::patch('{attendanceCorrection}/review', 'review')->name('review');
+    Route::patch('{attendanceCorrection}/review', 'review')->middleware('permission:approve-attendance-corrections')->name('review');
 });
 Route::apiResource('shift-templates', ShiftTemplateController::class);
 Route::apiResource('shift-assignments', ShiftAssignmentController::class);

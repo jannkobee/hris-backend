@@ -17,8 +17,11 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id',
+        'manager_id',
         'employee_no',
         'hire_date',
+        'employment_effective_from',
+        'employment_effective_to',
         'employment_status_id',
         'department_id',
         'position_id',
@@ -38,6 +41,8 @@ class Employee extends Model
 
     protected $casts = [
         'hire_date' => 'date:Y-m-d',
+        'employment_effective_from' => 'date:Y-m-d',
+        'employment_effective_to' => 'date:Y-m-d',
         'basic_monthly_salary' => 'decimal:2',
         'meta' => 'array',
     ];
@@ -45,6 +50,16 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'manager_id');
+    }
+
+    public function directReports(): HasMany
+    {
+        return $this->hasMany(self::class, 'manager_id');
     }
 
     public function department(): BelongsTo
@@ -100,5 +115,10 @@ class Employee extends Model
     public function shiftAssignments(): HasMany
     {
         return $this->hasMany(ShiftAssignment::class);
+    }
+
+    public function expenseClaims(): HasMany
+    {
+        return $this->hasMany(ExpenseClaim::class);
     }
 }

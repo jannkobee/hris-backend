@@ -55,12 +55,15 @@ class Organization extends Model
         'current_period_ends_at',
         'employee_limit',
         'billing_provider', 'billing_customer_id', 'billing_subscription_id', 'billing_interval',
+        'offboarding_requested_at', 'offboarding_scheduled_at', 'offboarding_reason',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'current_period_ends_at' => 'datetime',
         'employee_limit' => 'integer',
+        'offboarding_requested_at' => 'datetime',
+        'offboarding_scheduled_at' => 'datetime',
     ];
 
     public function users(): HasMany
@@ -76,6 +79,16 @@ class Organization extends Model
     public function appSettings(): HasMany
     {
         return $this->hasMany(AppSetting::class);
+    }
+
+    public function ownerInvitations(): HasMany
+    {
+        return $this->hasMany(OrganizationOwnerInvitation::class);
+    }
+
+    public function dataExports(): HasMany
+    {
+        return $this->hasMany(OrganizationDataExport::class);
     }
 
     public function isActive(): bool
