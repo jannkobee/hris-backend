@@ -94,6 +94,12 @@ class AppSettingService
                     ['value' => $this->encode($value)]
                 );
             }
+
+            if (array_key_exists('organization.company_name', $values)) {
+                $this->tenantContext->organization()->update([
+                    'name' => $values['organization.company_name'],
+                ]);
+            }
         });
 
         Cache::forget($this->cacheKey());

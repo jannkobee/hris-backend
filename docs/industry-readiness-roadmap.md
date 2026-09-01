@@ -24,11 +24,13 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 **Audited:** 2026-08-31  
 **Method:** Repository evidence from routes, migrations, models, services, controllers, frontend views, and automated tests. “Implemented” means a working code path exists; it does not replace production security review, payment-provider testing, load testing, or legal validation.
 
-**Verification note (2026-09-01):** SQLite PDO is enabled and the full automated suite passes: **134 tests, 1,292 assertions**. The MySQL migration set was also applied successfully and `php artisan tenancy:audit` passes for all 69 tenant-owned tables. SCIM provisioning was verified without requiring an identity provider to supply a birthday; the user field is now nullable for external provisioning while ordinary HR profiles can still collect it.
+**Verification note (2026-09-01):** SQLite PDO is enabled and the full automated suite passes: **144 tests, 1,368 assertions**. The MySQL migration set was also applied successfully and `php artisan tenancy:audit` passes for all 69 tenant-owned tables. SCIM provisioning was verified without requiring an identity provider to supply a birthday; the user field is now nullable for external provisioning while ordinary HR profiles can still collect it.
 
 **Delivery standard:** Every roadmap implementation must add or update focused automated tests (including authorization and tenant-isolation coverage where applicable), run code formatting, run the relevant test suite, run `php artisan tenancy:audit` after tenant-schema changes, and update this roadmap with the implemented scope, verification result, and remaining gaps.
 
 **Demo-data verification (2026-09-01):** `php artisan industry:seed-demo legacy` has been run successfully. It is idempotent and provides visible sample records for the employee profile, attendance, leave, overtime, workforce calendar, announcements, performance, training, benefits, and both submitted and reimbursed expenses.
+
+**Organization-branding delivery (2026-09-01):** Each tenant can now update its organization name and upload, replace, or remove a private PNG, JPG, or WebP workspace logo in App Settings. The HRIS navigation loads the logo through an authenticated tenant-scoped endpoint and falls back to organization initials; the product wordmark remains separate in the top bar. `OrganizationBrandingTest` (4 tests, 31 assertions), `AppSettingsTest` (5 tests, 16 assertions), and `php artisan tenancy:audit` pass.
 
 ### Status legend
 
@@ -54,7 +56,7 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 | Workstream | Status | Existing evidence | Remaining work |
 | --- | --- | --- | --- |
-| 2.1 Organization onboarding | **Implemented foundation** | Provisioning API/service, platform console organization list/create/detail, public trial signup, country/timezone/plan setup, owner invitation creation/acceptance email flow, and transactional provisioning tests | Add resend/revoke UI, verified custom domains, and production subdomain/TLS validation. |
+| 2.1 Organization onboarding | **Implemented foundation** | Provisioning API/service, platform console organization list/create/detail, public trial signup, country/timezone/plan setup, owner invitation creation/acceptance email flow, transactional provisioning tests, and tenant-owned organization-name/private-logo settings | Add resend/revoke UI, verified custom domains, and production subdomain/TLS validation. |
 | 2.2 Billing and subscriptions | **Advanced foundation** | Region-aware plans, Stripe checkout service, signed Stripe webhook endpoint, subscription fields/events, lifecycle reconciliation, trials, entitlement and employee-limit enforcement, console billing operations, and owner-only customer billing portal sessions | Add payment-method/invoice UX, upgrade/downgrade scheduling and proration validation, dunning communications, and live Stripe end-to-end tests. |
 | 2.3 Billing webhook idempotency | **Implemented foundation** | Signature validation, persisted subscription events, provider event IDs, reconciliation service | Expand provider-event test matrix, replay/operations UI, alerting, and production webhook observability. |
 | 2.4 Suspension/reactivation | **Mostly implemented** | Platform status API/UI, subscription reconciliation, tenant middleware enforcement, credential revocation controls | Finalize user-facing suspension/grace messaging, email communication, and comprehensive lifecycle tests. |

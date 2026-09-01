@@ -7,6 +7,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AppSettings\AppSettingService;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,7 @@ class AppSettingsTest extends TestCase
 
         $settings->update(['organization.company_name' => 'Globex']);
         $this->assertSame('Globex', $settings->get('organization.company_name'));
+        $this->assertSame('Globex', app(TenantContext::class)->organization()->fresh()->name);
     }
 
     public function test_timezone_options_come_from_the_php_timezone_database(): void

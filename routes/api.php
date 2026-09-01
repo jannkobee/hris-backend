@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'tenant.auth'])->group(function () {
         'integration/integration',
         'billing_portal/billing_portal',
         'organization_data_export/organization_data_export',
+        'organization/organization',
     ];
 
     foreach ($routes as $route) {

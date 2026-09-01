@@ -6,7 +6,7 @@ return [
         'type' => 'string',
         'group' => 'organization',
         'label' => 'Company name',
-        'description' => 'The organization name shown in company-wide settings.',
+        'description' => 'The organization name shown throughout the company workspace.',
         'rules' => ['required', 'string', 'max:120'],
     ],
     'organization.timezone' => [

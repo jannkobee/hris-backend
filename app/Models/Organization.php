@@ -46,6 +46,11 @@ class Organization extends Model
     protected $fillable = [
         'slug',
         'name',
+        'brand_logo_disk',
+        'brand_logo_path',
+        'brand_logo_name',
+        'brand_logo_mime',
+        'brand_logo_size',
         'timezone',
         'country_code',
         'plan_code',
@@ -65,6 +70,25 @@ class Organization extends Model
         'offboarding_requested_at' => 'datetime',
         'offboarding_scheduled_at' => 'datetime',
     ];
+
+    protected $hidden = [
+        'brand_logo_disk',
+        'brand_logo_path',
+        'brand_logo_name',
+        'brand_logo_mime',
+        'brand_logo_size',
+    ];
+
+    protected $appends = ['brand_logo_url'];
+
+    public function getBrandLogoUrlAttribute(): ?string
+    {
+        if (! $this->brand_logo_path) {
+            return null;
+        }
+
+        return '/organization/branding/logo?v='.sha1($this->brand_logo_path);
+    }
 
     public function users(): HasMany
     {
