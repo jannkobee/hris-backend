@@ -30,10 +30,12 @@ class ShiftAssignmentController extends Controller
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
             'employee_id' => ['nullable', 'uuid'],
+            'search' => ['nullable', 'string', 'max:100'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
 
         return $this->roster->listAssignments($request->only(['from', 'to', 'employee_id', 'limit']));
+        return $this->roster->listAssignments($request->only(['from', 'to', 'employee_id', 'search', 'limit']));
     }
 
     public function store(ShiftAssignmentRequest $request)

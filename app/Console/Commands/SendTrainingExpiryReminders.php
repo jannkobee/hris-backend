@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\AppNotification;
 use App\Models\Organization;
 use App\Models\TrainingEnrollment;
 use App\Services\Notifications\AppNotificationService;
@@ -38,7 +39,7 @@ class SendTrainingExpiryReminders extends Command
                     if (! $employee?->user) {
                         return;
                     }
-                    $exists = \App\Models\AppNotification::query()->where('user_id', $employee->user->getKey())->where('type', 'training_certificate_expiry')->where('data->enrollment_id', $enrollment->getKey())->whereDate('created_at', today())->exists();
+                    $exists = AppNotification::query()->where('user_id', $employee->user->getKey())->where('type', 'training_certificate_expiry')->where('data->enrollment_id', $enrollment->getKey())->whereDate('created_at', today())->exists();
                     if (! $exists) {
                         $notifications->send($employee->user, 'training_certificate_expiry', 'Training certificate expiry', 'Your training certificate expires on '.$enrollment->certificate_expires_on->format('M j, Y').'.', ['enrollment_id' => $enrollment->getKey()]);
                         $count++;

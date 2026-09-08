@@ -12,7 +12,7 @@ class OrganizationDefaultsSeeder extends Seeder
     public function run(): void
     {
         Organization::query()->where('status', Organization::STATUS_ACTIVE)->get()
-            ->each(fn (Organization $organization) => $this->seed($organization));
+            ->each(fn(Organization $organization) => $this->seed($organization));
     }
 
     public function seed(Organization $organization): void
@@ -24,6 +24,9 @@ class OrganizationDefaultsSeeder extends Seeder
                 PositionSeeder::class,
                 JobGradeSeeder::class,
                 LeaveTypeSeeder::class,
+                ShiftTemplateSeeder::class,
+                OvertimePolicySeeder::class,
+                ApprovalWorkflowSeeder::class,
             ]);
             app(LeaveAccrualScheduleSyncer::class)->sync();
         });

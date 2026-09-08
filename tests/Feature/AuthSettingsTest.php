@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\UserSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,6 +21,6 @@ class AuthSettingsTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.theme', 'dark');
 
-        $this->assertSame('dark', \App\Models\UserSetting::query()->where('user_id', $user->id)->where('setting_key', 'theme')->firstOrFail()->setting_value);
+        $this->assertSame('dark', UserSetting::query()->where('user_id', $user->id)->where('setting_key', 'theme')->firstOrFail()->setting_value);
     }
 }

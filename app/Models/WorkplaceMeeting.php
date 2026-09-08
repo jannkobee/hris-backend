@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\TenantContext;
 use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -53,7 +54,7 @@ class WorkplaceMeeting extends Model
     {
         return $this->belongsToMany(User::class, 'meeting_attendees', 'meeting_id', 'user_id')
             ->using(MeetingAttendee::class)
-            ->wherePivot('organization_id', app(\App\Tenancy\TenantContext::class)->id())
+            ->wherePivot('organization_id', app(TenantContext::class)->id())
             ->withPivot(['id', 'organization_id', 'is_required', 'response'])
             ->withTimestamps();
     }

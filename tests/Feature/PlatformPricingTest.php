@@ -21,9 +21,9 @@ class PlatformPricingTest extends TestCase
         $data = ['free_employee_limit' => 15, 'growth_price_per_employee' => 2500, 'currency' => 'php'];
         $this->patchJson(route('platform.pricing.update'), $data)->assertUnauthorized();
         $this->withHeaders(['X-Platform-Provisioning-Key' => 'pricing-test'])
-            ->patchJson(route('platform.pricing.update'), $data)->assertOk();
+            ->patchJson(route('platform.pricing.update'), $data)->assertSuccessful();
         $this->getJson(route('public-pricing'))->assertOk()->assertJsonPath('data.free_employee_limit', 15);
-        $this->patchJson(route('platform.pricing.update'), [...$data, 'growth_price_per_employee' => 3000, 'effective_at' => now()->addDay()->toIso8601String()])->assertOk();
+        $this->patchJson(route('platform.pricing.update'), [...$data, 'growth_price_per_employee' => 3000, 'effective_at' => now()->addDay()->toIso8601String()])->assertSuccessful();
         $service = app(PlatformPricingService::class);
         $this->assertSame(2500, $service->current()['growth_price_per_employee']);
         $this->assertCount(2, $service->history());
@@ -45,6 +45,6 @@ class PlatformPricingTest extends TestCase
         Employee::create(['employee_no' => 'THREE']);
         Employee::create(['employee_no' => 'ENDED', 'employment_effective_to' => now()->subDay()]);
         app(StripeBillingService::class)->checkout($organization, ['plan_code' => 'growth', 'billing_interval' => 'month', 'success_url' => 'https://example.test', 'cancel_url' => 'https://example.test']);
-        Http::assertSent(fn ($request) => $request['line_items'][0]['quantity'] === 2 && $request['line_items'][0]['price_data']['unit_amount'] === 2300);
+        Http::assertSent(fn($request) => $request['line_items'][0]['quantity'] === 2 && $request['line_items'][0]['price_data']['unit_amount'] === 2300);
     }
 }

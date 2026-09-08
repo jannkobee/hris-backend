@@ -2,6 +2,7 @@
 
 namespace App\Services\Organizations;
 
+use App\Models\Employee;
 use App\Models\Organization;
 use App\Services\Plans\PlatformPricingService;
 use Illuminate\Http\Request;
@@ -33,11 +34,11 @@ class StripeBillingService
         $snapshot = [];
         if ($plan === 'growth' && strtoupper((string) $organization->country_code) === 'PH') {
             $snapshot = $this->platformPricing->current();
-            $count = \App\Models\Employee::withoutGlobalScopes()->where('organization_id', $organization->id)
-                ->where(fn ($query) => $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', now($organization->timezone)->toDateString()))->count();
+            $count = Employee::withoutGlobalScopes()->where('organization_id', $organization->id)
+                ->where(fn($query) => $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', now($organization->timezone)->toDateString()))->count();
             $quantity = max(0, $count - $snapshot['free_employee_limit']);
             if ($quantity === 0) {
-                throw ValidationException::withMessages(['plan_code' => 'Your active employees fit within the free allowance.']);
+                $quantity = max(1, (int) ($data['additional_employees'] ?? 1));
             }
         }
         if ($amount < 1) {
@@ -46,10 +47,10 @@ class StripeBillingService
 
         $response = Http::asForm()->acceptJson()->timeout(20)
             ->withBasicAuth((string) config('billing.stripe.secret_key'), '')
-            ->post(rtrim((string) config('billing.stripe.api_base'), '/').'/v1/checkout/sessions', [
+            ->post(rtrim((string) config('billing.stripe.api_base'), '/') . '/v1/checkout/sessions', [
                 'mode' => 'subscription',
-                'success_url' => $data['success_url'].'?checkout=success',
-                'cancel_url' => $data['cancel_url'].'?checkout=cancelled',
+                'success_url' => $data['success_url'] . '?checkout=success',
+                'cancel_url' => $data['cancel_url'] . '?checkout=cancelled',
                 'client_reference_id' => $organization->id,
                 'customer' => $organization->billing_customer_id,
                 'customer_email' => $organization->billing_customer_id ? null : ($data['billing_email'] ?? null),
@@ -58,7 +59,7 @@ class StripeBillingService
                     'price_data' => [
                         'currency' => $pricing['currency'],
                         'unit_amount' => $amount,
-                        'product_data' => ['name' => 'HRIS '.config("plans.plans.{$plan}.name")],
+                        'product_data' => ['name' => 'HRIS ' . config("plans.plans.{$plan}.name")],
                         'recurring' => ['interval' => $data['billing_interval']],
                     ],
                 ]],
@@ -80,7 +81,7 @@ class StripeBillingService
 
         $response = Http::asForm()->acceptJson()->timeout(20)
             ->withBasicAuth((string) config('billing.stripe.secret_key'), '')
-            ->post(rtrim((string) config('billing.stripe.api_base'), '/').'/v1/billing_portal/sessions', [
+            ->post(rtrim((string) config('billing.stripe.api_base'), '/') . '/v1/billing_portal/sessions', [
                 'customer' => $organization->billing_customer_id,
                 'return_url' => $returnUrl,
             ])
@@ -88,6 +89,45 @@ class StripeBillingService
             ->json();
 
         return ['url' => $response['url'] ?? null];
+    }
+
+    public function syncSubscriptionQuantity(Organization $organization): ?int
+    {
+        if ((string) config('billing.stripe.secret_key') === '' || ! $organization->billing_subscription_id) {
+            return null;
+        }
+
+        if ($organization->plan_code !== 'growth' || strtoupper((string) $organization->country_code) !== 'PH') {
+            return null;
+        }
+
+        $snapshot = $this->platformPricing->current();
+        $count = Employee::withoutGlobalScopes()->where('organization_id', $organization->id)
+            ->where(fn($query) => $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', now($organization->timezone)->toDateString()))->count();
+        $newQuantity = max(1, $count - $snapshot['free_employee_limit']);
+
+        try {
+            $subUrl = rtrim((string) config('billing.stripe.api_base'), '/') . '/v1/subscriptions/' . $organization->billing_subscription_id;
+            $subscription = Http::asForm()->acceptJson()->timeout(15)
+                ->withBasicAuth((string) config('billing.stripe.secret_key'), '')
+                ->get($subUrl)->json();
+
+            $itemId = data_get($subscription, 'items.data.0.id');
+            if ($itemId) {
+                Http::asForm()->acceptJson()->timeout(15)
+                    ->withBasicAuth((string) config('billing.stripe.secret_key'), '')
+                    ->post($subUrl, [
+                        'items' => [
+                            ['id' => $itemId, 'quantity' => $newQuantity],
+                        ],
+                        'proration_behavior' => 'create_prorations',
+                    ]);
+            }
+
+            return $newQuantity;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function handleWebhook(Request $request): void
@@ -132,6 +172,22 @@ class StripeBillingService
                 ], 'stripe', $event['id'] ?? null);
             }
         }
+
+        if ($type === 'invoice.payment_failed') {
+            $subId = $object['subscription'] ?? null;
+            if ($subId) {
+                $organization = Organization::query()->where('billing_provider', 'stripe')->where('billing_subscription_id', $subId)->first();
+                if ($organization) {
+                    $this->subscriptions->update($organization, [
+                        'plan_code' => $organization->plan_code,
+                        'subscription_status' => Organization::SUBSCRIPTION_PAST_DUE,
+                        'trial_ends_at' => $organization->trial_ends_at,
+                        'current_period_ends_at' => $organization->current_period_ends_at,
+                        'employee_limit' => $organization->employee_limit,
+                    ], 'stripe', $event['id'] ?? null);
+                }
+            }
+        }
     }
 
     private function verifySignature(string $payload, string $signature): void
@@ -147,7 +203,7 @@ class StripeBillingService
             return [$key => $value];
         });
         $timestamp = (int) $parts->get('t');
-        $expected = hash_hmac('sha256', $timestamp.'.'.$payload, $secret);
+        $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
 
         if ($timestamp < now()->subMinutes(5)->timestamp || ! hash_equals($expected, (string) $parts->get('v1'))) {
             abort(400, 'Invalid Stripe webhook signature.');
@@ -156,7 +212,7 @@ class StripeBillingService
 
     private function pricing(Organization $organization): array
     {
-        $pricing = config('billing.regional_prices.'.$organization->country_code, [
+        $pricing = config('billing.regional_prices.' . $organization->country_code, [
             'currency' => config('billing.currency'),
             'prices' => config('billing.stripe.prices'),
         ]);

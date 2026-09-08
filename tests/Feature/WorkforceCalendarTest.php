@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Holiday;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -56,12 +57,12 @@ class WorkforceCalendarTest extends TestCase
         $user = User::factory()->create(['role_id' => $role->id]);
         $role->permissions()->attach($this->permission('view-holidays'));
 
-        \App\Models\Holiday::create([
+        Holiday::create([
             'name' => 'Regular Holiday',
             'date' => '2026-12-25',
             'type' => 'regular_holiday',
         ]);
-        \App\Models\Holiday::create([
+        Holiday::create([
             'name' => 'Working Exception',
             'date' => '2027-01-02',
             'type' => 'special_working_day',

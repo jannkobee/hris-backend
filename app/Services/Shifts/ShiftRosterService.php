@@ -30,6 +30,19 @@ class ShiftRosterService
         if (filled($filters['employee_id'] ?? null)) {
             $query->where('employee_id', $filters['employee_id']);
         }
+        if (filled($filters['search'] ?? null)) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('shift_name', 'like', "%{$search}%")
+                    ->orWhereHas('employee.user', function ($uq) use ($search) {
+                        $uq->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('employee', function ($eq) use ($search) {
+                        $eq->where('employee_no', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         return $this->response->successResponse('Shift assignments', $query->orderBy('work_date')->paginate((int) ($filters['limit'] ?? 50)));
     }

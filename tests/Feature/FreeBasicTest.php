@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Employee;
 use App\Models\Organization;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\Organizations\SubscriptionLifecycleService;
 use App\Services\Plans\PlanEntitlementService;
 use App\Tenancy\TenantContext;
@@ -80,8 +82,8 @@ class FreeBasicTest extends TestCase
     {
         $organization = app(TenantContext::class)->organization();
         $organization->update(['plan_code' => 'basic_free', 'subscription_status' => 'active']);
-        $role = \App\Models\Role::create(['name' => 'Admin']);
-        $admin = \App\Models\User::factory()->create(['role_id' => $role->id]);
+        $role = Role::create(['name' => 'Admin']);
+        $admin = User::factory()->create(['role_id' => $role->id]);
         for ($i = 1; $i <= 10; $i++) {
             Employee::create(['employee_no' => 'LIMIT-'.$i]);
         }

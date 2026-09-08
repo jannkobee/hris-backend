@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Organization;
+use App\Services\Organizations\StripeBillingService;
 use App\Services\Organizations\SubscriptionLifecycleService;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
@@ -34,11 +35,15 @@ class ReconcileSubscriptions extends Command
         }
 
         $changed = 0;
-        $query->where('status', Organization::STATUS_ACTIVE)->each(function (Organization $organization) use ($subscriptions, $tenantContext, &$changed): void {
-            $updated = $tenantContext->run($organization, fn (): ?Organization => $subscriptions->reconcile($organization));
+        $stripe = app(StripeBillingService::class);
+        $query->where('status', Organization::STATUS_ACTIVE)->each(function (Organization $organization) use ($subscriptions, $stripe, $tenantContext, &$changed): void {
+            $updated = $tenantContext->run($organization, fn(): ?Organization => $subscriptions->reconcile($organization));
             if ($updated) {
                 $changed++;
                 $this->line("{$updated->slug}: {$updated->subscription_status}");
+            }
+            if ($organization->plan_code === 'growth' && $organization->billing_provider === 'stripe') {
+                $stripe->syncSubscriptionQuantity($organization);
             }
         });
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Pivots\ConversationParticipant;
+use App\Tenancy\TenantContext;
 use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,7 +38,7 @@ class Conversation extends Model
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
             ->using(ConversationParticipant::class)
-            ->wherePivot('organization_id', app(\App\Tenancy\TenantContext::class)->id())
+            ->wherePivot('organization_id', app(TenantContext::class)->id())
             ->withPivot('id', 'organization_id', 'last_read_at')
             ->withTimestamps();
     }

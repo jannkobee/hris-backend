@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Services\Plans\PlanEntitlementService;
+use App\Tenancy\TenantContext;
 use App\Traits\BelongsToOrganization;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class Employee extends Model
 {
@@ -17,7 +20,7 @@ class Employee extends Model
 
     public function save(array $options = [])
     {
-        $organization = app(\App\Tenancy\TenantContext::class)->organization();
+        $organization = app(TenantContext::class)->organization();
 
         return $this->getConnection()->transaction(function () use ($organization, $options) {
             // Serialize capacity decisions for all employee writes in a tenant.
@@ -35,9 +38,9 @@ class Employee extends Model
                         ->where(function ($query) use ($today) {
                             $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', $today);
                         })->count();
-                    $limit = app(\App\Services\Plans\PlanEntitlementService::class)->employeeLimit($lockedOrganization);
+                    $limit = app(PlanEntitlementService::class)->employeeLimit($lockedOrganization);
                     if ($count >= $limit) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
+                        throw ValidationException::withMessages([
                             'organization' => "Basic includes {$limit} active employees. Upgrade before adding or reactivating another employee.",
                         ]);
                     }

@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Models\Organization;
 use App\Models\ScheduledTask;
 use App\Services\Scheduling\ScheduledTaskScheduleService;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Stringable;
@@ -28,7 +29,7 @@ class Kernel extends ConsoleKernel
     {
         $scheduleService = app(ScheduledTaskScheduleService::class);
 
-        $context = app(\App\Tenancy\TenantContext::class);
+        $context = app(TenantContext::class);
 
         Organization::query()->where('status', Organization::STATUS_ACTIVE)->get()->each(function (Organization $organization) use ($context, $schedule, $scheduleService): void {
             $context->run($organization, function () use ($organization, $schedule, $scheduleService, $context): void {
