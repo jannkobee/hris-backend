@@ -18,6 +18,7 @@ class PayslipArchiveController extends Controller
     public function __construct(AuditLogServiceInterface $auditLogs)
     {
         $this->auditLogs = $auditLogs;
+        $this->middleware('plan:payroll');
         $this->middleware('permission:manage-payroll')->only('store');
     }
 

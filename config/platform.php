@@ -7,4 +7,11 @@ return [
     'trial_days' => (int) env('PUBLIC_TRIAL_DAYS', 14),
     'owner_invitation_days' => (int) env('OWNER_INVITATION_DAYS', 7),
     'owner_invitation_url' => env('OWNER_INVITATION_URL', rtrim((string) env('FRONTEND_URL', 'http://localhost:5173'), '/').'/accept-invite'),
+    'health' => [
+        'thresholds' => [
+            'failed_jobs_warning' => (int) env('PLATFORM_FAILED_JOBS_WARNING', 1),
+            'failed_jobs_critical' => (int) env('PLATFORM_FAILED_JOBS_CRITICAL', 5),
+            'snapshot_interval_minutes' => (int) env('PLATFORM_HEALTH_SNAPSHOT_INTERVAL_MINUTES', 5),
+        ],
+    ],
 ];

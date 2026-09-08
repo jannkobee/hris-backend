@@ -1,5 +1,7 @@
 <?php
 
+\Illuminate\Support\Facades\Route::get('public-pricing', [\App\Http\Controllers\Platform\PlatformPricingController::class, 'show'])->middleware('throttle:60,1')->name('public-pricing');
+
 use App\Http\Controllers\PublicAPI\PublicAPIController;
 use App\Http\Controllers\PublicAPI\TrialSignupController;
 use Illuminate\Support\Facades\Route;

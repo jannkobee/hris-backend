@@ -29,7 +29,7 @@ class PlanEntitlementServiceTest extends TestCase
 
     public function test_enterprise_expands_to_every_known_feature_but_rejects_unknown_features(): void
     {
-        $organization = new Organization(['plan_code' => 'enterprise']);
+        $organization = new Organization(['plan_code' => 'enterprise', 'country_code' => 'PH']);
 
         foreach (array_keys(config('plans.features')) as $feature) {
             $this->assertTrue($this->entitlements->allows($organization, $feature));
@@ -47,6 +47,18 @@ class PlanEntitlementServiceTest extends TestCase
         $this->assertFalse(
             $this->entitlements->allows(new Organization(['plan_code' => null]), 'leave')
         );
+    }
+
+    public function test_payroll_is_philippine_only_even_for_enterprise(): void
+    {
+        foreach (['US', 'SG', null, ''] as $country) {
+            $organization = new Organization(['plan_code' => 'enterprise', 'country_code' => $country]);
+            $this->assertFalse($this->entitlements->allows($organization, 'payroll'));
+            $this->assertTrue($this->entitlements->allows($organization, 'core_hr'));
+            $payload = $this->entitlements->payload($organization);
+            $this->assertNotContains('payroll', $payload['features']);
+            $this->assertArrayNotHasKey('payroll', $payload['feature_details']);
+        }
     }
 
     public function test_payload_contains_only_enabled_features_and_their_details(): void

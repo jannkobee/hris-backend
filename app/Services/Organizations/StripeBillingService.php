@@ -3,6 +3,7 @@
 namespace App\Services\Organizations;
 
 use App\Models\Organization;
+use App\Services\Plans\PlatformPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -11,9 +12,12 @@ class StripeBillingService
 {
     private SubscriptionLifecycleService $subscriptions;
 
-    public function __construct(SubscriptionLifecycleService $subscriptions)
+    private PlatformPricingService $platformPricing;
+
+    public function __construct(SubscriptionLifecycleService $subscriptions, PlatformPricingService $platformPricing)
     {
         $this->subscriptions = $subscriptions;
+        $this->platformPricing = $platformPricing;
     }
 
     public function checkout(Organization $organization, array $data): array
@@ -25,6 +29,17 @@ class StripeBillingService
         $plan = $data['plan_code'];
         $pricing = $this->pricing($organization);
         $amount = (int) data_get($pricing, "prices.{$plan}.{$data['billing_interval']}", 0);
+        $quantity = 1;
+        $snapshot = [];
+        if ($plan === 'growth' && strtoupper((string) $organization->country_code) === 'PH') {
+            $snapshot = $this->platformPricing->current();
+            $count = \App\Models\Employee::withoutGlobalScopes()->where('organization_id', $organization->id)
+                ->where(fn ($query) => $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', now($organization->timezone)->toDateString()))->count();
+            $quantity = max(0, $count - $snapshot['free_employee_limit']);
+            if ($quantity === 0) {
+                throw ValidationException::withMessages(['plan_code' => 'Your active employees fit within the free allowance.']);
+            }
+        }
         if ($amount < 1) {
             throw ValidationException::withMessages(['plan_code' => 'This plan is not available for self-service checkout.']);
         }
@@ -39,7 +54,7 @@ class StripeBillingService
                 'customer' => $organization->billing_customer_id,
                 'customer_email' => $organization->billing_customer_id ? null : ($data['billing_email'] ?? null),
                 'line_items' => [[
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                     'price_data' => [
                         'currency' => $pricing['currency'],
                         'unit_amount' => $amount,
@@ -47,8 +62,8 @@ class StripeBillingService
                         'recurring' => ['interval' => $data['billing_interval']],
                     ],
                 ]],
-                'metadata' => ['organization_id' => $organization->id, 'plan_code' => $plan, 'billing_interval' => $data['billing_interval']],
-                'subscription_data' => ['metadata' => ['organization_id' => $organization->id, 'plan_code' => $plan, 'billing_interval' => $data['billing_interval']]],
+                'metadata' => ['organization_id' => $organization->id, 'plan_code' => $plan, 'billing_interval' => $data['billing_interval'], 'pricing_version' => $snapshot['version'] ?? 'legacy', 'free_employee_limit' => $snapshot['free_employee_limit'] ?? 0],
+                'subscription_data' => ['metadata' => ['organization_id' => $organization->id, 'plan_code' => $plan, 'billing_interval' => $data['billing_interval'], 'pricing_version' => $snapshot['version'] ?? 'legacy', 'free_employee_limit' => $snapshot['free_employee_limit'] ?? 0]],
             ])->throw()->json();
 
         return ['id' => $response['id'] ?? null, 'url' => $response['url'] ?? null];
@@ -141,9 +156,16 @@ class StripeBillingService
 
     private function pricing(Organization $organization): array
     {
-        return config('billing.regional_prices.'.$organization->country_code, [
+        $pricing = config('billing.regional_prices.'.$organization->country_code, [
             'currency' => config('billing.currency'),
             'prices' => config('billing.stripe.prices'),
         ]);
+        if (strtoupper((string) $organization->country_code) === 'PH') {
+            $dynamic = $this->platformPricing->current();
+            $pricing['currency'] = $dynamic['currency'];
+            $pricing['prices']['growth'] = ['month' => $dynamic['growth_price_per_employee'], 'year' => $dynamic['growth_price_per_employee'] * 10];
+        }
+
+        return $pricing;
     }
 }

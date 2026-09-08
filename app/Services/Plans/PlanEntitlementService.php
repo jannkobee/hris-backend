@@ -14,6 +14,10 @@ class PlanEntitlementService
 
         $features = $this->configuredFeatures($organization->plan_code);
 
+        if (! $this->availableInCountry($organization, $feature)) {
+            return false;
+        }
+
         return in_array('*', $features, true) || in_array($feature, $features, true);
     }
 
@@ -26,6 +30,8 @@ class PlanEntitlementService
         $enabledFeatures = in_array('*', $configuredFeatures, true)
             ? array_keys($featureDefinitions)
             : array_values(array_intersect($configuredFeatures, array_keys($featureDefinitions)));
+        $enabledFeatures = array_values(array_filter($enabledFeatures,
+            fn (string $feature): bool => $this->availableInCountry($organization, $feature)));
 
         return [
             'code' => $planCode,
@@ -43,12 +49,26 @@ class PlanEntitlementService
 
     public function employeeLimit(Organization $organization): ?int
     {
+        if ($organization->plan_code === 'basic_free') {
+            return (int) app(PlatformPricingService::class)->current()['free_employee_limit'];
+        }
+
         return $organization->employee_limit ?? $this->limits($organization)['employees'] ?? null;
     }
 
     private function limits(Organization $organization): array
     {
+        if ($organization->plan_code === 'basic_free') {
+            return ['employees' => $this->employeeLimit($organization)];
+        }
         return config('plans.plans.'.$this->normalizedPlanCode($organization->plan_code).'.limits', []);
+    }
+
+    private function availableInCountry(Organization $organization, string $feature): bool
+    {
+        $countries = config("plans.features.{$feature}.countries");
+
+        return $countries === null || in_array(strtoupper((string) $organization->country_code), $countries, true);
     }
 
     public function planExists(string $planCode): bool

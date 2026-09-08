@@ -1,5 +1,7 @@
 # HRIS Industry Readiness Roadmap
 
+**Dynamic pricing delivery (2026-09-08):** Platform Console pricing endpoints now allow authorized platform operators to update the Philippine free employee allowance and Growth per-employee rate. Values are persisted in platform settings and every change is recorded in platform operation logs. Stripe PH Growth checkout reads the current rate for new sessions; existing subscriptions are unchanged. Backend formatting and entitlement tests pass. A dedicated console form can consume `GET/PATCH /api/platform/pricing`.
+
 **Prepared:** 2026-08-31  
 **Target:** Make HRISFlow a credible, enterprise-ready SaaS HRIS within 12-18 months  
 **Baseline:** Solid MVP with multi-tenancy, core HR modules, payroll foundation, and strong UI/UX
@@ -21,10 +23,14 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 ## Current Implementation Audit
 
+**Philippine payroll scope (2026-09-08):** Payroll entitlements now require organization country PH, including Enterprise. Non-PH and missing-country organizations retain their eligible core HR features but receive no payroll entitlement in the frontend payload. Payroll adjustments, statutory reports, and payslip archives now also enforce the payroll gate. Marketing explicitly states Philippine-only payroll. Backend verification: 158 tests passed (1,459 assertions), including country-gate API and entitlement regression coverage. No schema changes.
+
+**Next billing delivery:** Connect the PHP19 Growth offer. Pending commercial choice: bill actual active employees above ten or sell prepaid employee capacity. Existing flat-price checkout must not be represented as the new per-employee offer until checkout, subscription updates, and webhook verification match the chosen policy.
+
 **Audited:** 2026-08-31  
 **Method:** Repository evidence from routes, migrations, models, services, controllers, frontend views, and automated tests. “Implemented” means a working code path exists; it does not replace production security review, payment-provider testing, load testing, or legal validation.
 
-**Verification note (2026-09-01):** SQLite PDO is enabled and the full automated suite passes: **144 tests, 1,368 assertions**. The MySQL migration set was also applied successfully and `php artisan tenancy:audit` passes for all 69 tenant-owned tables. SCIM provisioning was verified without requiring an identity provider to supply a birthday; the user field is now nullable for external provisioning while ordinary HR profiles can still collect it.
+**Verification note (2026-09-06):** SQLite PDO is enabled and the full automated suite passes: **147 tests, 1,400 assertions**. The MySQL migration set was previously applied successfully and `php artisan tenancy:audit` passes for all 69 tenant-owned tables. SCIM provisioning was verified without requiring an identity provider to supply a birthday; the user field is now nullable for external provisioning while ordinary HR profiles can still collect it.
 
 **Delivery standard:** Every roadmap implementation must add or update focused automated tests (including authorization and tenant-isolation coverage where applicable), run code formatting, run the relevant test suite, run `php artisan tenancy:audit` after tenant-schema changes, and update this roadmap with the implemented scope, verification result, and remaining gaps.
 
@@ -32,7 +38,13 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 **Organization-branding delivery (2026-09-01):** Each tenant can now update its organization name and upload, replace, or remove a private PNG, JPG, or WebP workspace logo in App Settings. The HRIS navigation loads the logo through an authenticated tenant-scoped endpoint and falls back to organization initials; the product wordmark remains separate in the top bar. `OrganizationBrandingTest` (4 tests, 31 assertions), `AppSettingsTest` (5 tests, 16 assertions), and `php artisan tenancy:audit` pass.
 
+**Platform-health delivery (2026-09-06):** The internal Platform Console now shows authenticated live database, cache, private storage, queue, mail, maintenance, organization, and failed-job health. Operators can persist failed-job/snapshot thresholds, review recent snapshots, and enable or restore maintenance mode with a required reason. All platform operations remain accessible while maintenance is active. `PlatformHealthTest` passes (3 tests, 24 assertions); external alert delivery and monitoring credentials remain deployment work. The new migration is pending local MySQL recovery because the local listener is dropping its initial handshake.
+
 ### Status legend
+
+**Checkpoint verification (2026-09-08):** After the release-hardening changes, Laravel Pint passes for edited PHP files and the full SQLite-backed backend suite passes: **150 tests, 1,413 assertions**. This does not verify MySQL deployment, browser workflows, or external providers.
+
+**Release-hardening checkpoint (2026-09-08):** Platform health now validates history limits (1–100), performs cache/storage write/read/cleanup probes, preserves the original top-level API check fields, and reports degraded health instead of losing the response when snapshot persistence fails. Maintenance tests use an in-memory driver and do not modify the running application's maintenance file. Added history-validation, unavailable-snapshot-storage, API-compatibility, and unauthorized-operation regression coverage. Mail checks describe configuration only, not verified delivery; queue checks count failed jobs, not worker heartbeat. Snapshots are collected on health requests, not by an independent monitor. This checkpoint does **not** mark the whole project or all 15 roadmap items complete. Production migration verification, external integration checks, workflow acceptance testing, security review, and payroll compliance sign-off remain release gates.
 
 - **Implemented:** The main end-to-end capability exists in the current codebase.
 - **Partial:** A usable foundation exists, but one or more roadmap acceptance criteria remain.
@@ -61,7 +73,7 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 | 2.3 Billing webhook idempotency | **Implemented foundation** | Signature validation, persisted subscription events, provider event IDs, reconciliation service | Expand provider-event test matrix, replay/operations UI, alerting, and production webhook observability. |
 | 2.4 Suspension/reactivation | **Mostly implemented** | Platform status API/UI, subscription reconciliation, tenant middleware enforcement, credential revocation controls | Finalize user-facing suspension/grace messaging, email communication, and comprehensive lifecycle tests. |
 | 2.5 Export and offboarding | **Implemented foundation** | Owner-only asynchronous whole-tenant JSON export request, private storage, expiry/checksum metadata, credential/secret exclusion, tenant-scoped download, and export audit events; organization offboarding metadata is ready for a non-destructive workflow | Add email-ready notices, scheduled file cleanup, explicit offboarding request/review/retention workflow, backups, and restore testing. Legal retention/deletion rules must be approved before any automatic deletion is enabled. |
-| 2.6 Platform health/support | **Implemented foundation** | Dimmed platform console, overview metrics, organization detail, subscription/identity/webhook visibility, `PlatformSupportService`, and a provisioning-key-protected platform health endpoint covering database, cache, private storage, queue driver, and organization status totals | Add mail delivery/job failure metrics, alert thresholds, impersonation with consent/banner/audit, maintenance controls, and external monitoring integration. |
+| 2.6 Platform health/support | **Advanced foundation** | Dimmed platform console, overview metrics, organization detail, subscription/identity/webhook visibility, `PlatformSupportService`, provisioning-key-protected health checks, persisted health snapshots, failed-job/mail visibility, configurable alert thresholds, and maintenance controls with operation logs | Connect external alert delivery/monitoring, establish on-call policy, and only add consent-based impersonation after a product and security decision. |
 
 ### Phase 3 audit — Workforce lifecycle and approvals
 
@@ -107,7 +119,29 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 ### Recommended immediate build block
 
-The next implementation block is **operational health/support**, followed by organizational hierarchy and employee lifecycle. The Phase 1 engineering foundations are implemented, while external validation and production operations remain launch requirements.
+**Free Basic delivery (2026-09-08):** Public signup defaults to `basic_free` (display name Basic), active with no trial or paid-period expiry. Existing legacy `basic` organizations retain their allowances. Employee writes serialize capacity checks using the organization row: creation/reactivation above ten is rejected while ordinary edits and ended employment remain allowed. Current employees and future hires reserve places; a recorded last day of employment releases the place on the following day in the organization's timezone. The employee form exposes this existing date field. No new schema is required. Existing paid trial selections are preserved. Marketing now offers Basic as available and keeps PHP 19 Growth billing explicitly upcoming.
+
+Verification: full backend suite passed (155 tests, 1,434 assertions); subsequent focused verification including employee API authorization/capacity passed (4 FreeBasic tests, 20 assertions). Ten existing frontend tests, Pint, Prettier, and production build pass. Concurrent MySQL execution and browser acceptance testing have not been exercised here. Next build: Growth billing and paid seat changes.
+
+**Self-service workspace address (2026-09-08):** Trial signup no longer asks customers to choose a slug. The browser shows a readable address preview based on the organization name, while the server generates and persists the authoritative unique slug, using a numeric suffix on collisions and ignoring legacy client-provided slugs. Focused backend tests cover normal generation and collisions (2 tests, 5 assertions); frontend form and regression tests pass (10 tests). Prettier and the production build pass (the build required an elevated retry for esbuild parent-directory access).
+
+**Product logo (2026-09-08):** Wired the supplied `lexisone-logo.png` into the marketing homepage, trial signup, customer login, Platform Console login/sidebar, and bundled PNG favicon. A shared logo component preserves aspect ratio; tenant-uploaded workspace logos and initials are unchanged. Prettier, two branding regression tests, six existing routing/pricing tests, and the production build pass. Original raster retained without modification; smaller optimized icon derivatives remain a possible performance improvement.
+
+**Marketing homepage (2026-09-08):** Moved the public view to `src/views/Marketing/Home.vue` at `/`, with the title `LexisOne — Simple HR for Growing Teams`. `/saas` and its existing route name redirect to Home while preserving query parameters and anchors. Public website links now use `/`. The authenticated shell entry is `/app` (redirects to Dashboard); existing module URLs and authentication requirements are preserved. Prettier, six combined routing/pricing tests, and the production build pass (build required an elevated retry for esbuild parent-directory access).
+
+**Pricing and self-service priority (2026-09-08):** The approved Philippine direction is Basic free for up to 10 active employees and Growth at PHP 19 per additional active employee/month (100 employees: PHP 1,710). The marketing page now explains the product in plain language, provides two upcoming plan cards, an accessible headcount estimator, onboarding steps, and FAQs distinguishing today's trial from the planned free subscription. Removed obsolete marketing prices and the misleading contact-sales link to trial signup. Calculator regression tests cover the free boundary, sample bills, invalid inputs, and PHP formatting (3 passing tests). This is a marketing preview, not a released billing change.
+
+Before promoting the new offer as available:
+- [x] Introduce the free subscription without reducing legacy organizations' existing entitlements.
+- [ ] Align signup, account status/expiry, employee counting, imports/reactivation, and plan gates with free Basic and paid Growth.
+- [ ] Replace flat Growth checkout with server-authoritative seat pricing and verified subscription quantity updates; test retry/idempotency and downgrade behavior.
+- [ ] Decide paid Growth access below 11 employees, revised Business pricing, tax display, and billing/proration rules before enabling checkout.
+- [ ] Verify self-service invitations, password recovery, billing portal, payment failure recovery, and account export/offboarding in staging.
+- [ ] Keep payroll approvals and sensitive account actions explicitly authorized; do not promise zero-interaction operations before monitoring and recovery paths are verified.
+
+No existing subscription, backend price, or live payment configuration was changed in this marketing pass. Prettier completed for the edited/new frontend files; all 3 calculator tests and `npm run build` pass. The build required an elevated retry because the sandbox denied esbuild parent-directory access. Browser visual verification and payment-provider end-to-end testing remain outstanding.
+
+After the pricing and self-service block above, resume **organizational hierarchy and effective-dated employment history**, followed by employee lifecycle templates and reminders. Platform health/support is an engineering foundation; external alert delivery and production operations remain launch requirements.
 
 ---
 

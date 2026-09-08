@@ -3,50 +3,62 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
-use App\Models\Organization;
+use App\Http\Requests\PlatformHealthHistoryRequest;
+use App\Http\Requests\UpdatePlatformHealthSettingsRequest;
+use App\Http\Requests\UpdatePlatformMaintenanceRequest;
+use App\Services\Organizations\PlatformHealthService;
 use App\Services\Utils\ResponseServiceInterface;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 
 class PlatformHealthController extends Controller
 {
     private ResponseServiceInterface $response;
 
-    public function __construct(ResponseServiceInterface $response)
+    private PlatformHealthService $health;
+
+    public function __construct(ResponseServiceInterface $response, PlatformHealthService $health)
     {
         $this->response = $response;
+        $this->health = $health;
     }
 
-    public function show()
+    public function show(): JsonResponse
     {
-        $checks = [
-            'database' => $this->check(fn () => DB::select('select 1')),
-            'cache' => $this->check(function (): void {
-                Cache::put('platform-health-check', 'ok', 10);
-                Cache::forget('platform-health-check');
-            }),
-            'storage' => $this->check(function (): void {
-                Storage::disk(config('filesystems.default'))->exists('.platform-health-check');
-            }),
-            'queue' => ['status' => config('queue.default') === 'sync' ? 'sync' : 'configured', 'driver' => config('queue.default')],
-        ];
-        $checks['organizations'] = Organization::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
-        $checks['status'] = collect($checks)->contains(fn ($check) => is_array($check) && ($check['status'] ?? null) === 'failed') ? 'degraded' : 'ok';
-
-        return $this->response->successResponse('Platform health', $checks);
+        return $this->response->successResponse('Platform health', $this->health->health());
     }
 
-    private function check(callable $callback): array
+    public function history(PlatformHealthHistoryRequest $request): JsonResponse
     {
-        try {
-            $callback();
+        return $this->response->successResponse(
+            'Platform health history',
+            $this->health->history((int) ($request->validated()['limit'] ?? 12))
+        );
+    }
 
-            return ['status' => 'ok'];
-        } catch (\Throwable $exception) {
-            report($exception);
+    public function settings(): JsonResponse
+    {
+        return $this->response->successResponse('Platform health settings', $this->health->settings());
+    }
 
-            return ['status' => 'failed'];
-        }
+    public function updateSettings(UpdatePlatformHealthSettingsRequest $request): JsonResponse
+    {
+        return $this->response->updateResponse(
+            'Platform health settings',
+            $this->health->updateSettings($request->validated())
+        );
+    }
+
+    public function updateMaintenance(UpdatePlatformMaintenanceRequest $request): JsonResponse
+    {
+        $attributes = $request->validated();
+
+        return $this->response->updateResponse(
+            'Platform maintenance status',
+            $this->health->setMaintenance(
+                $attributes['enabled'],
+                $attributes['retry_after'] ?? null,
+                $attributes['reason'] ?? null
+            )
+        );
     }
 }

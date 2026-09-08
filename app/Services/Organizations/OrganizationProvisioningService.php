@@ -49,7 +49,7 @@ class OrganizationProvisioningService
                 'plan_code' => $planCode,
                 'status' => Organization::STATUS_ACTIVE,
                 'subscription_status' => $attributes['subscription_status'] ?? Organization::SUBSCRIPTION_TRIALING,
-                'trial_ends_at' => $attributes['trial_ends_at'] ?? now()->addDays(14),
+                'trial_ends_at' => array_key_exists('trial_ends_at', $attributes) ? $attributes['trial_ends_at'] : now()->addDays(14),
                 'current_period_ends_at' => $attributes['current_period_ends_at'] ?? null,
                 'employee_limit' => $attributes['employee_limit'] ?? null,
             ]);
@@ -84,6 +84,23 @@ class OrganizationProvisioningService
 
             return $organization;
         });
+    }
+
+    public function generateAvailableSlug(string $organizationName): string
+    {
+        $base = Str::slug($organizationName);
+        $base = $base !== '' ? $base : 'workspace';
+        $base = Str::limit($base, 63, '');
+        $candidate = $base;
+        $suffix = 2;
+
+        while (Organization::query()->where('slug', $candidate)->exists()) {
+            $suffixText = '-'.$suffix;
+            $candidate = Str::limit($base, 63 - strlen($suffixText), '').$suffixText;
+            $suffix++;
+        }
+
+        return $candidate;
     }
 
     public function updateSubscription(Organization $organization, array $attributes): Organization

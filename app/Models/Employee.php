@@ -15,6 +15,39 @@ class Employee extends Model
 
     public $model_name = 'Employee';
 
+    public function save(array $options = [])
+    {
+        $organization = app(\App\Tenancy\TenantContext::class)->organization();
+
+        return $this->getConnection()->transaction(function () use ($organization, $options) {
+            // Serialize capacity decisions for all employee writes in a tenant.
+            $lockedOrganization = Organization::query()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
+            if ($lockedOrganization->plan_code === 'basic_free') {
+                $today = now($lockedOrganization->timezone)->toDateString();
+                $persisted = $this->exists ? static::query()->whereKey($this->getKey())->first() : null;
+                $wasActive = $persisted && ($persisted->employment_effective_to === null
+                    || $persisted->employment_effective_to->toDateString() >= $today);
+                $willBeActive = $this->employment_effective_to === null
+                    || $this->employment_effective_to->toDateString() >= $today;
+
+                if ($willBeActive && ! $wasActive) {
+                    $count = static::query()->where('organization_id', $organization->id)
+                        ->where(function ($query) use ($today) {
+                            $query->whereNull('employment_effective_to')->orWhereDate('employment_effective_to', '>=', $today);
+                        })->count();
+                    $limit = app(\App\Services\Plans\PlanEntitlementService::class)->employeeLimit($lockedOrganization);
+                    if ($count >= $limit) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'organization' => "Basic includes {$limit} active employees. Upgrade before adding or reactivating another employee.",
+                        ]);
+                    }
+                }
+            }
+
+            return parent::save($options);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'manager_id',

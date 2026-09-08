@@ -21,6 +21,7 @@ class PayrollAdjustmentRunController extends Controller
         $this->auditLogs = $auditLogs;
         $this->response = $response;
         $this->middleware('permission:manage-payroll');
+        $this->middleware('plan:payroll');
     }
 
     public function index()

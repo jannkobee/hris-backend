@@ -23,14 +23,16 @@ class TrialSignupController extends Controller
     public function store(TrialSignupRequest $request)
     {
         $data = $request->validated();
+        $planCode = $data['plan_code'] ?? 'basic_free';
+        $free = $planCode === 'basic_free';
         $organization = $this->provisioning->provision([
-            'slug' => $data['slug'],
+            'slug' => $this->provisioning->generateAvailableSlug($data['organization_name']),
             'name' => $data['organization_name'],
             'country_code' => strtoupper($data['country_code']),
             'timezone' => $data['timezone'],
-            'plan_code' => $data['plan_code'],
-            'subscription_status' => Organization::SUBSCRIPTION_TRIALING,
-            'trial_ends_at' => now()->addDays((int) config('platform.trial_days')),
+            'plan_code' => $planCode,
+            'subscription_status' => $free ? Organization::SUBSCRIPTION_ACTIVE : Organization::SUBSCRIPTION_TRIALING,
+            'trial_ends_at' => $free ? null : now()->addDays((int) config('platform.trial_days')),
             'admin_first_name' => $data['first_name'],
             'admin_last_name' => $data['last_name'],
             'admin_email' => $data['email'],
@@ -38,7 +40,7 @@ class TrialSignupController extends Controller
         ]);
 
         return $this->response->storeResponse('Trial organization', [
-            'organization' => ['name' => $organization->name, 'slug' => $organization->slug, 'trial_ends_at' => $organization->trial_ends_at],
+            'organization' => ['name' => $organization->name, 'slug' => $organization->slug, 'plan_code' => $organization->plan_code, 'subscription_status' => $organization->subscription_status, 'trial_ends_at' => $organization->trial_ends_at],
         ]);
     }
 }

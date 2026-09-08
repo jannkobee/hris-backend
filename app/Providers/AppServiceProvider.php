@@ -15,6 +15,7 @@ use App\Services\EmployeeNumber\EmployeeNumberService;
 use App\Services\EmployeeNumber\EmployeeNumberServiceInterface;
 use App\Services\Organizations\OrganizationBrandingService;
 use App\Services\Organizations\OrganizationProvisioningService;
+use App\Services\Organizations\PlatformHealthService;
 use App\Services\Permission\PermissionService;
 use App\Services\Permission\PermissionServiceInterface;
 use App\Services\Utils\ResponseService;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(MfaService::class);
         $this->app->scoped(OrganizationProvisioningService::class);
         $this->app->scoped(OrganizationBrandingService::class);
+        $this->app->singleton(PlatformHealthService::class);
         $this->app->singleton(AuditLogServiceInterface::class, AuditLogService::class);
         $this->app->singleton(ResponseServiceInterface::class, ResponseService::class);
         $this->app->singleton(PermissionRepositoryInterface::class, PermissionRepository::class);

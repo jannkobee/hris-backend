@@ -42,6 +42,7 @@ return [
         ],
         'payroll' => [
             'name' => 'Payroll',
+            'countries' => ['PH'],
             'description' => 'Payroll calculation, review, approval, payment, and employee payslips.',
         ],
         'workplace_hub' => [
@@ -83,6 +84,12 @@ return [
     ],
 
     'plans' => [
+        'basic_free' => [
+            'name' => 'Basic',
+            'description' => 'Free essential HR for up to 10 active employees. No expiry.',
+            'features' => ['core_hr', 'attendance', 'attendance_corrections', 'leave', 'overtime', 'workforce_calendar', 'announcements'],
+            'limits' => ['employees' => 10],
+        ],
         'starter' => [
             'name' => 'Starter',
             'description' => 'Essential HR operations for small teams.',

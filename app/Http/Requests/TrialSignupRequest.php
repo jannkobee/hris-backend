@@ -16,10 +16,12 @@ class TrialSignupRequest extends FormRequest
     {
         return [
             'organization_name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'regex:/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/'],
+            // The public trial flow chooses the workspace address from the
+            // organization name. Ignore a legacy client-provided slug.
+            'slug' => ['nullable', 'string'],
             'country_code' => ['required', 'string', 'size:2', 'alpha'],
             'timezone' => ['required', 'timezone'],
-            'plan_code' => ['required', 'in:starter,growth,business'],
+            'plan_code' => ['sometimes', 'in:basic_free,starter,growth,business'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],

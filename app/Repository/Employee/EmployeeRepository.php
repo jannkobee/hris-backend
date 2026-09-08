@@ -94,6 +94,11 @@ class EmployeeRepository extends BaseRepository implements EmployeeRepositoryInt
     private function ensureEmployeeCapacity(): void
     {
         $organization = $this->tenantContext->organization();
+        // Free Basic capacity is enforced atomically on every model save,
+        // including imports and reactivation, rather than only this endpoint.
+        if ($organization->plan_code === 'basic_free') {
+            return;
+        }
         $limit = $this->planEntitlements->employeeLimit($organization);
 
         if ($limit !== null && Employee::query()->count() >= $limit) {

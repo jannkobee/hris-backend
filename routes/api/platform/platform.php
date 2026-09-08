@@ -4,8 +4,16 @@ use App\Http\Controllers\Platform\BillingCheckoutController;
 use App\Http\Controllers\Platform\OrganizationOwnerInvitationController;
 use App\Http\Controllers\Platform\OrganizationProvisioningController;
 use App\Http\Controllers\Platform\PlatformHealthController;
+use App\Http\Controllers\Platform\PlatformPricingController;
 use App\Http\Controllers\Platform\PlatformSessionController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
+    ->prefix('platform')->name('platform.')->controller(PlatformPricingController::class)->group(function (): void {
+        Route::get('pricing', 'show')->name('pricing.show');
+        Route::get('pricing/history', 'history')->name('pricing.history');
+        Route::patch('pricing', 'update')->name('pricing.update');
+    });
 
 Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
     ->prefix('platform')
@@ -21,6 +29,10 @@ Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
     ->controller(PlatformHealthController::class)
     ->group(function (): void {
         Route::get('health', 'show')->name('health.show');
+        Route::get('health/history', 'history')->name('health.history');
+        Route::get('health/settings', 'settings')->name('health.settings');
+        Route::patch('health/settings', 'updateSettings')->name('health.settings.update');
+        Route::patch('maintenance', 'updateMaintenance')->name('maintenance.update');
     });
 
 Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])

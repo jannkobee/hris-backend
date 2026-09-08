@@ -20,6 +20,7 @@ class StatutoryReportController extends Controller
         $this->auditLogs = $auditLogs;
         $this->response = $response;
         $this->middleware('permission:view-payroll');
+        $this->middleware('plan:payroll');
     }
 
     public function index()
