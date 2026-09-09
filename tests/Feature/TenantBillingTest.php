@@ -81,7 +81,7 @@ class TenantBillingTest extends TestCase
 
         Http::assertSent(function ($request) {
             return $request['line_items'][0]['quantity'] === 1
-                && $request['line_items'][0]['price_data']['unit_amount'] === 1900
+                && $request['line_items'][0]['price_data']['unit_amount'] === 0
                 && $request['line_items'][0]['price_data']['currency'] === 'php';
         });
     }
@@ -114,6 +114,7 @@ class TenantBillingTest extends TestCase
         config(['billing.stripe.webhook_secret' => 'whsec_test']);
         $payload = json_encode([
             'type' => 'invoice.payment_failed',
+            'id' => 'evt_payment_failed_test',
             'data' => [
                 'object' => [
                     'subscription' => 'sub_failing_123',
@@ -122,7 +123,7 @@ class TenantBillingTest extends TestCase
         ], JSON_THROW_ON_ERROR);
 
         $timestamp = now()->timestamp;
-        $signature = 't=' . $timestamp . ',v1=' . hash_hmac('sha256', $timestamp . '.' . $payload, 'whsec_test');
+        $signature = 't='.$timestamp.',v1='.hash_hmac('sha256', $timestamp.'.'.$payload, 'whsec_test');
 
         $server = $this->transformHeadersToServerVars([
             'Stripe-Signature' => $signature,

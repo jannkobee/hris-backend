@@ -15,12 +15,13 @@ class PlatformPricingService
     {
         $effective = collect($this->history())->first(fn ($item) => \Carbon\Carbon::parse($item['effective_at'])->lte(now()));
         if ($effective) {
-            return $effective;
+            return array_merge(['minimum_billable_employees' => 0], $effective);
         }
 
         return array_merge([
             'country_code' => 'PH', 'currency' => 'php',
             'free_employee_limit' => 10, 'growth_price_per_employee' => 1900,
+            'minimum_billable_employees' => 0,
         ], PlatformSetting::query()->where('key', self::KEY)->value('value') ?? []);
     }
 

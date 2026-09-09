@@ -18,6 +18,9 @@ x-env: &env
   REDIS_HOST: redis
   FRONTEND_URL: https://${DOMAIN}
   TENANT_BASE_DOMAIN: ${TENANT_BASE_DOMAIN}
+  STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+  BILLING_PORTAL_RETURN_HOSTS: ${BILLING_PORTAL_RETURN_HOSTS:-localhost}
   MAIL_MAILER: ${MAIL_MAILER}
   MAIL_HOST: ${MAIL_HOST}
   MAIL_PORT: ${MAIL_PORT}
@@ -38,7 +41,11 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -57,11 +64,19 @@ services:
     build: { context: ., dockerfile: deploy/Dockerfile.production }
     environment: *env
     volumes: [backend-storage:/var/www/html/storage/app]
-    depends_on: { migrate: { condition: service_completed_successfully }, redis: { condition: service_started } }
+    depends_on:
+      {
+        migrate: { condition: service_completed_successfully },
+        redis: { condition: service_started },
+      }
     restart: unless-stopped
   api:
     image: nginx:1.27-alpine
-    volumes: [./deploy/nginx-api.conf:/etc/nginx/conf.d/default.conf:ro, ./:/var/www/html:ro]
+    volumes:
+      [
+        ./deploy/nginx-api.conf:/etc/nginx/conf.d/default.conf:ro,
+        ./:/var/www/html:ro,
+      ]
     depends_on: [app]
     restart: unless-stopped
   queue:

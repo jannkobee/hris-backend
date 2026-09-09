@@ -1,5 +1,9 @@
 # Backend coding baseline
 
+- After each implementation task, update both `docs/industry-readiness-roadmap.md`
+  and `docs/saas-launch-roadmap.md` with delivered scope, verification evidence,
+  remaining issues, and the next step. Distinguish implementation from staging verification.
+
 Apply these conventions to every new or edited backend feature.
 
 - Preserve tenant isolation. Every company-owned Eloquent model must use
