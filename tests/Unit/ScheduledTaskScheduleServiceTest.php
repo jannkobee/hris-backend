@@ -13,13 +13,23 @@ class ScheduledTaskScheduleServiceTest extends TestCase
         $service = app(ScheduledTaskScheduleService::class);
 
         $this->assertSame('30 9 * * *', $service->cronExpression(new ScheduledTask([
-            'frequency' => 'daily', 'run_time' => '09:30',
+            'frequency' => 'daily',
+            'run_time' => '09:30',
         ])));
         $this->assertSame('0 8 * * 1,5', $service->cronExpression(new ScheduledTask([
-            'frequency' => 'weekly', 'run_time' => '08:00', 'run_days' => [1, 5],
+            'frequency' => 'weekly',
+            'run_time' => '08:00',
+            'run_days' => [1, 5],
+        ])));
+        $this->assertSame('0 * * * *', $service->cronExpression(new ScheduledTask([
+            'frequency' => 'hourly',
+            'run_time' => '00:00',
         ])));
         $this->assertSame('15 17 20 1,7 *', $service->cronExpression(new ScheduledTask([
-            'frequency' => 'yearly', 'run_time' => '17:15', 'run_day_of_month' => 20, 'run_months' => [1, 7],
+            'frequency' => 'yearly',
+            'run_time' => '17:15',
+            'run_day_of_month' => 20,
+            'run_months' => [1, 7],
         ])));
     }
 }

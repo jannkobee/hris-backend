@@ -20,10 +20,11 @@ class ScheduledTaskScheduleService
         $time = "{$minute} {$hour}";
 
         return match ($task->frequency) {
+            'hourly' => "{$minute} * * * *",
             'daily' => "{$time} * * *",
-            'weekly' => "{$time} * * ".implode(',', $task->run_days ?: [1]),
-            'monthly' => "{$time} ".($task->run_day_of_month ?: 1).' * *',
-            'yearly' => "{$time} ".($task->run_day_of_month ?: 1).' '.implode(',', $task->run_months ?: [1]).' *',
+            'weekly' => "{$time} * * " . implode(',', $task->run_days ?: [1]),
+            'monthly' => "{$time} " . ($task->run_day_of_month ?: 1) . ' * *',
+            'yearly' => "{$time} " . ($task->run_day_of_month ?: 1) . ' ' . implode(',', $task->run_months ?: [1]) . ' *',
             default => '* * * * *',
         };
     }

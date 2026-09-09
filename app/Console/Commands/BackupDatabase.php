@@ -31,10 +31,15 @@ class BackupDatabase extends Command
             $database = $connection->getDatabaseName();
 
             $tables = $connection->getSchemaBuilder()->getTableListing();
-            $sql = "-- LexisOne Database Backup\n";
-            $sql .= "-- Database: {$database}\n";
-            $sql .= "-- Generated: " . now()->toIso8601String() . "\n\n";
-            $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
+            $gz = gzopen($outputPath, 'wb9');
+            if (! $gz) {
+                throw new \RuntimeException("Cannot open {$outputPath} for writing.");
+            }
+
+            gzwrite($gz, "-- LexisOne Database Backup\n");
+            gzwrite($gz, "-- Database: {$database}\n");
+            gzwrite($gz, '-- Generated: ' . now()->toIso8601String() . "\n\n");
+            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=0;\n\n");
 
             $bar = $this->output->createProgressBar(count($tables));
             $bar->start();
@@ -45,32 +50,23 @@ class BackupDatabase extends Command
                     $createRow = $connection->select("SHOW CREATE TABLE `{$table}`");
                     $createSql = $createRow[0]->{'Create Table'} ?? null;
                     if ($createSql) {
-                        $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
-                        $sql .= $createSql . ";\n\n";
+                        gzwrite($gz, "DROP TABLE IF EXISTS `{$table}`;\n");
+                        gzwrite($gz, $createSql . ";\n\n");
                     }
 
-                    // Dump rows
-                    $rows = $connection->table($table)->get();
-                    if ($rows->isNotEmpty()) {
-                        foreach ($rows->chunk(100) as $chunk) {
-                            $columns = array_keys((array) $chunk->first());
-                            $escapedColumns = implode(', ', array_map(fn($col) => "`{$col}`", $columns));
-                            $valuesList = [];
-
-                            foreach ($chunk as $row) {
-                                $rowValues = array_map(function ($val) use ($pdo) {
-                                    if ($val === null) {
-                                        return 'NULL';
-                                    }
-
-                                    return $pdo->quote((string) $val);
-                                }, (array) $row);
-
-                                $valuesList[] = '(' . implode(', ', $rowValues) . ')';
-                            }
-
-                            $sql .= "INSERT INTO `{$table}` ({$escapedColumns}) VALUES\n" . implode(",\n", $valuesList) . ";\n\n";
+                    // Dump rows using streaming cursor
+                    $buffer = [];
+                    foreach ($connection->table($table)->cursor() as $row) {
+                        $buffer[] = $row;
+                        if (count($buffer) >= 100) {
+                            $this->writeInsertChunk($gz, $table, $buffer, $pdo);
+                            $buffer = [];
                         }
+                    }
+
+                    if (! empty($buffer)) {
+                        $this->writeInsertChunk($gz, $table, $buffer, $pdo);
+                        $buffer = [];
                     }
                 } catch (\Throwable $e) {
                     $this->warn("Skipping table {$table}: {$e->getMessage()}");
@@ -78,12 +74,10 @@ class BackupDatabase extends Command
                 $bar->advance();
             }
 
-            $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
+            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=1;\n");
             $bar->finish();
             $this->newLine();
-
-            $compressed = gzencode($sql, 9);
-            file_put_contents($outputPath, $compressed);
+            gzclose($gz);
 
             $fileSizeBytes = filesize($outputPath);
             $fileSizeKb = round($fileSizeBytes / 1024, 2);
@@ -106,5 +100,30 @@ class BackupDatabase extends Command
 
             return self::FAILURE;
         }
+    }
+
+    /**
+     * @param  resource  $gz
+     * @param  array<int, object>  $rows
+     */
+    private function writeInsertChunk($gz, string $table, array $rows, \PDO $pdo): void
+    {
+        $columns = array_keys((array) $rows[0]);
+        $escapedColumns = implode(', ', array_map(fn($col) => "`{$col}`", $columns));
+        $valuesList = [];
+
+        foreach ($rows as $row) {
+            $rowValues = array_map(function ($val) use ($pdo) {
+                if ($val === null) {
+                    return 'NULL';
+                }
+
+                return $pdo->quote((string) $val);
+            }, (array) $row);
+
+            $valuesList[] = '(' . implode(', ', $rowValues) . ')';
+        }
+
+        gzwrite($gz, "INSERT INTO `{$table}` ({$escapedColumns}) VALUES\n" . implode(",\n", $valuesList) . ";\n\n");
     }
 }

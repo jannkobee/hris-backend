@@ -6,6 +6,10 @@ x-env: &env
   APP_URL: https://${DOMAIN}
   APP_KEY: ${APP_KEY}
   LOG_CHANNEL: stderr
+  LOG_LEVEL: "${LOG_LEVEL:-info}"
+  SESSION_SECURE_COOKIE: "true"
+  SECURITY_HSTS_ENABLED: "true"
+  AUDIT_LOG_SIGNING_KEY: "${AUDIT_LOG_SIGNING_KEY:-${APP_KEY}}"
   DB_CONNECTION: mysql
   DB_HOST: mysql
   DB_DATABASE: ${DB_DATABASE}
@@ -16,6 +20,18 @@ x-env: &env
   QUEUE_CONNECTION: redis
   REDIS_CLIENT: phpredis
   REDIS_HOST: redis
+  BROADCAST_DRIVER: "${BROADCAST_DRIVER:-reverb}"
+  REVERB_APP_ID: "${REVERB_APP_ID:-hris-app}"
+  REVERB_APP_KEY: "${REVERB_APP_KEY:-}"
+  REVERB_APP_SECRET: "${REVERB_APP_SECRET:-}"
+  REVERB_HOST: reverb
+  REVERB_PORT: 8080
+  REVERB_SCHEME: http
+  REVERB_SERVER_HOST: 0.0.0.0
+  REVERB_SERVER_PORT: 8080
+  REVERB_PUBLIC_HOST: "${DOMAIN}"
+  REVERB_PUBLIC_PORT: 443
+  REVERB_PUBLIC_SCHEME: https
   FRONTEND_URL: https://${DOMAIN}
   TENANT_BASE_DOMAIN: ${TENANT_BASE_DOMAIN}
   MAIL_MAILER: ${MAIL_MAILER}
@@ -38,7 +54,11 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -57,11 +77,19 @@ services:
     build: { context: ., dockerfile: deploy/Dockerfile.production }
     environment: *env
     volumes: [backend-storage:/var/www/html/storage/app]
-    depends_on: { migrate: { condition: service_completed_successfully }, redis: { condition: service_started } }
+    depends_on:
+      {
+        migrate: { condition: service_completed_successfully },
+        redis: { condition: service_started },
+      }
     restart: unless-stopped
   api:
     image: nginx:1.27-alpine
-    volumes: [./deploy/nginx-api.conf:/etc/nginx/conf.d/default.conf:ro, ./:/var/www/html:ro]
+    volumes:
+      [
+        ./deploy/nginx-api.conf:/etc/nginx/conf.d/default.conf:ro,
+        ./:/var/www/html:ro,
+      ]
     depends_on: [app]
     restart: unless-stopped
   queue:
@@ -75,6 +103,18 @@ services:
     environment: *env
     command: php artisan schedule:work
     depends_on: { migrate: { condition: service_completed_successfully } }
+    restart: unless-stopped
+  reverb:
+    build: { context: ., dockerfile: deploy/Dockerfile.production }
+    environment: *env
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "${REVERB_PORT_FORWARD:-8080}:8080"
+    depends_on:
+      {
+        migrate: { condition: service_completed_successfully },
+        redis: { condition: service_started },
+      }
     restart: unless-stopped
   frontend:
     build:

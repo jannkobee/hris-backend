@@ -33,6 +33,7 @@ class AuditLog extends Model
     protected static function booted(): void
     {
         static::creating(function (self $auditLog): void {
+            $auditLog->created_at ??= now();
             $organizationId = (string) $auditLog->organization_id;
             $previousHash = static::query()
                 ->where('organization_id', $organizationId)
@@ -93,7 +94,7 @@ class AuditLog extends Model
                     ->orWhere('id', 'LIKE', "%{$search}%");
 
                 $q->orWhere(function ($subQuery) use ($search) {
-                    $subQuery->whereRaw('LOWER(payload) LIKE ?', ['%'.strtolower($search).'%']);
+                    $subQuery->whereRaw('LOWER(payload) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             });
         }

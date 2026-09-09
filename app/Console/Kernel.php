@@ -31,16 +31,27 @@ class Kernel extends ConsoleKernel
 
         $context = app(TenantContext::class);
 
-        Organization::query()->where('status', Organization::STATUS_ACTIVE)->get()->each(function (Organization $organization) use ($context, $schedule, $scheduleService): void {
-            $context->run($organization, function () use ($organization, $schedule, $scheduleService, $context): void {
-                ScheduledTask::query()->where('is_active', true)->get()->each(function (ScheduledTask $task) use ($organization, $schedule, $scheduleService, $context) {
+        $globalCommands = [
+            'reports:deliver',
+            'subscriptions:reconcile',
+            'audit-logs:verify',
+            'training:send-expiry-reminders',
+        ];
+
+        Organization::query()->where('status', Organization::STATUS_ACTIVE)->get()->each(function (Organization $organization) use ($context, $schedule, $scheduleService, $globalCommands): void {
+            $context->run($organization, function () use ($organization, $schedule, $scheduleService, $context, $globalCommands): void {
+                ScheduledTask::query()->where('is_active', true)->get()->each(function (ScheduledTask $task) use ($organization, $schedule, $scheduleService, $context, $globalCommands) {
+                    if (in_array($task->command, $globalCommands, true)) {
+                        return;
+                    }
+
                     $command = $task->command === 'leave-credits:accrue'
-                        ? $task->command.' --organization='.$organization->slug
+                        ? $task->command . ' --organization=' . $organization->slug
                         : $task->command;
 
                     $event = $schedule->command($command)
                         ->appendOutputTo(storage_path("logs/scheduled-task-{$organization->slug}.log"))
-                        ->name($organization->slug.'-'.$task->name)
+                        ->name($organization->slug . '-' . $task->name)
                         ->timezone($task->timezone ?: config('app.timezone'))
                         ->withoutOverlapping(120)
                         ->onSuccess(function (Stringable $output) use ($organization, $task, $scheduleService, $context) {
@@ -75,7 +86,7 @@ class Kernel extends ConsoleKernel
 
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
