@@ -59,13 +59,17 @@ class PlatformHealthTest extends TestCase
     public function test_health_still_reports_when_snapshot_storage_is_unavailable(): void
     {
         config()->set('platform.provisioning_key', 'platform-test-key');
-        Schema::drop('platform_health_snapshots');
+        Schema::rename('platform_health_snapshots', 'platform_health_snapshots_unavailable');
 
-        $this->platformRequest()->getJson(route('platform.health.show'))
-            ->assertOk()
-            ->assertJsonPath('data.status', 'degraded')
-            ->assertJsonPath('data.checks.snapshot_storage.status', 'failed')
-            ->assertJsonPath('data.checks.database.status', 'ok');
+        try {
+            $this->platformRequest()->getJson(route('platform.health.show'))
+                ->assertOk()
+                ->assertJsonPath('data.status', 'degraded')
+                ->assertJsonPath('data.checks.snapshot_storage.status', 'failed')
+                ->assertJsonPath('data.checks.database.status', 'ok');
+        } finally {
+            Schema::rename('platform_health_snapshots_unavailable', 'platform_health_snapshots');
+        }
     }
 
     public function test_platform_mutations_require_operator_credentials(): void

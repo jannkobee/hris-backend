@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TimeOfDay;
 use App\Traits\BelongsToOrganization;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -21,6 +22,8 @@ class ShiftAssignment extends Model
 
     protected $casts = [
         'work_date' => 'date:Y-m-d',
+        'start_time' => TimeOfDay::class,
+        'end_time' => TimeOfDay::class,
         'break_minutes' => 'integer',
         'grace_minutes' => 'integer',
     ];

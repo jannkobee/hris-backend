@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\TimeOfDay;
 use App\Traits\BelongsToOrganization;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -19,6 +20,8 @@ class ShiftTemplate extends Model
     ];
 
     protected $casts = [
+        'start_time' => TimeOfDay::class,
+        'end_time' => TimeOfDay::class,
         'days_of_week' => 'array',
         'is_active' => 'boolean',
         'break_minutes' => 'integer',

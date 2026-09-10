@@ -4,6 +4,10 @@ Updated: 2026-09-10
 
 This is the execution plan from our current build to a verified release. Use the [industry roadmap](industry-readiness-roadmap.md) for feature history and this document for the order of work, expected behavior, and release evidence.
 
+Local staging-readiness tooling completed on 2026-09-10. Production Compose now keeps the Platform Console provisioning key in the HTTP app only, binds configurable frontend/Reverb ports to loopback by default, and waits on explicit service health checks. The secret-safe staging validator, disposable one-command production-topology smoke test, and infrastructure/topology runbook are implemented. Verification passed for 3 validator tests / 11 assertions, both deployment test files (including all 4 billing scenarios), Compose rendering, shell syntax, the frontend production build, and a complete disposable stack run covering health probes, migration status, queue/scheduler inspection, and the 69-table tenancy audit. This does not mean staging exists: DNS/TLS, SMTP, Stripe test mode, durable backups, monitoring, and rollback still require external resources and real-environment evidence.
+
+Production baseline hardening completed locally on 2026-09-10. Production Compose now keeps Stripe configuration out of Reverb and frontend services while supplying it to the app, migration, queue, and scheduler services. Shift roster time values are normalized to `HH:mm` on both SQLite and MySQL, and affected regression tests are database-independent. Verification passed for all 4 Compose billing scenarios, production Compose rendering, 13 focused MySQL tests / 62 assertions, the full MySQL backend suite / 170 tests / 1,554 assertions, the 69-table tenancy audit, and the frontend production build. This is implementation and local verification only; the candidate remains uncommitted and staging/provider verification is still pending.
+
 ## Where we are
 
 | Area                           | Current status                                        | Evidence / remaining work                                                                      |
@@ -15,10 +19,10 @@ This is the execution plan from our current build to a verified release. Use the
 | Checkout calculation           | Implemented; provider verification pending            | Saved rate and employee quantity are sent to Stripe.                                           |
 | Subscription synchronization   | Implemented; provider verification pending            | Uses the subscribed allowance, keeps the price, detects provider failures.                     |
 | Webhook handling               | Partially verified                                    | Paid/unpaid handling and duplicate event IDs tested; wider lifecycle scenarios remain below.   |
-| Deployment                     | Billing configuration locally tested; staging pending | Compose forwards billing settings; runtime services still need a staging rehearsal.            |
+| Deployment                     | Local topology verified; staging pending               | Validator, health gates, smoke test, and runbook pass locally; external services remain.        |
 | Public paid launch             | Pending                                               | Complete the release gates below.                                                              |
 
-Latest focused verification: 8 billing tests, 31 assertions passed; frontend production build passed. This does not establish a successful live Stripe checkout or a production deployment.
+Latest release verification: 4 Compose billing scenarios passed; the MySQL-backed backend suite passed with 170 tests and 1,554 assertions; the tenancy audit passed for 69 tables; and the frontend production build passed. The host lacks `pdo_sqlite`, so the ordinary SQLite-backed suite was not rerun. This does not establish a successful live Stripe checkout or a production deployment.
 
 ## How the current flow works
 
@@ -45,9 +49,9 @@ For a 10-person allowance and PHP19 rate, 25 active employees produce 15 billabl
 
 ## Step 1 — Establish a reproducible baseline
 
-Owner: development. Status: local baseline verified 2026-09-10. Frontend production build also passed.
+Owner: development. Status: local baseline verified on MySQL 2026-09-10; staging baseline pending. Frontend production build also passed.
 
-Baseline: backend `5e784a8482483bb613f88f82f452d0518e6767a4`, frontend `fa8d7d63e7668de8bf7930bb8b32a525d49969fc` plus the current uncommitted pricing-display changes. PHP 8.3.33 / SQLite: full suite passed, 168 tests and 1,544 assertions. `php artisan tenancy:audit` passed for 69 tables. Pricing display tests: 4 passed. These are local checks, not staging acceptance.
+Baseline: current backend work is based on `0095e69ce61d5c5a726eb4861a92510f19848fd9`; frontend `fa8d7d63e7668de8bf7930bb8b32a525d49969fc`. The production-hardening changes are not yet committed, so record the final backend commit after review. PHP 8.3.33 / isolated MySQL 8.4: full suite passed, 170 tests and 1,554 assertions. `php artisan tenancy:audit` passed for 69 tables. All 4 Compose billing scenarios and the frontend production build passed. The host lacks `pdo_sqlite`, so SQLite was not rerun. These are local checks, not staging acceptance.
 
 1. Record the backend and frontend commit IDs for the candidate release.
 2. Run the backend test suite from `hris-backend`:
@@ -80,9 +84,9 @@ Done when: every offered price can be reproduced by the calculator and checkout,
 
 Frontend production build passed after the configurable minimum implementation. No schema migration was needed.
 
-Owner: operations + development. Status: pending.
+Owner: operations + development. Status: local preparation complete; external staging pending.
 
-Delivered 2026-09-10: both Compose files forward Stripe API/webhook secrets and billing portal return hosts to the PHP services. The deployment environment template and instructions cover staging credentials and runtime refresh. Four configuration regression tests passed using Docker Compose rendering with dummy values, including blank-credential defaults and frontend exclusion. No containers were started, database operations run, or provider requests made. Next: supply isolated staging credentials and verify the running application, queue, scheduler, and Stripe test-mode flows.
+Delivered 2026-09-10: Compose forwards Stripe API/webhook secrets and billing portal return hosts only to the PHP services that require them; the Platform Console provisioning key reaches only the HTTP app. Public ports are configurable and loopback-bound by default, all long-running services have health checks, and startup dependencies use health/completion gates. The environment template, secret-safe validator, infrastructure runbook, and disposable `deploy/smoke-local.sh` rehearsal are ready. Local evidence includes configuration regression tests and a successful full-stack run with migrations, health probes, queue/scheduler checks, a 69-table tenancy audit, and automatic cleanup. Next: supply isolated external staging infrastructure and credentials, then repeat runtime, email, Stripe, backup, and rollback checks there.
 
 1. Use separate staging database, storage, email delivery and Stripe test credentials.
 2. Review [deployment instructions](deployment.md) and [deployment readiness](deployment-readiness-checklist.md).

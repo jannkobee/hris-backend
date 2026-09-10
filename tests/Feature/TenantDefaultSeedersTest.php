@@ -7,7 +7,6 @@ use App\Models\Department;
 use App\Models\EmploymentStatus;
 use App\Models\JobGrade;
 use App\Models\LeaveType;
-use App\Models\Organization;
 use App\Models\OvertimePolicy;
 use App\Models\ShiftTemplate;
 use App\Services\Organizations\OrganizationProvisioningService;
@@ -35,19 +34,19 @@ class TenantDefaultSeedersTest extends TestCase
             'admin_password' => 'Password123!',
         ]);
 
-        app(TenantContext::class)->run($org, function () use ($org): void {
+        app(TenantContext::class)->run($org, function (): void {
             // 1. Shift Templates
             $this->assertSame(5, ShiftTemplate::count());
             $dayShift = ShiftTemplate::where('code', 'DAY-8-5')->first();
             $this->assertNotNull($dayShift);
-            $this->assertSame('08:00:00', $dayShift->start_time);
-            $this->assertSame('17:00:00', $dayShift->end_time);
+            $this->assertSame('08:00', $dayShift->start_time);
+            $this->assertSame('17:00', $dayShift->end_time);
             $this->assertSame([1, 2, 3, 4, 5], $dayShift->days_of_week);
             $this->assertTrue($dayShift->is_active);
 
             $nightShift = ShiftTemplate::where('code', 'NIGHT-10-7')->first();
             $this->assertNotNull($nightShift);
-            $this->assertSame('22:00:00', $nightShift->start_time);
+            $this->assertSame('22:00', $nightShift->start_time);
 
             // 2. Overtime Policies
             $this->assertSame(6, OvertimePolicy::count());

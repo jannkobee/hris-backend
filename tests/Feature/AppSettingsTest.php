@@ -88,7 +88,7 @@ class AppSettingsTest extends TestCase
         $this->assertSame('Acme', $settings->get('organization.company_name'));
 
         $settingReads = collect(DB::getQueryLog())
-            ->filter(fn (array $query): bool => str_contains($query['query'], 'from "app_settings"'))
+            ->filter(fn (array $query): bool => str_contains($query['query'], 'app_settings'))
             ->count();
         $this->assertSame(1, $settingReads);
 

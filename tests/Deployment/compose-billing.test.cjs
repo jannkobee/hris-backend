@@ -28,6 +28,7 @@ const fixture = {
     MAIL_PASSWORD: "fixture",
     MAIL_ENCRYPTION: "",
     MAIL_FROM_ADDRESS: "fixture@example.test",
+    PLATFORM_PROVISIONING_KEY: "platform-compose-fixture",
 };
 
 for (const [file, services] of [
@@ -109,6 +110,24 @@ for (const [file, services] of [
                             service.build?.args?.[key],
                             undefined,
                             `${name} build must not receive ${key}`,
+                        );
+                    }
+                }
+                if (file === "docker-compose.production.yml") {
+                    assert.equal(
+                        config.services.app.environment
+                            .PLATFORM_PROVISIONING_KEY,
+                        fixture.PLATFORM_PROVISIONING_KEY,
+                        "app: PLATFORM_PROVISIONING_KEY",
+                    );
+                    for (const [name, service] of Object.entries(
+                        config.services,
+                    )) {
+                        if (name === "app") continue;
+                        assert.equal(
+                            service.environment?.PLATFORM_PROVISIONING_KEY,
+                            undefined,
+                            `${name} must not receive PLATFORM_PROVISIONING_KEY`,
                         );
                     }
                 }
