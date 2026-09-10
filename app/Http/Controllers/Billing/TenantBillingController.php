@@ -54,7 +54,8 @@ class TenantBillingController extends Controller
         $pricing = $this->platformPricing->current();
         $freeLimit = (int) ($pricing['free_employee_limit'] ?? 10);
         $growthPricePerEmployee = (int) ($pricing['growth_price_per_employee'] ?? 1900);
-        $billableCount = max(0, $activeCount - $freeLimit);
+        $minimum = (int) ($pricing['minimum_billable_employees'] ?? 0);
+        $billableCount = max($organization->plan_code === 'growth' ? $minimum : 0, $activeCount - $freeLimit);
         $monthlyAmountCentavos = $billableCount * $growthPricePerEmployee;
 
         return $this->response->successResponse('Billing summary', [
@@ -68,6 +69,7 @@ class TenantBillingController extends Controller
             'billing_subscription_id' => $organization->billing_subscription_id,
             'active_employee_count' => $activeCount,
             'free_employee_limit' => $freeLimit,
+            'minimum_billable_employees' => $minimum,
             'billable_employee_count' => $billableCount,
             'growth_price_per_employee' => $growthPricePerEmployee,
             'growth_currency' => $pricing['currency'] ?? 'php',

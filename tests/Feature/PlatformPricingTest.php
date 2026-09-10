@@ -15,6 +15,21 @@ class PlatformPricingTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_minimum_defaults_to_zero_and_is_validated_and_versioned(): void
+    {
+        config(['platform.provisioning_key' => 'pricing-test']);
+        $service = app(PlatformPricingService::class);
+        $this->assertSame(0, $service->current()['minimum_billable_employees']);
+        $data = ['free_employee_limit' => 10, 'growth_price_per_employee' => 1900, 'currency' => 'php', 'minimum_billable_employees' => 2];
+        $this->withHeaders(['X-Platform-Provisioning-Key' => 'pricing-test'])->patchJson(route('platform.pricing.update'), $data)->assertSuccessful();
+        $this->assertSame(2, $service->current()['minimum_billable_employees']);
+        $this->patchJson(route('platform.pricing.update'), [...$data, 'minimum_billable_employees' => -1])->assertUnprocessable();
+        $this->patchJson(route('platform.pricing.update'), [...$data, 'minimum_billable_employees' => 0, 'effective_at' => now()->addDay()->toIso8601String()])->assertSuccessful();
+        $this->assertSame(2, $service->current()['minimum_billable_employees']);
+        $this->travel(2)->days();
+        $this->assertSame(0, $service->current()['minimum_billable_employees']);
+    }
+
     public function test_pricing_requires_staff_key_and_preserves_scheduled_versions(): void
     {
         config(['platform.provisioning_key' => 'pricing-test']);
@@ -39,12 +54,12 @@ class PlatformPricingTest extends TestCase
         Http::fake(['*' => Http::response(['id' => 'session', 'url' => 'https://example.test'])]);
         $organization = app(TenantContext::class)->organization();
         $organization->update(['country_code' => 'PH', 'plan_code' => 'enterprise']);
-        app(PlatformPricingService::class)->update(['free_employee_limit' => 1, 'growth_price_per_employee' => 2300, 'currency' => 'php']);
+        app(PlatformPricingService::class)->update(['free_employee_limit' => 1, 'growth_price_per_employee' => 2300, 'currency' => 'php', 'minimum_billable_employees' => 5]);
         Employee::create(['employee_no' => 'ONE']);
         Employee::create(['employee_no' => 'TWO']);
         Employee::create(['employee_no' => 'THREE']);
         Employee::create(['employee_no' => 'ENDED', 'employment_effective_to' => now()->subDay()]);
         app(StripeBillingService::class)->checkout($organization, ['plan_code' => 'growth', 'billing_interval' => 'month', 'success_url' => 'https://example.test', 'cancel_url' => 'https://example.test']);
-        Http::assertSent(fn($request) => $request['line_items'][0]['quantity'] === 2 && $request['line_items'][0]['price_data']['unit_amount'] === 2300);
+        Http::assertSent(fn ($request) => $request['line_items'][0]['quantity'] === 5 && $request['line_items'][0]['price_data']['unit_amount'] === 2300);
     }
 }
