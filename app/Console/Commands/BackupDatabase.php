@@ -22,8 +22,8 @@ class BackupDatabase extends Command
             File::makeDirectory($backupDir, 0755, true);
         }
 
-        $filename = 'lexisone_backup_' . now()->format('Y_m_d_His') . '.sql.gz';
-        $outputPath = $this->option('output') ?: $backupDir . DIRECTORY_SEPARATOR . $filename;
+        $filename = 'trefnexus_backup_'.now()->format('Y_m_d_His').'.sql.gz';
+        $outputPath = $this->option('output') ?: $backupDir.DIRECTORY_SEPARATOR.$filename;
 
         try {
             $connection = DB::connection();
@@ -36,9 +36,9 @@ class BackupDatabase extends Command
                 throw new \RuntimeException("Cannot open {$outputPath} for writing.");
             }
 
-            gzwrite($gz, "-- LexisOne Database Backup\n");
+            gzwrite($gz, "-- Trefnexus Database Backup\n");
             gzwrite($gz, "-- Database: {$database}\n");
-            gzwrite($gz, '-- Generated: ' . now()->toIso8601String() . "\n\n");
+            gzwrite($gz, '-- Generated: '.now()->toIso8601String()."\n\n");
             gzwrite($gz, "SET FOREIGN_KEY_CHECKS=0;\n\n");
 
             $bar = $this->output->createProgressBar(count($tables));
@@ -51,7 +51,7 @@ class BackupDatabase extends Command
                     $createSql = $createRow[0]->{'Create Table'} ?? null;
                     if ($createSql) {
                         gzwrite($gz, "DROP TABLE IF EXISTS `{$table}`;\n");
-                        gzwrite($gz, $createSql . ";\n\n");
+                        gzwrite($gz, $createSql.";\n\n");
                     }
 
                     // Dump rows using streaming cursor
@@ -109,7 +109,7 @@ class BackupDatabase extends Command
     private function writeInsertChunk($gz, string $table, array $rows, \PDO $pdo): void
     {
         $columns = array_keys((array) $rows[0]);
-        $escapedColumns = implode(', ', array_map(fn($col) => "`{$col}`", $columns));
+        $escapedColumns = implode(', ', array_map(fn ($col) => "`{$col}`", $columns));
         $valuesList = [];
 
         foreach ($rows as $row) {
@@ -121,9 +121,9 @@ class BackupDatabase extends Command
                 return $pdo->quote((string) $val);
             }, (array) $row);
 
-            $valuesList[] = '(' . implode(', ', $rowValues) . ')';
+            $valuesList[] = '('.implode(', ', $rowValues).')';
         }
 
-        gzwrite($gz, "INSERT INTO `{$table}` ({$escapedColumns}) VALUES\n" . implode(",\n", $valuesList) . ";\n\n");
+        gzwrite($gz, "INSERT INTO `{$table}` ({$escapedColumns}) VALUES\n".implode(",\n", $valuesList).";\n\n");
     }
 }

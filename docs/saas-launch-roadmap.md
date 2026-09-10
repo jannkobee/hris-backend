@@ -1,8 +1,10 @@
-# LexisOne: step-by-step SaaS launch roadmap
+# Trefnexus: step-by-step SaaS launch roadmap
 
 Updated: 2026-09-10
 
 This is the execution plan from our current build to a verified release. Use the [industry roadmap](industry-readiness-roadmap.md) for feature history and this document for the order of work, expected behavior, and release evidence.
+
+The Trefnexus product rebrand was implemented locally on 2026-09-10 across web surfaces, platform operations, email copy, runtime defaults, backup naming, deployment fixtures, and documentation. A new T/N icon was generated in the existing monochrome-plus-silver format and exported into the current web, favicon, Android, iOS, and store asset matrix. Verification passed for Prettier, all 5 frontend regression test files (including 6 focused branding/routing cases), the 651-module production build, PHP and shell syntax, and 3 staging-validator tests / 11 assertions. This evidence covers implementation only, not a deployed brand: visual browser/device review, external email, actual backup/restore behavior, domain registration, and formal trademark clearance remain pending. Next step: approve the mark on target screens and complete legal/domain clearance before public promotion.
 
 Local staging-readiness tooling completed on 2026-09-10. Production Compose now keeps the Platform Console provisioning key in the HTTP app only, binds configurable frontend/Reverb ports to loopback by default, and waits on explicit service health checks. The secret-safe staging validator, disposable one-command production-topology smoke test, and infrastructure/topology runbook are implemented. Verification passed for 3 validator tests / 11 assertions, both deployment test files (including all 4 billing scenarios), Compose rendering, shell syntax, the frontend production build, and a complete disposable stack run covering health probes, migration status, queue/scheduler inspection, and the 69-table tenancy audit. This does not mean staging exists: DNS/TLS, SMTP, Stripe test mode, durable backups, monitoring, and rollback still require external resources and real-environment evidence.
 

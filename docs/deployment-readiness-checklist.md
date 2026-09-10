@@ -1,6 +1,6 @@
 # Deployment Readiness & Operations Runbook
 
-Ensure all operational primitives are configured and verified before promoting LexisOne to public production.
+Ensure all operational primitives are configured and verified before promoting Trefnexus to public production.
 
 ---
 
@@ -54,7 +54,7 @@ Ensure all operational primitives are configured and verified before promoting L
 - [ ] **Mail Driver**: Confirm `MAIL_MAILER=smtp` (or `ses`) with valid host, port, user, and TLS credentials.
 - [ ] **Test Delivery**: Send test email and verify DKIM/SPF passing:
     ```bash
-    php artisan tinker --execute="Mail::raw('LexisOne staging ping', function(\$m) { \$m->to('admin@example.com')->subject('Delivery Test'); });"
+    php artisan tinker --execute="Mail::raw('Trefnexus staging ping', function(\$m) { \$m->to('admin@example.com')->subject('Delivery Test'); });"
     ```
 
 ---
@@ -68,12 +68,12 @@ Ensure all operational primitives are configured and verified before promoting L
     php artisan db:backup
     ```
 
-    Verify backup file is written to `storage/app/backups/lexisone_backup_*.sql.gz` and recorded in `platform_operation_logs`.
+    Verify backup file is written to `storage/app/backups/trefnexus_backup_*.sql.gz` and recorded in `platform_operation_logs`.
 
 - [ ] **Test Database Restoration**:
       Verify backup can be cleanly decompressed and loaded with foreign keys restored:
     ```bash
-    php artisan db:restore lexisone_backup_YYYY_MM_DD_HHMMSS.sql.gz --force
+    php artisan db:restore trefnexus_backup_YYYY_MM_DD_HHMMSS.sql.gz --force
     ```
     Verify output displays:
     ```

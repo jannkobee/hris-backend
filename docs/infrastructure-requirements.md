@@ -1,4 +1,4 @@
-# LexisOne infrastructure requirements
+# Trefnexus infrastructure requirements
 
 This document describes the infrastructure needed to move from local verification to isolated staging and, later, production. Staging and production must use separate credentials, databases, storage, email accounts, payment-provider environments, and DNS names.
 
