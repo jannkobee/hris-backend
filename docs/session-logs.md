@@ -263,3 +263,23 @@ This ledger records every working session across the Suitify HR codebase. Every 
     -   Docker container: `hris-frontend-1` healthy and serving updated assets on `http://localhost:3000`
 -   **Open Issues / Blockers:** None.
 -   **Next Recommended Step:** Hard-refresh browser (`Ctrl+F5` / `Cmd+Shift+R`) on `http://localhost:3000` to view the clean, flush-left typographic titles.
+
+---
+
+## [2026-09-11 22:45] Session: Fix Duplicate Marketing Navbar CTAs
+
+-   **Agent/Model:** Antigravity / Gemini Pro
+-   **Scope Delivered:**
+    -   Diagnosed duplicate buttons ("Sign in  Start free  Sign in  Start free") in `src/views/Marketing/Home.vue` caused by legacy and standardized button pairs coexisting in `.nav-actions`.
+    -   Cleaned `.nav-actions` to a single pair:
+        -   `Sign in`: `variant="text" class="text-none" to="/login"`
+        -   `Start free`: `color="primary" variant="flat" class="text-none" to="/start-trial"`
+    -   Rebuilt frontend production bundle and recreated `hris-frontend-1` Docker container.
+-   **Verification Evidence:**
+    -   Frontend unit tests: `node --test tests/*.test.cjs` (15 passed, 0 failed)
+    -   Frontend build: `npm run build` (passed in 19.04s, 0 TypeScript/Vite errors)
+    -   Tenancy audit: `php artisan tenancy:audit` (passed for 69 tables)
+    -   Authorization audit: `php artisan authorization:audit --strict` (passed, 100% route coverage)
+    -   Docker container: `hris-frontend-1` healthy and verified on port 3000
+-   **Open Issues / Blockers:** None.
+-   **Next Recommended Step:** Hard-refresh browser (`Ctrl+F5` or `Cmd+Shift+R`) on `http://localhost:3000` to verify the single, clean navbar CTA pair.
