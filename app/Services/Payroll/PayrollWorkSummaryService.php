@@ -48,6 +48,8 @@ class PayrollWorkSummaryService
             'absent_days' => 0.0,
             'late_minutes' => 0,
             'undertime_minutes' => 0,
+            'night_differential_minutes' => 0,
+            'night_differential_hours' => 0.0,
             'exceptions' => [],
             'attendance_records' => $attendances->flatten()->count(),
             'approved_leave_requests' => $leaveRequests->count(),
@@ -94,6 +96,13 @@ class PayrollWorkSummaryService
             }
 
             $summary['days_worked'] += max(0, 1 - $paidLeave - $unpaidLeave);
+
+            if ($attendance->time_in && $attendance->time_out) {
+                $summary['night_differential_minutes'] += $this->calculateNightDifferentialMinutes(
+                    $attendance->time_in->copy()->setTimezone($timezone),
+                    $attendance->time_out->copy()->setTimezone($timezone)
+                );
+            }
 
             // Roster-aware exceptions are calculated at attendance capture time.
             // Prefer that immutable daily result over the legacy company-wide
@@ -151,8 +160,36 @@ class PayrollWorkSummaryService
         foreach (['scheduled_days', 'days_worked', 'paid_leave_days', 'unpaid_leave_days', 'absent_days'] as $key) {
             $summary[$key] = round($summary[$key], 2);
         }
+        $summary['night_differential_hours'] = round($summary['night_differential_minutes'] / 60, 2);
 
         return $summary;
+    }
+
+    public function calculateNightDifferentialMinutes(Carbon $timeIn, Carbon $timeOut): int
+    {
+        if ($timeOut->lte($timeIn)) {
+            return 0;
+        }
+
+        $minutes = 0;
+        $currentDay = $timeIn->copy()->subDay()->startOfDay();
+        $lastDay = $timeOut->copy()->addDay()->startOfDay();
+
+        while ($currentDay->lte($lastDay)) {
+            $windowStart = $currentDay->copy()->setTime(22, 0, 0);
+            $windowEnd = $currentDay->copy()->addDay()->setTime(6, 0, 0);
+
+            $overlapStart = $timeIn->max($windowStart);
+            $overlapEnd = $timeOut->min($windowEnd);
+
+            if ($overlapEnd->gt($overlapStart)) {
+                $minutes += $overlapStart->diffInMinutes($overlapEnd);
+            }
+
+            $currentDay->addDay();
+        }
+
+        return $minutes;
     }
 
     private function leaveFractionsForDate($leaveRequests, Carbon $date, string $timezone): array

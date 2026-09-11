@@ -26,10 +26,20 @@ class PayrollDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $context = app(\App\Tenancy\TenantContext::class);
+        if (! $context->hasOrganization()) {
+            $organization = \App\Models\Organization::query()->where('slug', config('tenancy.default_slug', 'legacy'))->first()
+                ?? \App\Models\Organization::query()->firstOrFail();
+
+            $context->run($organization, fn() => $this->run());
+
+            return;
+        }
+
         if (! Role::query()->where('name', 'User')->exists()) {
             $this->call(RoleSeeder::class);
         }
-        if (! User::query()->whereHas('role', fn ($query) => $query->whereIn('name', ['Super Admin', 'Admin']))->exists()) {
+        if (! User::query()->whereHas('role', fn($query) => $query->whereIn('name', ['Super Admin', 'Admin']))->exists()) {
             $this->call(AdminSeeder::class);
         }
         if (! EmploymentStatus::query()->where('name', 'Regular')->exists()) {
@@ -38,7 +48,7 @@ class PayrollDemoSeeder extends Seeder
         if (! Department::query()->where('name', 'Information Technology')->exists()) {
             $this->call(DepartmentSeeder::class);
         }
-        if (! Position::query()->whereHas('department', fn ($query) => $query->where('name', 'Information Technology'))->exists()) {
+        if (! Position::query()->whereHas('department', fn($query) => $query->where('name', 'Information Technology'))->exists()) {
             $this->call(PositionSeeder::class);
         }
         if (! JobGrade::query()->where('code', 'JG-03')->exists()) {
@@ -61,7 +71,7 @@ class PayrollDemoSeeder extends Seeder
         /** @var JobGrade $grade */
         $grade = JobGrade::query()->where('code', 'JG-03')->firstOrFail();
         /** @var User $approver */
-        $approver = User::query()->whereHas('role', fn ($query) => $query->whereIn('name', ['Super Admin', 'Admin']))->firstOrFail();
+        $approver = User::query()->whereHas('role', fn($query) => $query->whereIn('name', ['Super Admin', 'Admin']))->firstOrFail();
 
         $profiles = [
             ['first_name' => 'Alyssa', 'last_name' => 'Santos', 'salary' => 32000, 'pattern' => 'complete'],
@@ -76,7 +86,7 @@ class PayrollDemoSeeder extends Seeder
             foreach ($profiles as $index => $profile) {
                 /** @var User $user */
                 $user = User::query()->updateOrCreate(
-                    ['email' => 'payroll.demo.'.($index + 1).'@hris.test'],
+                    ['email' => 'payroll.demo.' . ($index + 1) . '@hris.test'],
                     [
                         'role_id' => $role->id,
                         'first_name' => $profile['first_name'],
@@ -88,7 +98,7 @@ class PayrollDemoSeeder extends Seeder
                     ]
                 );
 
-                $employeeNo = 'PAY-DEMO-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT);
+                $employeeNo = 'PAY-DEMO-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT);
                 $employee = $this->upsertDemoEmployee($user, $employeeNo, [
                     'hire_date' => $from->copy()->subYears(2)->toDateString(),
                     'employment_status_id' => $status->id,
@@ -126,7 +136,7 @@ class PayrollDemoSeeder extends Seeder
         });
 
         $this->command?->info('Payroll demo data created. Login: payroll.demo.1@hris.test / password');
-        $this->command?->info('Open Payroll and generate the draft period: '.$from->toDateString().' to '.$to->toDateString());
+        $this->command?->info('Open Payroll and generate the draft period: ' . $from->toDateString() . ' to ' . $to->toDateString());
     }
 
     private function upsertDemoEmployee(User $user, string $employeeNo, array $attributes): Employee
@@ -136,9 +146,11 @@ class PayrollDemoSeeder extends Seeder
         /** @var Employee|null $employeeForNumber */
         $employeeForNumber = Employee::query()->where('employee_no', $employeeNo)->first();
 
-        if ($employeeForUser instanceof Employee
+        if (
+            $employeeForUser instanceof Employee
             && $employeeForNumber instanceof Employee
-            && $employeeForUser->getKey() !== $employeeForNumber->getKey()) {
+            && $employeeForUser->getKey() !== $employeeForNumber->getKey()
+        ) {
             throw new RuntimeException("Demo user {$user->email} and employee number {$employeeNo} refer to different employee records.");
         }
 
@@ -163,12 +175,12 @@ class PayrollDemoSeeder extends Seeder
 
     private function periodName(Carbon $from, Carbon $to): string
     {
-        return 'Demo Payroll - '.$from->format('M j').' to '.$to->format('M j, Y');
+        return 'Demo Payroll - ' . $from->format('M j') . ' to ' . $to->format('M j, Y');
     }
 
     private function seedAttendance(Employee $employee, string $pattern, Carbon $from, Carbon $to, string $timezone): void
     {
-        $weekdays = collect(CarbonPeriod::create($from, $to))->filter(fn (Carbon $date) => $date->isWeekday())->values();
+        $weekdays = collect(CarbonPeriod::create($from, $to))->filter(fn(Carbon $date) => $date->isWeekday())->values();
         foreach ($weekdays as $index => $date) {
             if (($pattern === 'leave' && $index === 2) || ($pattern === 'absence' && $index === 3)) {
                 continue;
@@ -176,8 +188,8 @@ class PayrollDemoSeeder extends Seeder
 
             $minutesLate = $pattern === 'late' && in_array($index, [1, 4], true) ? 25 : 0;
             $minutesEarly = $pattern === 'undertime' && $index === 3 ? 90 : 0;
-            $timeIn = Carbon::parse($date->toDateString().' 09:00', $timezone)->addMinutes($minutesLate);
-            $timeOut = Carbon::parse($date->toDateString().' 18:00', $timezone)->subMinutes($minutesEarly);
+            $timeIn = Carbon::parse($date->toDateString() . ' 09:00', $timezone)->addMinutes($minutesLate);
+            $timeOut = Carbon::parse($date->toDateString() . ' 18:00', $timezone)->subMinutes($minutesEarly);
 
             Attendance::query()->updateOrCreate(
                 ['employee_id' => $employee->id, 'date' => $date->toDateString()],
@@ -195,7 +207,7 @@ class PayrollDemoSeeder extends Seeder
 
     private function seedScenarioRecords(Employee $employee, string $pattern, ?User $approver, Carbon $from, Carbon $to, string $timezone): void
     {
-        $weekdays = collect(CarbonPeriod::create($from, $to))->filter(fn (Carbon $date) => $date->isWeekday())->values();
+        $weekdays = collect(CarbonPeriod::create($from, $to))->filter(fn(Carbon $date) => $date->isWeekday())->values();
         if ($pattern === 'leave' && $weekdays->get(2)) {
             $date = $weekdays->get(2)->toDateString();
             LeaveRequest::query()->updateOrCreate(
@@ -223,7 +235,7 @@ class PayrollDemoSeeder extends Seeder
                     'reason' => 'Generated approved overtime for payroll testing',
                     'status' => 'approved',
                     'approved_by' => $approver?->id,
-                    'approved_at' => Carbon::parse($date.' 20:00', $timezone)->utc(),
+                    'approved_at' => Carbon::parse($date . ' 20:00', $timezone)->utc(),
                 ]
             );
             if ($overtime->trashed()) {

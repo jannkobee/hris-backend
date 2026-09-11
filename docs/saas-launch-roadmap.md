@@ -1,10 +1,24 @@
-# Trefnexus: step-by-step SaaS launch roadmap
+# Suitify HR: step-by-step SaaS launch roadmap
+
+**Modern Aesthetic Input Overhaul & Enterprise UI Button Standardization (2026-09-11):** Elevated form field architecture across all tenant modules and platform consoles with solid surface backgrounds, subtle card-level resting depth, Linear/Stripe-style 3px focus rings, tabular numbers, and cross-theme native date/time indicator styling. Standardized UI buttons across all 25 frontend views strictly to canonical design standards (`variant="flat"` for primary CTAs, `variant="tonal"` for secondary/toolbar actions, `class="text-none"` universal text casing). Full test suite: 187 tests passed (1,683 assertions); tenancy audit passed for 69 tables; authorization audit passed; encryption audit passed; frontend build passed (650 modules, 11.90s); 15/15 frontend tests passed.
+
+**Universal Sharp UI Unification, Interactive Org Chart Canvas & Leave Forecasting Engine (2026-09-11):** Enforced universal zero-border-radius design standard across all Vuetify components, custom cards, dialogs, sheets, and marketing/platform views. Implemented an interactive hierarchy visualization canvas (`OrgChartTree.vue` & `OrgChartNode.vue`) in Core HR integrated with `GET /api/v1/organization-chart`. Implemented multi-month leave balance forecasting engine (`GET /backend/api/v1/leave-credits/forecast`) projecting accruals against tenant settings and employee tenure. Full test suite: 187 tests passed (1,683 assertions); tenancy audit passed for 69 tables; authorization audit passed; frontend build passed (650 modules, 11.28s); 15/15 frontend tests passed.
+
+**Batch 1 Module Improvements & Autonomous Session Protocol (2026-09-11):** Delivered root `AGENTS.md` and `docs/session-logs.md` establishing mandatory autonomous startup reading without user prompts. Implemented 15-minute password reset token hardening, platform owner invitation resend/revocation management, recursive organizational chart hierarchy endpoint (`GET /api/v1/organization-chart`), Philippine Night Shift Differential (NSD) auto-calculation in attendance work summaries, and pre-flight payroll variance analysis (`GET /api/v1/payroll-periods/{id}/variance`). Full test suite: 183 tests passed (1,651 assertions); tenancy audit passed for 69 tables; authorization audit passed; frontend build passed (649 modules, 11.06s).
+
+**Legacy-label cleanup (2026-09-11):** Removed appended former-brand labels from login and tenant navigation so the shared Suitify HR wordmark renders only once. The production build passed (649 modules), all 6 branding/routing tests passed, and the local frontend container was rebuilt.
 
 Updated: 2026-09-10
 
+**Wordmark-only identity (2026-09-11):** Active web product surfaces now use a text-rendered Suitify HR wordmark matching the approved white-and-blue reference, without a separate symbol. The browser identity uses a matching SVG wordmark; obsolete web PNG and ICO logo assets were removed. The production build passed (649 modules) and all 6 branding/routing tests passed. Mobile-store icon replacement remains pending until a mobile release is planned.
+
+**Windows local Docker verification (2026-09-11):** The complete local Compose stack builds after a transient Docker DNS failure cleared. The frontend image health check now targets `127.0.0.1` because Alpine resolved `localhost` to IPv6 while Nginx listened on IPv4. Backend, frontend, MySQL, Redis, and Mailpit report healthy; queue, scheduler, and Reverb are running. Frontend, API health, and Mailpit HTTP checks passed.
+
+**Suitify HR brand update (2026-09-11):** Product-facing names and active technical identifiers now use Suitify HR across frontend entry points, application defaults, Docker runtime, deployment fixtures, backups, signup, authentication, billing, and Platform Console. The logo component and source assets were renamed; no former-brand references remain. The frontend production build passed (651 modules), branding/route tests passed (6 tests), and staging-validator tests passed (3 tests, 11 assertions). Windows absolute paths are now accepted by the staging validator. Staging visual/legal review remains pending.
+
 This is the execution plan from our current build to a verified release. Use the [industry roadmap](industry-readiness-roadmap.md) for feature history and this document for the order of work, expected behavior, and release evidence.
 
-The Trefnexus product rebrand was implemented locally on 2026-09-10 across web surfaces, platform operations, email copy, runtime defaults, backup naming, deployment fixtures, and documentation. A new T/N icon was generated in the existing monochrome-plus-silver format and exported into the current web, favicon, Android, iOS, and store asset matrix. Verification passed for Prettier, all 5 frontend regression test files (including 6 focused branding/routing cases), the 651-module production build, PHP and shell syntax, and 3 staging-validator tests / 11 assertions. This evidence covers implementation only, not a deployed brand: visual browser/device review, external email, actual backup/restore behavior, domain registration, and formal trademark clearance remain pending. Next step: approve the mark on target screens and complete legal/domain clearance before public promotion.
+The previous product rebrand from 2026-09-10 was superseded by Suitify HR on 2026-09-11. The existing application mark and icon matrix remain pending visual review and replacement if they do not fit the new brand. External email, backup/restore behavior, domain registration, and formal trademark clearance remain pending.
 
 Local staging-readiness tooling completed on 2026-09-10. Production Compose now keeps the Platform Console provisioning key in the HTTP app only, binds configurable frontend/Reverb ports to loopback by default, and waits on explicit service health checks. The secret-safe staging validator, disposable one-command production-topology smoke test, and infrastructure/topology runbook are implemented. Verification passed for 3 validator tests / 11 assertions, both deployment test files (including all 4 billing scenarios), Compose rendering, shell syntax, the frontend production build, and a complete disposable stack run covering health probes, migration status, queue/scheduler inspection, and the 69-table tenancy audit. This does not mean staging exists: DNS/TLS, SMTP, Stripe test mode, durable backups, monitoring, and rollback still require external resources and real-environment evidence.
 
@@ -12,17 +26,17 @@ Production baseline hardening completed locally on 2026-09-10. Production Compos
 
 ## Where we are
 
-| Area                           | Current status                                        | Evidence / remaining work                                                                      |
-| ------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Free Basic                     | Implemented                                           | Employee capacity is enforced; signup reads the public allowance.                              |
-| Philippine payroll restriction | Implemented                                           | Payroll entitlements and related APIs require PH. Other countries retain eligible HR features. |
-| Platform pricing editor        | Implemented                                           | `/platform-console/pricing`: allowance, peso rate, effective date, preview, history.           |
-| Pricing versions               | Implemented                                           | Global platform settings hold versions; operation logs record changes.                         |
-| Checkout calculation           | Implemented; provider verification pending            | Saved rate and employee quantity are sent to Stripe.                                           |
-| Subscription synchronization   | Implemented; provider verification pending            | Uses the subscribed allowance, keeps the price, detects provider failures.                     |
-| Webhook handling               | Partially verified                                    | Paid/unpaid handling and duplicate event IDs tested; wider lifecycle scenarios remain below.   |
-| Deployment                     | Local topology verified; staging pending               | Validator, health gates, smoke test, and runbook pass locally; external services remain.        |
-| Public paid launch             | Pending                                               | Complete the release gates below.                                                              |
+| Area                           | Current status                             | Evidence / remaining work                                                                      |
+| ------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Free Basic                     | Implemented                                | Employee capacity is enforced; signup reads the public allowance.                              |
+| Philippine payroll restriction | Implemented                                | Payroll entitlements and related APIs require PH. Other countries retain eligible HR features. |
+| Platform pricing editor        | Implemented                                | `/platform-console/pricing`: allowance, peso rate, effective date, preview, history.           |
+| Pricing versions               | Implemented                                | Global platform settings hold versions; operation logs record changes.                         |
+| Checkout calculation           | Implemented; provider verification pending | Saved rate and employee quantity are sent to Stripe.                                           |
+| Subscription synchronization   | Implemented; provider verification pending | Uses the subscribed allowance, keeps the price, detects provider failures.                     |
+| Webhook handling               | Partially verified                         | Paid/unpaid handling and duplicate event IDs tested; wider lifecycle scenarios remain below.   |
+| Deployment                     | Local topology verified; staging pending   | Validator, health gates, smoke test, and runbook pass locally; external services remain.       |
+| Public paid launch             | Pending                                    | Complete the release gates below.                                                              |
 
 Latest release verification: 4 Compose billing scenarios passed; the MySQL-backed backend suite passed with 170 tests and 1,554 assertions; the tenancy audit passed for 69 tables; and the frontend production build passed. The host lacks `pdo_sqlite`, so the ordinary SQLite-backed suite was not rerun. This does not establish a successful live Stripe checkout or a production deployment.
 
@@ -42,12 +56,12 @@ For a 10-person allowance and PHP19 rate, 25 active employees produce 15 billabl
 
 ### Behavior that must be settled before launch
 
-- Resolved: Growth has no minimum by default. Platform Console → Pricing → Minimum billable employees controls this: 0 means no minimum; 1 or more sets a floor multiplied by the employee rate. New subscriptions snapshot the setting; existing snapshots are preserved. Missing historical minimum metadata defaults to zero.
-- Annual Growth currently uses ten times the monthly unit rate. Confirm this commercial rule and disclose it before selling annual subscriptions.
-- Editing the public free allowance affects Basic capacity globally. Existing Stripe subscriptions use their stored allowance. Decide whether existing Basic organizations also need a grandfathered allowance.
-- Legacy Stripe subscriptions without allowance metadata are skipped by quantity synchronization. Do not infer or rewrite their commercial terms automatically.
-- Quantity updates currently request proration. Verify actual invoice credits and charges in Stripe test mode.
-- Checkout currently estimates the period end from the processing date. Verify and replace this with authoritative provider period data before relying on billing dates.
+-   Resolved: Growth has no minimum by default. Platform Console → Pricing → Minimum billable employees controls this: 0 means no minimum; 1 or more sets a floor multiplied by the employee rate. New subscriptions snapshot the setting; existing snapshots are preserved. Missing historical minimum metadata defaults to zero.
+-   Annual Growth currently uses ten times the monthly unit rate. Confirm this commercial rule and disclose it before selling annual subscriptions.
+-   Editing the public free allowance affects Basic capacity globally. Existing Stripe subscriptions use their stored allowance. Decide whether existing Basic organizations also need a grandfathered allowance.
+-   Legacy Stripe subscriptions without allowance metadata are skipped by quantity synchronization. Do not infer or rewrite their commercial terms automatically.
+-   Quantity updates currently request proration. Verify actual invoice credits and charges in Stripe test mode.
+-   Checkout currently estimates the period end from the processing date. Verify and replace this with authoritative provider period data before relying on billing dates.
 
 ## Step 1 — Establish a reproducible baseline
 
@@ -205,3 +219,7 @@ Status: pending / in progress / verified
 ```
 
 Implementation complete and staging verified are separate statuses. Do not mark a milestone verified merely because code exists.
+
+**Native input icon theme correction (2026-09-11):** Removed the extra dark-mode inversion from App.vue so native date/time icons use the browser's existing dark color scheme; extended picker styling to month/week fields. Production and Docker builds passed (655 modules); authorization and encryption audits passed. Local frontend container rebuilt; HTTP and served CSS verified at 127.0.0.1:3000. Browser visual verification remains pending; next step is to refresh and check picker contrast in both themes. No launch gate status changed.
+
+**UI standardization review (2026-09-11):** Re-audited the seven-phase UI checklist; centralized theme-aware input/button styles, preserved validation/floating-label/textarea behavior, aligned native date/time icons, removed conflicting table sizing, improved mobile action wrapping and touch targets, and filled missing button variants/accessibility names. See [UI standardization checklist](ui-standardization-checklist.md). Verification: 187 backend tests (1,683 assertions), 15 frontend tests, tenancy (69 tables), authorization and encryption audits all passed; production and final Docker builds passed (656 modules). Chrome checks passed for shared controls in both themes, keyboard/clear/select/textarea interactions, 390px mobile layout and 44px touch targets. Local frontend rebuilt and served CSS verified. Remaining: Safari/Firefox and complete authenticated workflow acceptance; next step is reviewing real module data in the refreshed UI. No readiness gate was advanced.

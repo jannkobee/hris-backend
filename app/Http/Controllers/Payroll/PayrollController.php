@@ -505,6 +505,95 @@ class PayrollController extends Controller
         return $employeeId;
     }
 
+    public function variance(Request $request, PayrollPeriod $period): JsonResponse
+    {
+        $this->ensureEnabled();
+        $this->authorizePermission($request, 'view-payroll');
+
+        $period->load('items.employee.user');
+
+        $previousPeriod = PayrollPeriod::query()
+            ->where('id', '!=', $period->id)
+            ->where('date_to', '<=', $period->date_from)
+            ->orderByDesc('date_to')
+            ->with('items')
+            ->first();
+
+        $prevItemsByEmployee = $previousPeriod ? $previousPeriod->items->keyBy('employee_id') : collect();
+        $threshold = (float) $request->input('threshold_percent', 15.0);
+
+        $variances = [];
+        $significantCount = 0;
+
+        foreach ($period->items as $item) {
+            $prevItem = $prevItemsByEmployee->get($item->employee_id);
+
+            $prevGross = (float) ($prevItem?->gross_pay ?? 0);
+            $currGross = (float) $item->gross_pay;
+            $grossDelta = round($currGross - $prevGross, 2);
+            $grossPct = $prevGross > 0 ? round(($grossDelta / $prevGross) * 100, 2) : ($currGross > 0 ? 100.0 : 0.0);
+
+            $prevNet = (float) ($prevItem?->net_pay ?? 0);
+            $currNet = (float) $item->net_pay;
+            $netDelta = round($currNet - $prevNet, 2);
+            $netPct = $prevNet > 0 ? round(($netDelta / $prevNet) * 100, 2) : ($currNet > 0 ? 100.0 : 0.0);
+
+            $isSignificant = abs($grossPct) >= $threshold || abs($netPct) >= $threshold;
+            if ($isSignificant) {
+                $significantCount++;
+            }
+
+            $variances[] = [
+                'employee_id' => $item->employee_id,
+                'employee_no' => $item->employee?->employee_no,
+                'employee_name' => trim(($item->employee?->user?->first_name ?? '').' '.($item->employee?->user?->last_name ?? '')),
+                'current' => [
+                    'gross_pay' => $currGross,
+                    'net_pay' => $currNet,
+                    'overtime_pay' => (float) $item->overtime_pay,
+                    'total_deductions' => (float) $item->total_deductions,
+                ],
+                'previous' => $prevItem ? [
+                    'gross_pay' => $prevGross,
+                    'net_pay' => $prevNet,
+                    'overtime_pay' => (float) $prevItem->overtime_pay,
+                    'total_deductions' => (float) $prevItem->total_deductions,
+                ] : null,
+                'deltas' => [
+                    'gross_pay' => $grossDelta,
+                    'gross_pay_percentage' => $grossPct,
+                    'net_pay' => $netDelta,
+                    'net_pay_percentage' => $netPct,
+                ],
+                'is_significant_variance' => $isSignificant,
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Payroll variance analysis generated successfully.',
+            'data' => [
+                'current_period' => [
+                    'id' => $period->id,
+                    'name' => $period->name,
+                    'date_from' => $period->date_from,
+                    'date_to' => $period->date_to,
+                    'total_gross' => (float) $period->total_gross,
+                    'total_net' => (float) $period->total_net,
+                ],
+                'previous_period' => $previousPeriod ? [
+                    'id' => $previousPeriod->id,
+                    'name' => $previousPeriod->name,
+                    'date_from' => $previousPeriod->date_from,
+                    'date_to' => $previousPeriod->date_to,
+                ] : null,
+                'threshold_percent' => $threshold,
+                'total_items' => count($variances),
+                'significant_variances_count' => $significantCount,
+                'items' => $variances,
+            ],
+        ]);
+    }
+
     private function ensureEnabled(): void
     {
         if (! $this->settings->get('payroll.enabled', true)) {

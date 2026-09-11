@@ -22,7 +22,7 @@ class BackupDatabase extends Command
             File::makeDirectory($backupDir, 0755, true);
         }
 
-        $filename = 'trefnexus_backup_'.now()->format('Y_m_d_His').'.sql.gz';
+        $filename = 'suitify_hr_backup_'.now()->format('Y_m_d_His').'.sql.gz';
         $outputPath = $this->option('output') ?: $backupDir.DIRECTORY_SEPARATOR.$filename;
 
         try {
@@ -36,7 +36,7 @@ class BackupDatabase extends Command
                 throw new \RuntimeException("Cannot open {$outputPath} for writing.");
             }
 
-            gzwrite($gz, "-- Trefnexus Database Backup\n");
+            gzwrite($gz, "-- Suitify HR Database Backup\n");
             gzwrite($gz, "-- Database: {$database}\n");
             gzwrite($gz, '-- Generated: '.now()->toIso8601String()."\n\n");
             gzwrite($gz, "SET FOREIGN_KEY_CHECKS=0;\n\n");

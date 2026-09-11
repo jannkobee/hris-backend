@@ -15,6 +15,7 @@ Route::middleware('plan:payroll')->group(function (): void {
         Route::post('/{period}/approve', 'approve')->middleware('permission:approve-payroll')->name('approve');
         Route::post('/{period}/lock', 'lock')->middleware('permission:approve-payroll')->name('lock');
         Route::post('/{period}/mark-paid', 'markPaid')->middleware('permission:mark-payroll-paid')->name('mark-paid');
+        Route::get('/{period}/variance', 'variance')->middleware('permission:view-payroll')->name('variance');
         Route::get('/{period}/export/csv', 'exportCsv')->middleware('permission:view-payroll')->name('export.csv');
     });
 

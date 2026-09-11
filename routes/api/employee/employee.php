@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Employee\EmployeeController;
+use App\Http\Controllers\Employee\OrganizationChartController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('organization-chart', OrganizationChartController::class)
+    ->name('organization-chart');
 
 Route::prefix('employees')
     ->name('employees.')

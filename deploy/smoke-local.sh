@@ -7,7 +7,7 @@ project_root=$(dirname "$script_dir")
 frontend_root=$(dirname "$project_root")/hris-frontend
 frontend_port=${SMOKE_FRONTEND_PORT:-18080}
 reverb_port=${SMOKE_REVERB_PORT:-18081}
-project_name="trefnexus-smoke-$$"
+project_name="suitify-hr-smoke-$$"
 temporary_dir=$(mktemp -d)
 environment_file="$temporary_dir/staging.env"
 
@@ -37,13 +37,13 @@ fi
 
 umask 077
 {
-    echo 'DOMAIN=smoke.trefnexus.test'
-    echo 'TENANT_BASE_DOMAIN=smoke.trefnexus.test'
+    echo 'DOMAIN=smoke.suitify-hr.test'
+    echo 'TENANT_BASE_DOMAIN=smoke.suitify-hr.test'
     echo 'APP_KEY=base64:YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE='
     echo 'AUDIT_LOG_SIGNING_KEY=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
     echo 'PLATFORM_PROVISIONING_KEY=cccccccccccccccccccccccccccccccc'
-    echo 'DB_DATABASE=trefnexus_smoke'
-    echo 'DB_USERNAME=trefnexus_smoke'
+    echo 'DB_DATABASE=suitify_hr_smoke'
+    echo 'DB_USERNAME=suitify_hr_smoke'
     echo 'DB_PASSWORD=dddddddddddddddddddd'
     echo 'DB_ROOT_PASSWORD=eeeeeeeeeeeeeeeeeeee'
     echo 'MYSQL_IMAGE=mysql:8.4'
@@ -54,7 +54,7 @@ umask 077
     echo 'MAIL_USERNAME=smoke-user'
     echo 'MAIL_PASSWORD=smoke-mail-password'
     echo 'MAIL_ENCRYPTION=tls'
-    echo 'MAIL_FROM_ADDRESS=no-reply@smoke.trefnexus.test'
+    echo 'MAIL_FROM_ADDRESS=no-reply@smoke.suitify-hr.test'
     echo 'REVERB_APP_ID=smoke-reverb'
     echo 'REVERB_APP_KEY=ffffffffffffffff'
     echo 'REVERB_APP_SECRET=gggggggggggggggggggggggggggggggg'
@@ -64,7 +64,7 @@ umask 077
     echo "REVERB_PORT_FORWARD=$reverb_port"
     echo 'STRIPE_SECRET_KEY=sk_test_smoke_fixture'
     echo 'STRIPE_WEBHOOK_SECRET=whsec_smoke_fixture'
-    echo 'BILLING_PORTAL_RETURN_HOSTS=smoke.trefnexus.test,acme.smoke.trefnexus.test'
+    echo 'BILLING_PORTAL_RETURN_HOSTS=smoke.suitify-hr.test,acme.smoke.suitify-hr.test'
     echo 'LOG_LEVEL=warning'
 } > "$environment_file"
 
@@ -81,7 +81,7 @@ compose up -d --build
 
 attempt=0
 until curl --fail --silent --show-error "http://127.0.0.1:$frontend_port/healthz" >/dev/null \
-    && curl --fail --silent --show-error -H 'Host: smoke.trefnexus.test' \
+    && curl --fail --silent --show-error -H 'Host: smoke.suitify-hr.test' \
         "http://127.0.0.1:$frontend_port/backend/api/v1/health" >/dev/null; do
     attempt=$((attempt + 1))
     if [ "$attempt" -ge 60 ]; then

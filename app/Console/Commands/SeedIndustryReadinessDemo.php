@@ -81,8 +81,8 @@ class SeedIndustryReadinessDemo extends Command
                 }
                 Attendance::query()->firstOrCreate(['employee_id' => $employee->getKey(), 'date' => $date->toDateString()], ['time_in' => $date->copy()->setTime(1, 5), 'time_out' => $date->copy()->setTime(10, 0), 'late_minutes' => $offset === 1 ? 5 : 0]);
             }
-            Holiday::query()->firstOrCreate(['date' => now()->addMonth()->startOfMonth()->toDateString()], ['name' => 'HRISFlow Company Day', 'type' => 'company_holiday', 'description' => 'Demo workforce-calendar event']);
-            Announcement::query()->firstOrCreate(['title' => 'Welcome to your HRISFlow demo'], ['content' => 'Explore attendance, leave, overtime, benefits, expenses, training, and performance workflows with these sample records.', 'published_at' => now()->toDateString(), 'is_active' => true, 'created_by' => $user->getKey()]);
+            Holiday::query()->firstOrCreate(['date' => now()->addMonth()->startOfMonth()->toDateString()], ['name' => 'Suitify HR Company Day', 'type' => 'company_holiday', 'description' => 'Demo workforce-calendar event']);
+            Announcement::query()->firstOrCreate(['title' => 'Welcome to your Suitify HR demo'], ['content' => 'Explore attendance, leave, overtime, benefits, expenses, training, and performance workflows with these sample records.', 'published_at' => now()->toDateString(), 'is_active' => true, 'created_by' => $user->getKey()]);
         });
         $this->info('Industry-readiness demo data is ready.');
 

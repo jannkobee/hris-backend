@@ -23,7 +23,7 @@ class StagingEnvironmentValidatorTest extends TestCase
         $values['REVERB_PORT_FORWARD'] = $values['FRONTEND_PORT_FORWARD'];
         $values['DB_ROOT_PASSWORD'] = $values['DB_PASSWORD'];
         $values['STRIPE_SECRET_KEY'] = 'sk_live_not_allowed';
-        $values['BILLING_PORTAL_RETURN_HOSTS'] = 'tenant.staging.trefnexus.test';
+        $values['BILLING_PORTAL_RETURN_HOSTS'] = 'tenant.staging.suitify-hr.test';
 
         $result = (new StagingEnvironmentValidator())->validate($values);
         $messages = implode(' ', $result['errors']);
@@ -40,13 +40,13 @@ class StagingEnvironmentValidatorTest extends TestCase
     private function validConfiguration(): array
     {
         return [
-            'DOMAIN' => 'staging.trefnexus.test',
-            'TENANT_BASE_DOMAIN' => 'staging.trefnexus.test',
+            'DOMAIN' => 'staging.suitify-hr.test',
+            'TENANT_BASE_DOMAIN' => 'staging.suitify-hr.test',
             'APP_KEY' => 'base64:'.base64_encode(str_repeat('a', 32)),
             'AUDIT_LOG_SIGNING_KEY' => str_repeat('b', 32),
             'PLATFORM_PROVISIONING_KEY' => str_repeat('c', 32),
-            'DB_DATABASE' => 'trefnexus_staging',
-            'DB_USERNAME' => 'trefnexus_staging',
+            'DB_DATABASE' => 'suitify_hr_staging',
+            'DB_USERNAME' => 'suitify_hr_staging',
             'DB_PASSWORD' => str_repeat('d', 20),
             'DB_ROOT_PASSWORD' => str_repeat('e', 20),
             'MYSQL_IMAGE' => 'mysql:8.4',
@@ -56,7 +56,7 @@ class StagingEnvironmentValidatorTest extends TestCase
             'MAIL_PORT' => '587',
             'MAIL_USERNAME' => 'staging-user',
             'MAIL_PASSWORD' => 'staging-mail-password',
-            'MAIL_FROM_ADDRESS' => 'no-reply@staging.trefnexus.test',
+            'MAIL_FROM_ADDRESS' => 'no-reply@staging.suitify-hr.test',
             'REVERB_APP_ID' => 'staging-reverb',
             'REVERB_APP_KEY' => str_repeat('f', 16),
             'REVERB_APP_SECRET' => str_repeat('g', 32),
@@ -66,7 +66,7 @@ class StagingEnvironmentValidatorTest extends TestCase
             'REVERB_PORT_FORWARD' => '18081',
             'STRIPE_SECRET_KEY' => 'sk_test_staging_fixture',
             'STRIPE_WEBHOOK_SECRET' => 'whsec_staging_fixture',
-            'BILLING_PORTAL_RETURN_HOSTS' => 'staging.trefnexus.test,acme.staging.trefnexus.test',
+            'BILLING_PORTAL_RETURN_HOSTS' => 'staging.suitify-hr.test,acme.staging.suitify-hr.test',
         ];
     }
 }

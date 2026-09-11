@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Do not create a public issue for a suspected security vulnerability. Send the report to the security contact configured by the HRISFlow operator, including reproduction steps, impact, and affected endpoints. Acknowledge reports within two business days and provide a remediation target after triage.
+Do not create a public issue for a suspected security vulnerability. Send the report to the security contact configured by the Suitify HR operator, including reproduction steps, impact, and affected endpoints. Acknowledge reports within two business days and provide a remediation target after triage.
 
 ## Supported deployment baseline
 

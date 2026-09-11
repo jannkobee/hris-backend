@@ -9,6 +9,7 @@ use App\Http\Requests\StoreExpenseClaimRequest;
 use App\Models\Employee;
 use App\Models\ExpenseClaim;
 use App\Services\AuditLog\AuditLogServiceInterface;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class ExpenseClaimController extends Controller
@@ -18,16 +19,20 @@ class ExpenseClaimController extends Controller
     public function __construct(AuditLogServiceInterface $auditLogs)
     {
         $this->auditLogs = $auditLogs;
-        $this->middleware('permission:view-employees')->only('index');
         $this->middleware('permission:manage-employees')->only('review');
         $this->middleware('permission:manage-payroll')->only('reimburse');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $claims = ExpenseClaim::query()->with('employee.user')->latest()->get();
+        $user = $request->user();
+        $query = ExpenseClaim::query()->with('employee.user')->latest();
+        if (! $user->hasAnyPermission(['view-employees', 'manage-employees', 'manage-payroll'])) {
+            // Ordinary employees can track their own claims, never a colleague's.
+            $query->whereHas('employee', fn ($employee) => $employee->where('user_id', $user->getKey()));
+        }
 
-        return response()->json(['data' => $claims]);
+        return response()->json(['data' => $query->get()]);
     }
 
     public function store(StoreExpenseClaimRequest $request)

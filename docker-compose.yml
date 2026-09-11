@@ -1,7 +1,7 @@
 name: hris
 
 x-backend-environment: &backend-environment
-    APP_NAME: HRIS
+    APP_NAME: Suitify HR
     APP_ENV: local
     APP_DEBUG: "true"
     APP_URL: http://localhost:8000
@@ -38,7 +38,7 @@ x-backend-environment: &backend-environment
     MAIL_HOST: mailpit
     MAIL_PORT: 1025
     MAIL_FROM_ADDRESS: no-reply@hris.local
-    MAIL_FROM_NAME: HRIS
+    MAIL_FROM_NAME: Suitify HR
 
 x-backend-service: &backend-service
     build:

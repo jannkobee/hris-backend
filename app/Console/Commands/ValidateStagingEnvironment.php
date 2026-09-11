@@ -17,7 +17,9 @@ class ValidateStagingEnvironment extends Command
     public function handle(StagingEnvironmentValidator $validator): int
     {
         $option = (string) $this->option('env-file');
-        $path = str_starts_with($option, DIRECTORY_SEPARATOR) ? $option : base_path($option);
+        $isAbsolute = str_starts_with($option, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:[\\\\\/]/', $option) === 1;
+        $path = $isAbsolute ? $option : base_path($option);
 
         if (! File::isFile($path)) {
             $this->error('Staging environment file was not found.');

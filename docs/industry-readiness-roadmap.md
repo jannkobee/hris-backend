@@ -1,5 +1,19 @@
 # HRIS Industry Readiness Roadmap
 
+**Modern Aesthetic Input Overhaul & Enterprise UI Button Standardization (2026-09-11):** Elevated form field architecture across all tenant modules and platform consoles with solid surface backgrounds, subtle card-level resting depth, Linear/Stripe-style 3px focus rings, tabular numbers, and cross-theme native date/time indicator styling. Standardized UI buttons across all 25 frontend views strictly to canonical design standards (`variant="flat"` for primary CTAs, `variant="tonal"` for secondary/toolbar actions, `class="text-none"` universal text casing). Full test suite: 187 tests passed (1,683 assertions); tenancy audit passed for 69 tables; authorization audit passed; encryption audit passed; frontend build passed (650 modules, 11.90s); 15/15 frontend tests passed.
+
+**Universal Sharp UI Unification, Interactive Org Chart Canvas & Leave Forecasting Engine (2026-09-11):** Enforced universal zero-border-radius design standard across all Vuetify components, custom cards, dialogs, sheets, and marketing/platform views. Implemented an interactive hierarchy visualization canvas (`OrgChartTree.vue` & `OrgChartNode.vue`) in Core HR integrated with `GET /api/v1/organization-chart`. Implemented multi-month leave balance forecasting engine (`GET /backend/api/v1/leave-credits/forecast`) projecting accruals against tenant settings and employee tenure. Full test suite: 187 tests passed (1,683 assertions); tenancy audit passed for 69 tables; authorization audit passed; frontend build passed (650 modules, 11.28s); 15/15 frontend tests passed.
+
+**Batch 1 Module Improvements & Autonomous Session Protocol (2026-09-11):** Delivered root `AGENTS.md` and `docs/session-logs.md` establishing mandatory autonomous startup reading without user prompts. Implemented 15-minute password reset token hardening, platform owner invitation resend/revocation management, recursive organizational chart hierarchy endpoint (`GET /api/v1/organization-chart`), Philippine Night Shift Differential (NSD) auto-calculation in attendance work summaries, and pre-flight payroll variance analysis (`GET /api/v1/payroll-periods/{id}/variance`). Full test suite: 183 tests passed (1,651 assertions); tenancy audit passed for 69 tables; authorization audit passed; frontend build passed (649 modules, 11.06s).
+
+**Legacy-label cleanup (2026-09-11):** Removed appended former-brand labels from login and tenant navigation so the shared Suitify HR wordmark renders only once. The production build passed (649 modules), all 6 branding/routing tests passed, and the local frontend container was rebuilt.
+
+**Wordmark-only identity (2026-09-11):** Active web product surfaces now use a text-rendered Suitify HR wordmark matching the approved white-and-blue reference, without a separate symbol. The browser identity uses a matching SVG wordmark; obsolete web PNG and ICO logo assets were removed. The production build passed (649 modules) and all 6 branding/routing tests passed. Mobile-store icon replacement remains pending until a mobile release is planned.
+
+**Windows local Docker verification (2026-09-11):** The complete local Compose stack builds after a transient Docker DNS failure cleared. The frontend image health check now targets `127.0.0.1` because Alpine resolved `localhost` to IPv6 while Nginx listened on IPv4. Backend, frontend, MySQL, Redis, and Mailpit report healthy; queue, scheduler, and Reverb are running. Frontend, API health, and Mailpit HTTP checks passed.
+
+**Suitify HR brand update (2026-09-11):** Product-facing names and active technical identifiers now use Suitify HR across frontend entry points, application defaults, Docker runtime, deployment fixtures, backups, signup, authentication, billing, and Platform Console. The logo component and source assets were renamed; no former-brand references remain. The frontend production build passed (651 modules), branding/route tests passed (6 tests), and staging-validator tests passed (3 tests, 11 assertions). Windows absolute paths are now accepted by the staging validator. Staging visual/legal review remains pending.
+
 **Local deployment-readiness tooling (2026-09-10):** The production topology now maps the Platform Console provisioning secret only into the HTTP application container, exposes frontend and Reverb through configurable loopback-bound ports, and defines health checks plus dependency gates for MySQL, Redis, PHP-FPM, API Nginx, queue, scheduler, Reverb, and frontend Nginx. A secret-safe `deployment:validate-staging` command rejects placeholders, invalid host/port/image settings, weak or reused secrets, and non-test Stripe credentials before staging startup. `deploy/smoke-local.sh` now creates an isolated disposable environment, validates and renders configuration, builds and starts the complete topology, probes frontend/API health, checks migrations, audits tenancy, checks failed jobs and the scheduler, and removes its containers and volumes. Infrastructure, DNS/TLS, provider, storage, sizing, and routing requirements are documented in `docs/infrastructure-requirements.md`. Local verification passed: 3 validator tests / 11 assertions, both deployment test files (including all 4 billing scenarios), production Compose rendering, shell syntax, and the full disposable smoke run; the run included a successful 69-table tenancy audit and frontend production build. This is implementation and local verification, not a staging deployment: real DNS/TLS, SMTP delivery, Stripe test-mode calls, external backup/restore, monitoring, and rollback rehearsal remain pending. Next provision isolated staging resources, populate a protected environment file, run the validator, and execute the staging acceptance checklist.
 
 **Production baseline hardening (2026-09-10):** Production Compose now separates the shared runtime environment from the billing-capable application environment, so Stripe secrets and billing return-host configuration reach only the app, migration, queue, and scheduler services and are not exposed to Reverb or frontend services. Shift template and assignment time fields now use the existing `TimeOfDay` cast for database-independent `HH:mm` API values. Health-storage and settings-cache regression tests were made portable across SQLite and MySQL. Verified locally: all 4 Compose billing configuration scenarios passed; production Compose rendered successfully; 13 focused MySQL compatibility tests passed with 62 assertions; the full MySQL-backed backend suite passed with 170 tests and 1,554 assertions; `php artisan tenancy:audit` passed for 69 tables; and the frontend production build passed. The ordinary SQLite run could not execute in this host because `pdo_sqlite` is unavailable; MySQL ran in an isolated local container. No staging deployment, external email, or Stripe request was performed. Next deploy this candidate to isolated staging and complete runtime, provider, browser, backup, and rollback verification.
@@ -10,7 +24,7 @@
 
 **Launch baseline and pricing display (2026-09-10):** Full backend suite passed: 168 tests, 1,544 assertions; tenancy audit passed for 69 tables. Pricing formatting now preserves centavos, and marketing hides fallback amounts while prices load or are unavailable. Four pricing utility tests passed. Launch roadmap Step 2 remains in progress pending minimum Growth charge, annual pricing and Basic grandfathering decisions. Roadmap updates are now part of the backend AGENTS.md delivery requirements.
 
-For the ordered implementation-to-launch process, current gaps, and verification gates, see [Trefnexus SaaS launch roadmap](saas-launch-roadmap.md).
+For the ordered implementation-to-launch process, current gaps, and verification gates, see [Suitify HR SaaS launch roadmap](saas-launch-roadmap.md).
 
 Frontend build passed for the configurable Growth minimum; no schema changes were required.
 
@@ -65,9 +79,9 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 **Release-hardening checkpoint (2026-09-08):** Platform health now validates history limits (1–100), performs cache/storage write/read/cleanup probes, preserves the original top-level API check fields, and reports degraded health instead of losing the response when snapshot persistence fails. Maintenance tests use an in-memory driver and do not modify the running application's maintenance file. Added history-validation, unavailable-snapshot-storage, API-compatibility, and unauthorized-operation regression coverage. Mail checks describe configuration only, not verified delivery; queue checks count failed jobs, not worker heartbeat. Snapshots are collected on health requests, not by an independent monitor. This checkpoint does **not** mark the whole project or all 15 roadmap items complete. Production migration verification, external integration checks, workflow acceptance testing, security review, and payroll compliance sign-off remain release gates.
 
-- **Implemented:** The main end-to-end capability exists in the current codebase.
-- **Partial:** A usable foundation exists, but one or more roadmap acceptance criteria remain.
-- **Missing:** No meaningful implementation was found beyond adjacent infrastructure or display copy.
+-   **Implemented:** The main end-to-end capability exists in the current codebase.
+-   **Partial:** A usable foundation exists, but one or more roadmap acceptance criteria remain.
+-   **Missing:** No meaningful implementation was found beyond adjacent infrastructure or display copy.
 
 ### Phase 1 audit — Security and tenancy
 
@@ -138,7 +152,7 @@ Your HRIS has a real foundation: multi-tenant architecture, working HR modules (
 
 ### Recommended immediate build block
 
-**Trefnexus rebrand (2026-09-10):** Replaced the former product name across the public site, signup, authentication, tenant shell, billing copy, Platform Console, password-reset email, application metadata, environment defaults, staging examples, deployment documentation, and new backup filenames. Added a new original T/N application mark in the established monochrome-plus-silver format, with transparent and opaque web masters plus favicon, Play Store, App Store, Android-density, adaptive, and iOS icon derivatives. Tenant-uploaded organization branding and existing public URLs remain unchanged. Local implementation verification passed: Prettier, all 5 frontend regression test files (including 6 focused branding/routing cases), the production frontend build (651 modules), PHP and shell syntax checks, and 3 focused staging-validator tests / 11 assertions. This is not staging verification: browser/device icon review, email delivery, generated backup/restore rehearsal, domain ownership, and formal trademark clearance remain pending. Next step: visually approve the mark in browsers and target devices, then complete legal/domain clearance before publishing the brand externally.
+**Previous product rebrand (2026-09-10):** Replaced the former product name across product and deployment surfaces and generated the current application mark and icon matrix. This work was superseded by the Suitify HR branding update on 2026-09-11. Tenant-uploaded organization branding and existing public URLs remain unchanged.
 
 **Free Basic delivery (2026-09-08):** Public signup defaults to `basic_free` (display name Basic), active with no trial or paid-period expiry. Existing legacy `basic` organizations retain their allowances. Employee writes serialize capacity checks using the organization row: creation/reactivation above ten is rejected while ordinary edits and ended employment remain allowed. Current employees and future hires reserve places; a recorded last day of employment releases the place on the following day in the organization's timezone. The employee form exposes this existing date field. No new schema is required. Existing paid trial selections are preserved. Marketing now offers Basic as available and keeps PHP 19 Growth billing explicitly upcoming.
 
@@ -154,12 +168,12 @@ Verification: full backend suite passed (155 tests, 1,434 assertions); subsequen
 
 Before promoting the new offer as available:
 
-- [x] Introduce the free subscription without reducing legacy organizations' existing entitlements.
-- [ ] Align signup, account status/expiry, employee counting, imports/reactivation, and plan gates with free Basic and paid Growth.
-- [ ] Replace flat Growth checkout with server-authoritative seat pricing and verified subscription quantity updates; test retry/idempotency and downgrade behavior.
-- [ ] Decide paid Growth access below 11 employees, revised Business pricing, tax display, and billing/proration rules before enabling checkout.
-- [ ] Verify self-service invitations, password recovery, billing portal, payment failure recovery, and account export/offboarding in staging.
-- [ ] Keep payroll approvals and sensitive account actions explicitly authorized; do not promise zero-interaction operations before monitoring and recovery paths are verified.
+-   [x] Introduce the free subscription without reducing legacy organizations' existing entitlements.
+-   [ ] Align signup, account status/expiry, employee counting, imports/reactivation, and plan gates with free Basic and paid Growth.
+-   [ ] Replace flat Growth checkout with server-authoritative seat pricing and verified subscription quantity updates; test retry/idempotency and downgrade behavior.
+-   [ ] Decide paid Growth access below 11 employees, revised Business pricing, tax display, and billing/proration rules before enabling checkout.
+-   [ ] Verify self-service invitations, password recovery, billing portal, payment failure recovery, and account export/offboarding in staging.
+-   [ ] Keep payroll approvals and sensitive account actions explicitly authorized; do not promise zero-interaction operations before monitoring and recovery paths are verified.
 
 No existing subscription, backend price, or live payment configuration was changed in this marketing pass. Prettier completed for the edited/new frontend files; all 3 calculator tests and `npm run build` pass. The build required an elevated retry because the sandbox denied esbuild parent-directory access. Browser visual verification and payment-provider end-to-end testing remain outstanding.
 
@@ -181,28 +195,28 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Adversarial isolation test suite: for every resource (employees, attendance, leave, payroll, documents, messages, settings, scheduled tasks, webhooks, audit logs), verify:
-    - List endpoints never leak Organization B records when logged in as Organization A
-    - Known foreign UUIDs return 403/404 for show, update, delete, download, relationship assignment
-    - Duplicate tenant-relative natural keys (department name, role name, leave type, etc.) are allowed across organizations
-    - Cache, file storage, exports, broadcasts, and queued jobs cannot cross tenant boundaries
-    - All child records inherit organization scope from parent (e.g., employee → addresses, contacts, documents, leave requests)
-- [ ] Test coverage for all scheduled commands and background jobs (leave accrual, payroll processing, notification delivery, report scheduling)
-- [ ] Test suite for file uploads, downloads, and exports by organization
-- [ ] Regression tests for every permission + role combination across two simultaneous organizations
+-   [ ] Adversarial isolation test suite: for every resource (employees, attendance, leave, payroll, documents, messages, settings, scheduled tasks, webhooks, audit logs), verify:
+    -   List endpoints never leak Organization B records when logged in as Organization A
+    -   Known foreign UUIDs return 403/404 for show, update, delete, download, relationship assignment
+    -   Duplicate tenant-relative natural keys (department name, role name, leave type, etc.) are allowed across organizations
+    -   Cache, file storage, exports, broadcasts, and queued jobs cannot cross tenant boundaries
+    -   All child records inherit organization scope from parent (e.g., employee → addresses, contacts, documents, leave requests)
+-   [ ] Test coverage for all scheduled commands and background jobs (leave accrual, payroll processing, notification delivery, report scheduling)
+-   [ ] Test suite for file uploads, downloads, and exports by organization
+-   [ ] Regression tests for every permission + role combination across two simultaneous organizations
 
 **Acceptance criteria:**
 
-- All adversarial tests pass
-- New feature tests must include isolation verification
-- CI pipeline runs isolation suite on every commit
+-   All adversarial tests pass
+-   New feature tests must include isolation verification
+-   CI pipeline runs isolation suite on every commit
 
 **Implementation notes:**
 
-- Use `TenantContext` to run tests under two organizations simultaneously
-- Verify broadcast channels use organization-scoped namespace
-- Check cache keys prefix with `organization_id`
-- Verify file paths and export filenames don't leak organization data
+-   Use `TenantContext` to run tests under two organizations simultaneously
+-   Verify broadcast channels use organization-scoped namespace
+-   Check cache keys prefix with `organization_id`
+-   Verify file paths and export filenames don't leak organization data
 
 ---
 
@@ -216,80 +230,80 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Hardened password reset flow:
+-   [ ] Hardened password reset flow:
 
-    - Implement `PasswordResetRequest` with expiring token (15 min), one-time use
-    - Do not reveal whether email exists in organization (generic response)
-    - Require token + new password + password confirmation
-    - Invalidate all sessions after successful reset
-    - Send reset link via email with secure random token
-    - Rate limit password reset attempts (5 per hour per email, 20 per hour per IP)
+    -   Implement `PasswordResetRequest` with expiring token (15 min), one-time use
+    -   Do not reveal whether email exists in organization (generic response)
+    -   Require token + new password + password confirmation
+    -   Invalidate all sessions after successful reset
+    -   Send reset link via email with secure random token
+    -   Rate limit password reset attempts (5 per hour per email, 20 per hour per IP)
 
-- [ ] Multi-factor authentication (TOTP):
+-   [ ] Multi-factor authentication (TOTP):
 
-    - Support optional user-level MFA (TOTP, e.g., Google Authenticator)
-    - Generate and validate TOTP secrets
-    - Provide recovery codes (10x one-time use)
-    - Require MFA at login if enabled, after password entry
-    - Allow disable and regenerate actions
+    -   Support optional user-level MFA (TOTP, e.g., Google Authenticator)
+    -   Generate and validate TOTP secrets
+    -   Provide recovery codes (10x one-time use)
+    -   Require MFA at login if enabled, after password entry
+    -   Allow disable and regenerate actions
 
-- [ ] Session and device management:
+-   [ ] Session and device management:
 
-    - Track sessions and device fingerprints
-    - Return session ID in auth response
-    - Allow "logout from all devices"
-    - Invalidate sessions on password change, role change, or user deactivation
-    - Set secure, HttpOnly, SameSite cookies for sensitive tokens
+    -   Track sessions and device fingerprints
+    -   Return session ID in auth response
+    -   Allow "logout from all devices"
+    -   Invalidate sessions on password change, role change, or user deactivation
+    -   Set secure, HttpOnly, SameSite cookies for sensitive tokens
 
-- [ ] Login throttling and brute-force protection:
+-   [ ] Login throttling and brute-force protection:
 
-    - Rate limit login attempts (5 failures per email per 15 min, then exponential backoff)
-    - Generic error response ("Invalid email or password") to prevent user enumeration
-    - Log failed login attempts for security audit
-    - Trigger alert or lock user after N failures
+    -   Rate limit login attempts (5 failures per email per 15 min, then exponential backoff)
+    -   Generic error response ("Invalid email or password") to prevent user enumeration
+    -   Log failed login attempts for security audit
+    -   Trigger alert or lock user after N failures
 
-- [ ] Account deactivation and status:
-    - Add `status` enum (active, inactive, suspended, deleted) to User model
-    - Reject login for inactive/suspended users
-    - Allow admin to deactivate users
-    - Soft-delete users (set status = deleted, keep data)
+-   [ ] Account deactivation and status:
+    -   Add `status` enum (active, inactive, suspended, deleted) to User model
+    -   Reject login for inactive/suspended users
+    -   Allow admin to deactivate users
+    -   Soft-delete users (set status = deleted, keep data)
 
 #### Frontend
 
-- [ ] Password reset form:
+-   [ ] Password reset form:
 
-    - Link from login page to `/reset-password` with token query param
-    - Validate form: new password, confirm password, strength indicator
-    - Show errors clearly (token expired, invalid, mismatch)
+    -   Link from login page to `/reset-password` with token query param
+    -   Validate form: new password, confirm password, strength indicator
+    -   Show errors clearly (token expired, invalid, mismatch)
 
-- [ ] MFA setup flow:
+-   [ ] MFA setup flow:
 
-    - Settings page option to enable MFA
-    - Display QR code and manual entry key
-    - Verify TOTP code to confirm setup
-    - Show recovery codes (download and copy options)
-    - Warning: "If you lose these codes and can't use TOTP, contact support"
+    -   Settings page option to enable MFA
+    -   Display QR code and manual entry key
+    -   Verify TOTP code to confirm setup
+    -   Show recovery codes (download and copy options)
+    -   Warning: "If you lose these codes and can't use TOTP, contact support"
 
-- [ ] Login with MFA:
-    - After password entry, show "Enter code from authenticator" form
-    - Input field for 6-digit code
-    - "Lost access to authenticator?" link → recovery code entry
+-   [ ] Login with MFA:
+    -   After password entry, show "Enter code from authenticator" form
+    -   Input field for 6-digit code
+    -   "Lost access to authenticator?" link → recovery code entry
 
 **Acceptance criteria:**
 
-- Password reset form is secure and cannot reveal user existence
-- MFA is optional per user and fully functional
-- Logout from all devices works; sessions expire correctly
-- Brute-force throttling prevents rapid login attempts
-- No plaintext passwords in logs or error messages
+-   Password reset form is secure and cannot reveal user existence
+-   MFA is optional per user and fully functional
+-   Logout from all devices works; sessions expire correctly
+-   Brute-force throttling prevents rapid login attempts
+-   No plaintext passwords in logs or error messages
 
 **Implementation notes:**
 
-- Use `Laravel\Fortify` or custom guards; prefer custom to control tenant context
-- TOTP: Use `spatie/laravel-qrcode` and `pragmarx/google2fa` or similar
-- Store MFA secret encrypted in DB
-- Update frontend axios instance to handle 403 "MFA required" responses
-- Document password policy (length, complexity) in settings
+-   Use `Laravel\Fortify` or custom guards; prefer custom to control tenant context
+-   TOTP: Use `spatie/laravel-qrcode` and `pragmarx/google2fa` or similar
+-   Store MFA secret encrypted in DB
+-   Update frontend axios instance to handle 403 "MFA required" responses
+-   Document password policy (length, complexity) in settings
 
 ---
 
@@ -301,51 +315,51 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Audit every API endpoint:
+-   [ ] Audit every API endpoint:
 
-    - Does it check a permission or role?
-    - Does it scope the query to the authenticated user's organization?
-    - Does it validate input belongs to the correct organization (TenantRule)?
-    - Does it reject foreign UUIDs with 403/404?
-    - Is there a feature test that verifies the permission is enforced?
+    -   Does it check a permission or role?
+    -   Does it scope the query to the authenticated user's organization?
+    -   Does it validate input belongs to the correct organization (TenantRule)?
+    -   Does it reject foreign UUIDs with 403/404?
+    -   Is there a feature test that verifies the permission is enforced?
 
-- [ ] Add missing authorization:
+-   [ ] Add missing authorization:
 
-    - `manage-users` → user CRUD, deactivation, role assignment
-    - `manage-roles` → role CRUD, permission assignment
-    - `manage-leave-credits` → leave balance mutations (accrual, adjustment, manual entry)
-    - `manage-payroll` → payroll period lock/unlock, payment approval, recalculation
-    - `manage-audit-logs` → audit log access, export
-    - `manage-settings` → organization settings, integrations
-    - `manage-documents` → sensitive employee documents, retention policies
+    -   `manage-users` → user CRUD, deactivation, role assignment
+    -   `manage-roles` → role CRUD, permission assignment
+    -   `manage-leave-credits` → leave balance mutations (accrual, adjustment, manual entry)
+    -   `manage-payroll` → payroll period lock/unlock, payment approval, recalculation
+    -   `manage-audit-logs` → audit log access, export
+    -   `manage-settings` → organization settings, integrations
+    -   `manage-documents` → sensitive employee documents, retention policies
 
-- [ ] Frontend authorization guard:
+-   [ ] Frontend authorization guard:
 
-    - Every route meta declares required `permission` and optional `planFeature`
-    - Router navigation guard validates current user's permissions before rendering
-    - Hide navigation items and action buttons when permission is missing
-    - Show permission-denied state in dialogs/forms when user lacks permission
+    -   Every route meta declares required `permission` and optional `planFeature`
+    -   Router navigation guard validates current user's permissions before rendering
+    -   Hide navigation items and action buttons when permission is missing
+    -   Show permission-denied state in dialogs/forms when user lacks permission
 
-- [ ] Systematic feature test for every permission:
-    - Create test users with different role/permission combinations
-    - Verify allowed actions succeed
-    - Verify denied actions return 403
-    - Verify 403 response does not leak data (no "record not found" vs "access denied" timing)
+-   [ ] Systematic feature test for every permission:
+    -   Create test users with different role/permission combinations
+    -   Verify allowed actions succeed
+    -   Verify denied actions return 403
+    -   Verify 403 response does not leak data (no "record not found" vs "access denied" timing)
 
 **Acceptance criteria:**
 
-- Every endpoint has explicit authorization
-- Feature tests cover happy path, permission denied, and feature gating
-- Frontend routes and buttons respect permissions
-- CI runs permission regression tests
-- No endpoint should accidentally grant access
+-   Every endpoint has explicit authorization
+-   Feature tests cover happy path, permission denied, and feature gating
+-   Frontend routes and buttons respect permissions
+-   CI runs permission regression tests
+-   No endpoint should accidentally grant access
 
 **Implementation notes:**
 
-- Update `EnsurePlanFeature` middleware to reject with 403 before controller runs
-- Use blade/vue `@can` directive consistently
-- Document permission matrix by module in AGENTS.md
-- Create permission audit script: `php artisan auth:audit-endpoints`
+-   Update `EnsurePlanFeature` middleware to reject with 403 before controller runs
+-   Use blade/vue `@can` directive consistently
+-   Document permission matrix by module in AGENTS.md
+-   Create permission audit script: `php artisan auth:audit-endpoints`
 
 ---
 
@@ -357,50 +371,50 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Expand audit logging:
+-   [ ] Expand audit logging:
 
-    - Log all user creations, deactivations, role/permission changes
-    - Log all payroll period state changes (draft → locked → approved → paid)
-    - Log all leave/overtime approval state changes
-    - Log all sensitive setting changes (company name, payroll country, etc.)
-    - Log all file uploads and downloads (employee documents, payroll exports)
-    - Log all failed login attempts and permission violations
-    - Log all paid data mutations (employee records, leave balances, payroll items)
+    -   Log all user creations, deactivations, role/permission changes
+    -   Log all payroll period state changes (draft → locked → approved → paid)
+    -   Log all leave/overtime approval state changes
+    -   Log all sensitive setting changes (company name, payroll country, etc.)
+    -   Log all file uploads and downloads (employee documents, payroll exports)
+    -   Log all failed login attempts and permission violations
+    -   Log all paid data mutations (employee records, leave balances, payroll items)
 
-- [ ] Audit log retention:
+-   [ ] Audit log retention:
 
-    - Immutable audit log (append-only; no edits/deletes except expiry policy)
-    - Configurable retention (e.g., 7 years for payroll, 2 years for access logs)
-    - Scheduled cleanup job to delete/archive expired logs
-    - Export endpoint for compliance (e.g., BIR audit downloads)
+    -   Immutable audit log (append-only; no edits/deletes except expiry policy)
+    -   Configurable retention (e.g., 7 years for payroll, 2 years for access logs)
+    -   Scheduled cleanup job to delete/archive expired logs
+    -   Export endpoint for compliance (e.g., BIR audit downloads)
 
-- [ ] Audit log details:
+-   [ ] Audit log details:
 
-    - Record actor (user ID, name, role), action (create, update, delete, view, download), resource type, resource ID, before/after values (for mutations)
-    - Device info (IP, user-agent, device fingerprint if available)
-    - Timestamp with microsecond precision
-    - Organization ID always scoped
+    -   Record actor (user ID, name, role), action (create, update, delete, view, download), resource type, resource ID, before/after values (for mutations)
+    -   Device info (IP, user-agent, device fingerprint if available)
+    -   Timestamp with microsecond precision
+    -   Organization ID always scoped
 
-- [ ] Audit log export:
-    - CSV export for admin/compliance officer
-    - Filter by date range, user, action, resource type
-    - Tamper-evident (hash or signed export)
-    - Rate-limited to prevent data exfiltration
+-   [ ] Audit log export:
+    -   CSV export for admin/compliance officer
+    -   Filter by date range, user, action, resource type
+    -   Tamper-evident (hash or signed export)
+    -   Rate-limited to prevent data exfiltration
 
 **Acceptance criteria:**
 
-- All sensitive actions are logged
-- Audit log is immutable
-- Retention policy is enforced
-- Export format supports regulatory review
-- Dashboard shows audit summary (actions per day, permission denials, failed logins)
+-   All sensitive actions are logged
+-   Audit log is immutable
+-   Retention policy is enforced
+-   Export format supports regulatory review
+-   Dashboard shows audit summary (actions per day, permission denials, failed logins)
 
 **Implementation notes:**
 
-- Use Laravel events to trigger audit logs
-- Create `LogSensitiveAction` observer or middleware
-- Audit log should never be deleted by normal operations; only expiry policy
-- Document audit log schema in data dictionary
+-   Use Laravel events to trigger audit logs
+-   Create `LogSensitiveAction` observer or middleware
+-   Audit log should never be deleted by normal operations; only expiry policy
+-   Document audit log schema in data dictionary
 
 ---
 
@@ -412,32 +426,32 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Encrypted sensitive fields:
+-   [ ] Encrypted sensitive fields:
 
-    - OIDC client secret, SAML cert/key
-    - SCIM token
-    - Stripe API key
-    - Any external API credentials stored in AppSetting or SsoConfiguration
-    - Employee salary (in payroll module)
+    -   OIDC client secret, SAML cert/key
+    -   SCIM token
+    -   Stripe API key
+    -   Any external API credentials stored in AppSetting or SsoConfiguration
+    -   Employee salary (in payroll module)
 
-- [ ] Use Laravel's encryption:
+-   [ ] Use Laravel's encryption:
 
-    - Enable transparent encryption for model fields using `Encryptable` or custom mutator
-    - Store cipher in config; rotate cipher key with deployment
-    - Decrypt only when needed (not in list endpoints)
+    -   Enable transparent encryption for model fields using `Encryptable` or custom mutator
+    -   Store cipher in config; rotate cipher key with deployment
+    -   Decrypt only when needed (not in list endpoints)
 
-- [ ] Secrets management (post-Phase 1):
-    - Environment variables for production secrets (OIDC, Stripe, mail)
-    - Consider external secret manager (AWS Secrets Manager, HashiCorp Vault) for future
-    - Never commit `.env` with real values
-    - Rotate Stripe/OIDC credentials quarterly
+-   [ ] Secrets management (post-Phase 1):
+    -   Environment variables for production secrets (OIDC, Stripe, mail)
+    -   Consider external secret manager (AWS Secrets Manager, HashiCorp Vault) for future
+    -   Never commit `.env` with real values
+    -   Rotate Stripe/OIDC credentials quarterly
 
 **Acceptance criteria:**
 
-- Sensitive fields are encrypted at rest
-- Decryption key is environment-based, never in code
-- No plaintext secrets in logs or error messages
-- Secret rotation documented and tested
+-   Sensitive fields are encrypted at rest
+-   Decryption key is environment-based, never in code
+-   No plaintext secrets in logs or error messages
+-   Secret rotation documented and tested
 
 ---
 
@@ -449,30 +463,30 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] HTML sanitization:
+-   [ ] HTML sanitization:
 
-    - Sanitize announcement HTML on server before saving
-    - Use allowlist of safe HTML tags: `<p>`, `<br>`, `<strong>`, `<em>`, `<ul>`, `<ol>`, `<li>`, `<a href="...">`
-    - Strip `<script>`, `<iframe>`, `onclick`, `onerror`, etc.
-    - Use `HTMLPurifier` or `mews/purifier` package
+    -   Sanitize announcement HTML on server before saving
+    -   Use allowlist of safe HTML tags: `<p>`, `<br>`, `<strong>`, `<em>`, `<ul>`, `<ol>`, `<li>`, `<a href="...">`
+    -   Strip `<script>`, `<iframe>`, `onclick`, `onerror`, etc.
+    -   Use `HTMLPurifier` or `mews/purifier` package
 
-- [ ] Content Security Policy:
+-   [ ] Content Security Policy:
 
-    - Set header `Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-...'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'`
-    - Disable `unsafe-inline` for scripts (use nonce)
-    - Allow external resources only if needed (e.g., Gravatar)
+    -   Set header `Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-...'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'`
+    -   Disable `unsafe-inline` for scripts (use nonce)
+    -   Allow external resources only if needed (e.g., Gravatar)
 
-- [ ] Frontend:
-    - Replace `v-html` with `v-text` where possible
-    - If HTML is unavoidable, use sanitized version only after server-side sanitization
-    - Avoid `innerHTML` in JavaScript
+-   [ ] Frontend:
+    -   Replace `v-html` with `v-text` where possible
+    -   If HTML is unavoidable, use sanitized version only after server-side sanitization
+    -   Avoid `innerHTML` in JavaScript
 
 **Acceptance criteria:**
 
-- Announcement HTML is sanitized
-- CSP header is set and enforced in browser
-- XSS tests pass (try `<script>alert('xss')</script>` in announcement)
-- No `unsafe-inline` or `unsafe-eval` in CSP
+-   Announcement HTML is sanitized
+-   CSP header is set and enforced in browser
+-   XSS tests pass (try `<script>alert('xss')</script>` in announcement)
+-   No `unsafe-inline` or `unsafe-eval` in CSP
 
 ---
 
@@ -484,42 +498,42 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] OWASP Top 10 checklist:
+-   [ ] OWASP Top 10 checklist:
 
-    - SQL injection: use parameterized queries, Laravel ORM (done)
-    - Authentication: MFA, strong password, session management (Phase 1)
-    - Sensitive data exposure: encryption, HTTPS only (Phase 1)
-    - XML external entities: no XML parsing (N/A)
-    - Broken access control: authorization tests (Phase 1)
-    - Security misconfiguration: secure headers, no debug mode in prod (1.7)
-    - Cross-site scripting: sanitization, CSP (1.6)
-    - Insecure deserialization: avoid `unserialize()`, use JSON (check code)
-    - Using components with known vulnerabilities: `composer audit`, `npm audit` (1.7)
-    - Insufficient logging: audit logs (1.4)
+    -   SQL injection: use parameterized queries, Laravel ORM (done)
+    -   Authentication: MFA, strong password, session management (Phase 1)
+    -   Sensitive data exposure: encryption, HTTPS only (Phase 1)
+    -   XML external entities: no XML parsing (N/A)
+    -   Broken access control: authorization tests (Phase 1)
+    -   Security misconfiguration: secure headers, no debug mode in prod (1.7)
+    -   Cross-site scripting: sanitization, CSP (1.6)
+    -   Insecure deserialization: avoid `unserialize()`, use JSON (check code)
+    -   Using components with known vulnerabilities: `composer audit`, `npm audit` (1.7)
+    -   Insufficient logging: audit logs (1.4)
 
-- [ ] Automated security scanning:
+-   [ ] Automated security scanning:
 
-    - Run `composer audit` and `npm audit` in CI/CD
-    - Optional: SAST scanner (SonarQube, Snyk, or GitHub CodeQL)
-    - Fail CI if high/critical vulnerabilities found
+    -   Run `composer audit` and `npm audit` in CI/CD
+    -   Optional: SAST scanner (SonarQube, Snyk, or GitHub CodeQL)
+    -   Fail CI if high/critical vulnerabilities found
 
-- [ ] Penetration testing plan:
-    - Document scope and assumptions
-    - Plan for Q1 of next year: manual pentesting or bug bounty
-    - Fix findings before production launch
+-   [ ] Penetration testing plan:
+    -   Document scope and assumptions
+    -   Plan for Q1 of next year: manual pentesting or bug bounty
+    -   Fix findings before production launch
 
 **Acceptance criteria:**
 
-- OWASP checklist reviewed; findings documented
-- No high/critical vulnerabilities in dependency audit
-- Security testing integrated into CI/CD
-- Pentesting plan approved and scheduled
+-   OWASP checklist reviewed; findings documented
+-   No high/critical vulnerabilities in dependency audit
+-   Security testing integrated into CI/CD
+-   Pentesting plan approved and scheduled
 
 **Implementation notes:**
 
-- Create `SECURITY.md` with vulnerability disclosure policy
-- Set up dependency update alerts (Dependabot, GitHub)
-- Document security assumptions and threat model
+-   Create `SECURITY.md` with vulnerability disclosure policy
+-   Set up dependency update alerts (Dependabot, GitHub)
+-   Document security assumptions and threat model
 
 ---
 
@@ -527,15 +541,15 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Gate: Do NOT proceed to Phase 2 until all of Phase 1 is complete.**
 
-- [ ] Isolation test suite passes; new features require isolation tests
-- [ ] Password reset, MFA, session management all working
-- [ ] Every endpoint has explicit authorization; feature tests for all permissions
-- [ ] Sensitive actions logged; audit log immutable and exported
-- [ ] Sensitive fields encrypted; no plaintext secrets in code
-- [ ] Announcement HTML sanitized; CSP header set
-- [ ] OWASP checklist reviewed; dependency audit clean
-- [ ] Security documentation (threat model, incident response, pentesting plan) complete
-- [ ] Team trained on secure coding practices
+-   [ ] Isolation test suite passes; new features require isolation tests
+-   [ ] Password reset, MFA, session management all working
+-   [ ] Every endpoint has explicit authorization; feature tests for all permissions
+-   [ ] Sensitive actions logged; audit log immutable and exported
+-   [ ] Sensitive fields encrypted; no plaintext secrets in code
+-   [ ] Announcement HTML sanitized; CSP header set
+-   [ ] OWASP checklist reviewed; dependency audit clean
+-   [ ] Security documentation (threat model, incident response, pentesting plan) complete
+-   [ ] Team trained on secure coding practices
 
 ---
 
@@ -555,65 +569,65 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Organization provisioning API:
+-   [ ] Organization provisioning API:
 
-    - `POST /platform/organizations` → create org, owner user, default roles, settings, leave types, holidays
-    - Input: company name, slug, timezone, country, plan code, owner email, owner full name
-    - Output: organization ID, subdomain, admin invitation link
-    - Idempotent: re-running with same slug does not duplicate
-    - Transactional: all-or-nothing (org + owner + roles + settings or rollback)
+    -   `POST /platform/organizations` → create org, owner user, default roles, settings, leave types, holidays
+    -   Input: company name, slug, timezone, country, plan code, owner email, owner full name
+    -   Output: organization ID, subdomain, admin invitation link
+    -   Idempotent: re-running with same slug does not duplicate
+    -   Transactional: all-or-nothing (org + owner + roles + settings or rollback)
 
-- [ ] Owner invitation flow:
+-   [ ] Owner invitation flow:
 
-    - Generate secure invitation token (random, 32 bytes, expires in 7 days)
-    - Send invitation email with `https://acme.hris.example.com/accept-invite?token=...`
-    - Invitation token can be used to create password and activate account
-    - One-time use: after acceptance, token is invalidated
-    - Invitation can be resent or revoked by platform admin
+    -   Generate secure invitation token (random, 32 bytes, expires in 7 days)
+    -   Send invitation email with `https://acme.hris.example.com/accept-invite?token=...`
+    -   Invitation token can be used to create password and activate account
+    -   One-time use: after acceptance, token is invalidated
+    -   Invitation can be resent or revoked by platform admin
 
-- [ ] Tenant domain setup:
-    - Support subdomain (e.g., `acme.hris.example.com`)
-    - Support custom domain (e.g., `hr.acme.com`) after verification
-    - Verify custom domain ownership via DNS TXT or CNAME record
-    - Update `ResolveTenant` middleware to resolve by hostname
+-   [ ] Tenant domain setup:
+    -   Support subdomain (e.g., `acme.hris.example.com`)
+    -   Support custom domain (e.g., `hr.acme.com`) after verification
+    -   Verify custom domain ownership via DNS TXT or CNAME record
+    -   Update `ResolveTenant` middleware to resolve by hostname
 
 #### Frontend
 
-- [ ] Platform admin panel → organizations list:
+-   [ ] Platform admin panel → organizations list:
 
-    - Show all organizations with status, plan, created date, owner email
-    - Search/filter by name, slug, status
-    - Create new organization form
-    - Organization detail view with edit, suspend, reactivate, delete actions
+    -   Show all organizations with status, plan, created date, owner email
+    -   Search/filter by name, slug, status
+    -   Create new organization form
+    -   Organization detail view with edit, suspend, reactivate, delete actions
 
-- [ ] Organization creation flow:
+-   [ ] Organization creation flow:
 
-    - Form: company name, slug, timezone, country, plan, owner email, owner name
-    - Validate slug uniqueness and format
-    - Show confirmation and success message with invitation link
-    - Display invitation link and "Send via email" button
+    -   Form: company name, slug, timezone, country, plan, owner email, owner name
+    -   Validate slug uniqueness and format
+    -   Show confirmation and success message with invitation link
+    -   Display invitation link and "Send via email" button
 
-- [ ] Invitation acceptance flow:
-    - Page `/accept-invite?token=...`
-    - Show "Welcome to [Company]! Set up your account."
-    - Form: full name (pre-filled if available), email (pre-filled), password, password confirm
-    - After submit, redirect to login
-    - Handle invalid/expired token with clear error
+-   [ ] Invitation acceptance flow:
+    -   Page `/accept-invite?token=...`
+    -   Show "Welcome to [Company]! Set up your account."
+    -   Form: full name (pre-filled if available), email (pre-filled), password, password confirm
+    -   After submit, redirect to login
+    -   Handle invalid/expired token with clear error
 
 **Acceptance criteria:**
 
-- Organization can be created via API and UI
-- Owner receives invitation and accepts it
-- New organization is isolated and functional
-- Subdomain resolution works
-- Custom domain setup documented
+-   Organization can be created via API and UI
+-   Owner receives invitation and accepts it
+-   New organization is isolated and functional
+-   Subdomain resolution works
+-   Custom domain setup documented
 
 **Implementation notes:**
 
-- Slug format: lowercase, alphanumeric + hyphen, 3-50 chars, unique
-- Invitation email template with branding and support link
-- Store invitation token in `password_reset_requests` or separate `invitation_tokens` table
-- Verify SSL wildcard cert or configure TLS for custom domains (infrastructure task)
+-   Slug format: lowercase, alphanumeric + hyphen, 3-50 chars, unique
+-   Invitation email template with branding and support link
+-   Store invitation token in `password_reset_requests` or separate `invitation_tokens` table
+-   Verify SSL wildcard cert or configure TLS for custom domains (infrastructure task)
 
 ---
 
@@ -627,87 +641,87 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Stripe integration:
+-   [ ] Stripe integration:
 
-    - Create Stripe account and API keys
-    - `POST /platform/organizations/{id}/checkout-session` → return Stripe checkout session URL
-    - `POST /webhooks/stripe` → handle payment_intent.succeeded, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed
-    - Validate webhook signature; reject unsigned webhooks
-    - Idempotent webhook processing (if Stripe resends, use `idempotency_key` in request)
+    -   Create Stripe account and API keys
+    -   `POST /platform/organizations/{id}/checkout-session` → return Stripe checkout session URL
+    -   `POST /webhooks/stripe` → handle payment_intent.succeeded, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed
+    -   Validate webhook signature; reject unsigned webhooks
+    -   Idempotent webhook processing (if Stripe resends, use `idempotency_key` in request)
 
-- [ ] Subscription model and states:
+-   [ ] Subscription model and states:
 
-    - Add `SubscriptionEvent` table: org_id, event_type, event_data, stripe_event_id, created_at
-    - Track subscription status: trialing, active, past_due, suspended, cancelled
-    - Store Stripe subscription ID and customer ID on Organization
-    - On webhook, update organization subscription_status and log event
+    -   Add `SubscriptionEvent` table: org_id, event_type, event_data, stripe_event_id, created_at
+    -   Track subscription status: trialing, active, past_due, suspended, cancelled
+    -   Store Stripe subscription ID and customer ID on Organization
+    -   On webhook, update organization subscription_status and log event
 
-- [ ] Plan entitlements enforcement:
+-   [ ] Plan entitlements enforcement:
 
-    - Define plans in config/plans.php: Basic (employees, attendance, leave, overtime), Enterprise (+ payroll, workplace hub, notes, custom fields)
-    - Store plan code on Organization
-    - Backend middleware `EnsurePlanFeature` checks organization.plan against required feature
-    - Fail with 403 if plan does not include feature
+    -   Define plans in config/plans.php: Basic (employees, attendance, leave, overtime), Enterprise (+ payroll, workplace hub, notes, custom fields)
+    -   Store plan code on Organization
+    -   Backend middleware `EnsurePlanFeature` checks organization.plan against required feature
+    -   Fail with 403 if plan does not include feature
 
-- [ ] Trial and grace periods:
+-   [ ] Trial and grace periods:
 
-    - Add `trial_starts_at`, `trial_ends_at`, `grace_until` to Organization
-    - New organizations start 14-day trial automatically
-    - After trial, require active subscription to access paid features
-    - Grace period (3 days) after payment failure before suspension
+    -   Add `trial_starts_at`, `trial_ends_at`, `grace_until` to Organization
+    -   New organizations start 14-day trial automatically
+    -   After trial, require active subscription to access paid features
+    -   Grace period (3 days) after payment failure before suspension
 
-- [ ] Usage quota enforcement:
-    - Track monthly active users, storage, API calls per organization
-    - Store quotas by plan in config
-    - Reject user invitations if over seat limit
-    - Warn when approaching quota
-    - (Post-Phase 2: implement hard limits)
+-   [ ] Usage quota enforcement:
+    -   Track monthly active users, storage, API calls per organization
+    -   Store quotas by plan in config
+    -   Reject user invitations if over seat limit
+    -   Warn when approaching quota
+    -   (Post-Phase 2: implement hard limits)
 
 #### Frontend
 
-- [ ] Billing portal:
+-   [ ] Billing portal:
 
-    - Settings → Billing tab
-    - Show current plan, subscription status, renewal date
-    - Button "Change plan" → Stripe checkout
-    - Button "Manage billing" → Stripe customer portal
-    - Show usage (users, storage)
+    -   Settings → Billing tab
+    -   Show current plan, subscription status, renewal date
+    -   Button "Change plan" → Stripe checkout
+    -   Button "Manage billing" → Stripe customer portal
+    -   Show usage (users, storage)
 
-- [ ] Plan upgrade/downgrade:
+-   [ ] Plan upgrade/downgrade:
 
-    - Present plan options (Basic vs Enterprise)
-    - Show price difference and proration explanation
-    - Redirect to Stripe checkout on selection
-    - After success, redirect to billing page
+    -   Present plan options (Basic vs Enterprise)
+    -   Show price difference and proration explanation
+    -   Redirect to Stripe checkout on selection
+    -   After success, redirect to billing page
 
-- [ ] Payment failure notifications:
+-   [ ] Payment failure notifications:
 
-    - Toast notification: "Payment failed. Manage billing to update payment method."
-    - Link to Stripe customer portal or `/billing/update-payment`
-    - Show grace period countdown ("Plan will suspend in 2 days")
-    - Persist notification until resolved
+    -   Toast notification: "Payment failed. Manage billing to update payment method."
+    -   Link to Stripe customer portal or `/billing/update-payment`
+    -   Show grace period countdown ("Plan will suspend in 2 days")
+    -   Persist notification until resolved
 
-- [ ] Feature gating:
-    - Hide payroll, workplace hub, notes, custom fields for Basic plan
-    - Show "Upgrade to Enterprise to use this feature" tooltip/modal
+-   [ ] Feature gating:
+    -   Hide payroll, workplace hub, notes, custom fields for Basic plan
+    -   Show "Upgrade to Enterprise to use this feature" tooltip/modal
 
 **Acceptance criteria:**
 
-- Stripe integration is complete and tested
-- Trial → paid conversion works end-to-end
-- Webhook handling is idempotent and error-safe
-- Plan entitlements are enforced in backend and frontend
-- Usage is tracked and limits are enforced (soft limits in Phase 2)
-- Payment failure flow is clear and actionable
+-   Stripe integration is complete and tested
+-   Trial → paid conversion works end-to-end
+-   Webhook handling is idempotent and error-safe
+-   Plan entitlements are enforced in backend and frontend
+-   Usage is tracked and limits are enforced (soft limits in Phase 2)
+-   Payment failure flow is clear and actionable
 
 **Implementation notes:**
 
-- Test mode with Stripe test keys first
-- Mock Stripe in tests or use `mockstripe/mockstripe` package
-- Webhook must log and retry failed events (queue job)
-- Currency: use organization.country or USD global default
-- Tax calculation: consider TaxJar or similar for international customers
-- Invoice generation: use Stripe invoices or generate PDF from Organization + subscription data
+-   Test mode with Stripe test keys first
+-   Mock Stripe in tests or use `mockstripe/mockstripe` package
+-   Webhook must log and retry failed events (queue job)
+-   Currency: use organization.country or USD global default
+-   Tax calculation: consider TaxJar or similar for international customers
+-   Invoice generation: use Stripe invoices or generate PDF from Organization + subscription data
 
 ---
 
@@ -719,31 +733,31 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Webhook receiver:
+-   [ ] Webhook receiver:
 
-    - Verify Stripe signature on every webhook
-    - Log webhook receipt and processing
-    - Idempotent processing: check if event already processed (store stripe_event_id)
-    - Retry on transient errors; skip after 3 failed retries
+    -   Verify Stripe signature on every webhook
+    -   Log webhook receipt and processing
+    -   Idempotent processing: check if event already processed (store stripe_event_id)
+    -   Retry on transient errors; skip after 3 failed retries
 
-- [ ] Event handlers:
+-   [ ] Event handlers:
 
-    - `payment_intent.succeeded` → update subscription status to active, clear past_due flag
-    - `customer.subscription.updated` → check new plan vs old plan; update organization, trigger notification if plan changed
-    - `customer.subscription.deleted` → set subscription_status to cancelled, disable organization (or set grace_until)
-    - `invoice.payment_failed` → increment payment_failure_count, set past_due flag, set grace_until = now + 3 days
+    -   `payment_intent.succeeded` → update subscription status to active, clear past_due flag
+    -   `customer.subscription.updated` → check new plan vs old plan; update organization, trigger notification if plan changed
+    -   `customer.subscription.deleted` → set subscription_status to cancelled, disable organization (or set grace_until)
+    -   `invoice.payment_failed` → increment payment_failure_count, set past_due flag, set grace_until = now + 3 days
 
-- [ ] Notification on subscription events:
-    - Send email: "Subscription updated to [plan]" or "Payment failed; plan will suspend in 3 days"
-    - In-app notification: "Upgrade available" or "Payment action required"
-    - Link to billing portal or update-payment flow
+-   [ ] Notification on subscription events:
+    -   Send email: "Subscription updated to [plan]" or "Payment failed; plan will suspend in 3 days"
+    -   In-app notification: "Upgrade available" or "Payment action required"
+    -   Link to billing portal or update-payment flow
 
 **Acceptance criteria:**
 
-- All Stripe webhook events are handled
-- Webhook processing is idempotent
-- Signature verification prevents tampering
-- Events trigger appropriate notifications
+-   All Stripe webhook events are handled
+-   Webhook processing is idempotent
+-   Signature verification prevents tampering
+-   Events trigger appropriate notifications
 
 ---
 
@@ -757,40 +771,40 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Suspension workflow:
+-   [ ] Suspension workflow:
 
-    - Automatic: subscription_status becomes `suspended` OR grace period expires
-    - Manual: platform admin action "Suspend organization"
-    - Set `suspended_at` and `suspension_reason` on Organization
-    - On suspension: block all tenant login, show "Organization suspended" message
-    - Preserve all data; do not delete
+    -   Automatic: subscription_status becomes `suspended` OR grace period expires
+    -   Manual: platform admin action "Suspend organization"
+    -   Set `suspended_at` and `suspension_reason` on Organization
+    -   On suspension: block all tenant login, show "Organization suspended" message
+    -   Preserve all data; do not delete
 
-- [ ] Reactivation workflow:
-    - Admin action "Reactivate organization"
-    - Requires subscription to be active (not past_due or cancelled)
-    - Clear `suspended_at`
-    - Send email to owner: "Organization reactivated"
-    - Users can log in again
+-   [ ] Reactivation workflow:
+    -   Admin action "Reactivate organization"
+    -   Requires subscription to be active (not past_due or cancelled)
+    -   Clear `suspended_at`
+    -   Send email to owner: "Organization reactivated"
+    -   Users can log in again
 
 #### Frontend
 
-- [ ] Organization detail (admin):
+-   [ ] Organization detail (admin):
 
-    - Show "SUSPENDED" badge if suspended
-    - Button "Reactivate" (if conditions met)
-    - Button "Suspend" (for testing; requires confirmation)
-    - Show suspension reason and date
+    -   Show "SUSPENDED" badge if suspended
+    -   Button "Reactivate" (if conditions met)
+    -   Button "Suspend" (for testing; requires confirmation)
+    -   Show suspension reason and date
 
-- [ ] Tenant app (user view):
-    - On login, if organization is suspended, show modal: "Your organization has been suspended. Contact support."
-    - No access to app until reactivated
+-   [ ] Tenant app (user view):
+    -   On login, if organization is suspended, show modal: "Your organization has been suspended. Contact support."
+    -   No access to app until reactivated
 
 **Acceptance criteria:**
 
-- Suspended organizations cannot be accessed
-- Reactivation works smoothly
-- Data is preserved during suspension
-- Users are notified appropriately
+-   Suspended organizations cannot be accessed
+-   Reactivation works smoothly
+-   Data is preserved during suspension
+-   Users are notified appropriately
 
 ---
 
@@ -802,38 +816,38 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Deliverables:**
 
-- [ ] Data export:
+-   [ ] Data export:
 
-    - `POST /platform/organizations/{id}/export` → queue job to export all org data
-    - Export includes: employees, departments, positions, roles, users, attendance, leave, overtime, payroll, documents, audit logs, settings, announcements
-    - Format: JSON or CSV per entity type, in a ZIP file
-    - Store export file in `storage/exports/`, signed download URL
-    - Access log export download
+    -   `POST /platform/organizations/{id}/export` → queue job to export all org data
+    -   Export includes: employees, departments, positions, roles, users, attendance, leave, overtime, payroll, documents, audit logs, settings, announcements
+    -   Format: JSON or CSV per entity type, in a ZIP file
+    -   Store export file in `storage/exports/`, signed download URL
+    -   Access log export download
 
-- [ ] Data retention and deletion:
+-   [ ] Data retention and deletion:
 
-    - On subscription cancelled or admin action, set deletion policy
-    - Soft delete: set status = deleted, keep data for 90 days, then hard-delete
-    - Hard delete: immediately delete all organization data
-    - Audit trail of deletion request: who, when, reason
+    -   On subscription cancelled or admin action, set deletion policy
+    -   Soft delete: set status = deleted, keep data for 90 days, then hard-delete
+    -   Hard delete: immediately delete all organization data
+    -   Audit trail of deletion request: who, when, reason
 
-- [ ] Backup and restore:
-    - Daily backups (infrastructure layer)
-    - Restore capability documented and tested quarterly
-    - Recovery time objective (RTO) and recovery point objective (RPO) defined
+-   [ ] Backup and restore:
+    -   Daily backups (infrastructure layer)
+    -   Restore capability documented and tested quarterly
+    -   Recovery time objective (RTO) and recovery point objective (RPO) defined
 
 **Acceptance criteria:**
 
-- Organizations can export their data
-- Deletion follows 90-day retention with soft-delete
-- Backup/restore tested and documented
+-   Organizations can export their data
+-   Deletion follows 90-day retention with soft-delete
+-   Backup/restore tested and documented
 
 **Implementation notes:**
 
-- Export job should be queued and run asynchronously
-- Large exports may take time; email download link when ready
-- Document compliance with GDPR/privacy act for data subject requests
-- Consider S3 for export storage instead of local filesystem
+-   Export job should be queued and run asynchronously
+-   Large exports may take time; email download link when ready
+-   Document compliance with GDPR/privacy act for data subject requests
+-   Consider S3 for export storage instead of local filesystem
 
 ---
 
@@ -847,34 +861,34 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Health metrics:
-    - Count of organizations by status (active, trialing, suspended)
-    - Count of users per organization (average, total)
-    - Monthly recurring revenue (MRR) and churn
-    - Storage used per organization
-    - Login success/failure rates
+-   [ ] Health metrics:
+    -   Count of organizations by status (active, trialing, suspended)
+    -   Count of users per organization (average, total)
+    -   Monthly recurring revenue (MRR) and churn
+    -   Storage used per organization
+    -   Login success/failure rates
 
 #### Frontend
 
-- [ ] Platform admin dashboard:
+-   [ ] Platform admin dashboard:
 
-    - Overview: total orgs, active users, MRR, churn rate
-    - Organizations table: name, plan, status, users, created, last login
-    - Organization detail view (already started in 2.1)
-    - Search and filter by status, plan, date range
-    - Quick actions: suspend, reactivate, force password reset (support)
+    -   Overview: total orgs, active users, MRR, churn rate
+    -   Organizations table: name, plan, status, users, created, last login
+    -   Organization detail view (already started in 2.1)
+    -   Search and filter by status, plan, date range
+    -   Quick actions: suspend, reactivate, force password reset (support)
 
-- [ ] Support tools:
-    - "Switch to organization" (admin can view org as tenant user for debugging)
-    - Reset organization admin password (send reset link)
-    - View organization's audit log
-    - Send announcement to specific organizations
+-   [ ] Support tools:
+    -   "Switch to organization" (admin can view org as tenant user for debugging)
+    -   Reset organization admin password (send reset link)
+    -   View organization's audit log
+    -   Send announcement to specific organizations
 
 **Acceptance criteria:**
 
-- Admin can view and manage organizations
-- Metrics are available and accurate
-- Support tools allow debugging without direct DB access
+-   Admin can view and manage organizations
+-   Metrics are available and accurate
+-   Support tools allow debugging without direct DB access
 
 ---
 
@@ -882,16 +896,16 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 **Gate: Do NOT proceed to Phase 3 until Phases 1 and 2 are complete.**
 
-- [ ] Organization onboarding flow works end-to-end
-- [ ] Owner receives and accepts invitation
-- [ ] Stripe integration is complete; test checkout works
-- [ ] Subscription lifecycle (trial → active → past_due → suspended) is implemented
-- [ ] All Stripe webhooks are handled idempotently
-- [ ] Plan entitlements are enforced in backend and frontend
-- [ ] Suspension and reactivation workflows work
-- [ ] Data export and retention policies are documented and tested
-- [ ] Admin dashboard is functional
-- [ ] Prod deployment checklist prepared (domains, TLS, backups, monitoring)
+-   [ ] Organization onboarding flow works end-to-end
+-   [ ] Owner receives and accepts invitation
+-   [ ] Stripe integration is complete; test checkout works
+-   [ ] Subscription lifecycle (trial → active → past_due → suspended) is implemented
+-   [ ] All Stripe webhooks are handled idempotently
+-   [ ] Plan entitlements are enforced in backend and frontend
+-   [ ] Suspension and reactivation workflows work
+-   [ ] Data export and retention policies are documented and tested
+-   [ ] Admin dashboard is functional
+-   [ ] Prod deployment checklist prepared (domains, TLS, backups, monitoring)
 
 ---
 
@@ -911,44 +925,44 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Employee hierarchy:
+-   [ ] Employee hierarchy:
 
-    - Add `manager_id` (nullable UUID) to Employee, foreign key to users.id
-    - Add scope `whereManager($userId)` to get all direct reports
-    - Recursive query: get all subordinates (multi-level reports)
-    - Add scope `whereManagerPath()` to check if user is in the chain of command
+    -   Add `manager_id` (nullable UUID) to Employee, foreign key to users.id
+    -   Add scope `whereManager($userId)` to get all direct reports
+    -   Recursive query: get all subordinates (multi-level reports)
+    -   Add scope `whereManagerPath()` to check if user is in the chain of command
 
-- [ ] Organizational unit:
+-   [ ] Organizational unit:
 
-    - Add `Location`, `CostCenter`, `BusinessUnit` models (optional, depending on customer needs)
-    - Link employees to these organizational units
-    - Support hierarchical structure (location → department → team)
+    -   Add `Location`, `CostCenter`, `BusinessUnit` models (optional, depending on customer needs)
+    -   Link employees to these organizational units
+    -   Support hierarchical structure (location → department → team)
 
-- [ ] Effective-dated employment history:
-    - Add `EmploymentHistory` table: employee_id, start_date, end_date, department_id, position_id, manager_id
-    - Track employment changes: promotion, transfer, manager change
-    - Default to most recent active record for current data
-    - Support retroactive updates (backdate changes)
+-   [ ] Effective-dated employment history:
+    -   Add `EmploymentHistory` table: employee_id, start_date, end_date, department_id, position_id, manager_id
+    -   Track employment changes: promotion, transfer, manager change
+    -   Default to most recent active record for current data
+    -   Support retroactive updates (backdate changes)
 
 #### Frontend
 
-- [ ] Org chart view:
+-   [ ] Org chart view:
 
-    - Tree view showing org structure from top leader down
-    - Click employee → detail view with reports, history
-    - Filter by department or team
-    - Edit reporting lines (drag-and-drop or form)
+    -   Tree view showing org structure from top leader down
+    -   Click employee → detail view with reports, history
+    -   Filter by department or team
+    -   Edit reporting lines (drag-and-drop or form)
 
-- [ ] Employee profile:
-    - Show current manager, direct reports
-    - Show employment history timeline
+-   [ ] Employee profile:
+    -   Show current manager, direct reports
+    -   Show employment history timeline
 
 **Acceptance criteria:**
 
-- Manager-subordinate relationship is tracked
-- Org chart displays correctly
-- Employment history is maintained
-- Reporting line changes are audited
+-   Manager-subordinate relationship is tracked
+-   Org chart displays correctly
+-   Employment history is maintained
+-   Reporting line changes are audited
 
 ---
 
@@ -962,44 +976,44 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Onboarding workflow:
+-   [ ] Onboarding workflow:
 
-    - Add `OnboardingChecklist` model: employee_id, task (e.g., "Create email account", "Set up IT equipment", "Conduct orientation"), assigned_to, completed_at
-    - Predefined checklist template by role/department
-    - Support custom checklists
-    - Track progress: show % complete
-    - Notification when task is due or overdue
+    -   Add `OnboardingChecklist` model: employee_id, task (e.g., "Create email account", "Set up IT equipment", "Conduct orientation"), assigned_to, completed_at
+    -   Predefined checklist template by role/department
+    -   Support custom checklists
+    -   Track progress: show % complete
+    -   Notification when task is due or overdue
 
-- [ ] Offboarding workflow:
+-   [ ] Offboarding workflow:
 
-    - Add `OffboardingChecklist` model: employee_id, task (e.g., "Collect laptop", "Return keys", "Deactivate accounts"), assigned_to, completed_at
-    - Triggered on employee status change to "inactive" or "terminated"
-    - Checklist must be 100% complete before employee record is fully archived
-    - Prevent employee data deletion until checklist complete
+    -   Add `OffboardingChecklist` model: employee_id, task (e.g., "Collect laptop", "Return keys", "Deactivate accounts"), assigned_to, completed_at
+    -   Triggered on employee status change to "inactive" or "terminated"
+    -   Checklist must be 100% complete before employee record is fully archived
+    -   Prevent employee data deletion until checklist complete
 
-- [ ] Probation and regularization:
-    - Add `probation_start_date`, `probation_end_date`, `regularization_date` to Employee
-    - Track probation status: probationary, regularized, terminated-probation
-    - Automation: on `probation_end_date`, send reminder to manager for regularization decision
-    - Block leave/overtime approval during probation (configurable by policy)
+-   [ ] Probation and regularization:
+    -   Add `probation_start_date`, `probation_end_date`, `regularization_date` to Employee
+    -   Track probation status: probationary, regularized, terminated-probation
+    -   Automation: on `probation_end_date`, send reminder to manager for regularization decision
+    -   Block leave/overtime approval during probation (configurable by policy)
 
 #### Frontend
 
-- [ ] Onboarding/offboarding list:
+-   [ ] Onboarding/offboarding list:
 
-    - Dashboard view: open tasks, overdue tasks, progress by employee
-    - Detail view: employee name, start date, checklist progress, notes
-    - Check off tasks, add comments, upload attachments
+    -   Dashboard view: open tasks, overdue tasks, progress by employee
+    -   Detail view: employee name, start date, checklist progress, notes
+    -   Check off tasks, add comments, upload attachments
 
-- [ ] Employee status timeline:
-    - Show lifecycle events: hired, regularized, promoted, suspended, terminated
-    - Each event shows date, change reason, notes, actor
+-   [ ] Employee status timeline:
+    -   Show lifecycle events: hired, regularized, promoted, suspended, terminated
+    -   Each event shows date, change reason, notes, actor
 
 **Acceptance criteria:**
 
-- Onboarding checklists can be created and tracked
-- Offboarding prevents access and deletion until complete
-- Probation status is enforced in workflows
+-   Onboarding checklists can be created and tracked
+-   Offboarding prevents access and deletion until complete
+-   Probation status is enforced in workflows
 
 ---
 
@@ -1013,79 +1027,79 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Approval workflow engine:
+-   [ ] Approval workflow engine:
 
-    - Define workflow as a directed graph: step → approver → next step
-    - Steps: draft, pending_approval, approved, rejected, cancelled
-    - Approver: by role, by manager, by specific user, by job grade threshold
+    -   Define workflow as a directed graph: step → approver → next step
+    -   Steps: draft, pending_approval, approved, rejected, cancelled
+    -   Approver: by role, by manager, by specific user, by job grade threshold
 
-    - Model `ApprovalWorkflow`: organization_id, name (e.g., "Leave Request - Standard"), entity_type (leave_request, overtime_request, attendance_correction, payroll_adjustment)
-    - Model `ApprovalStep`: workflow_id, sequence, approver_type (role, manager, user), approver_id, auto_approve_after_days (SLA)
-    - Support multi-level approval: step 1 (team lead) → step 2 (manager) → step 3 (HR)
+    -   Model `ApprovalWorkflow`: organization_id, name (e.g., "Leave Request - Standard"), entity_type (leave_request, overtime_request, attendance_correction, payroll_adjustment)
+    -   Model `ApprovalStep`: workflow_id, sequence, approver_type (role, manager, user), approver_id, auto_approve_after_days (SLA)
+    -   Support multi-level approval: step 1 (team lead) → step 2 (manager) → step 3 (HR)
 
-- [ ] Approval engine:
+-   [ ] Approval engine:
 
-    - When entity (LeaveRequest, OvertimeRequest) is submitted, transition to step 1
-    - Generate ApprovalTask for approver(s) in step 1
-    - On approval, move to step 2; notify step 2 approver
-    - On rejection, go back to draft; notify requester
-    - Track approval history: who, when, comment, decision
+    -   When entity (LeaveRequest, OvertimeRequest) is submitted, transition to step 1
+    -   Generate ApprovalTask for approver(s) in step 1
+    -   On approval, move to step 2; notify step 2 approver
+    -   On rejection, go back to draft; notify requester
+    -   Track approval history: who, when, comment, decision
 
-- [ ] Delegation:
+-   [ ] Delegation:
 
-    - User can delegate approvals to another user for a date range
-    - `ApprovalDelegation`: delegator_id, delegate_id, starts_on, ends_on, workflows (empty = all)
-    - When approver is delegator, check for active delegation
-    - If delegated, create task for delegate instead; note delegation in audit log
+    -   User can delegate approvals to another user for a date range
+    -   `ApprovalDelegation`: delegator_id, delegate_id, starts_on, ends_on, workflows (empty = all)
+    -   When approver is delegator, check for active delegation
+    -   If delegated, create task for delegate instead; note delegation in audit log
 
-- [ ] Escalation (SLA):
+-   [ ] Escalation (SLA):
 
-    - If approval not completed after `auto_approve_after_days`, auto-approve or escalate to manager
-    - Notification: "Approval overdue; auto-approving in 2 days"
-    - Configurable per step
+    -   If approval not completed after `auto_approve_after_days`, auto-approve or escalate to manager
+    -   Notification: "Approval overdue; auto-approving in 2 days"
+    -   Configurable per step
 
-- [ ] Approval notifications:
-    - Email: "Approval needed for [entity] by [requester]. Action needed."
-    - In-app notification: linked to approval detail
-    - Link to approval page with one-click approve/reject
+-   [ ] Approval notifications:
+    -   Email: "Approval needed for [entity] by [requester]. Action needed."
+    -   In-app notification: linked to approval detail
+    -   Link to approval page with one-click approve/reject
 
 #### Frontend
 
-- [ ] Admin: approval workflow builder:
+-   [ ] Admin: approval workflow builder:
 
-    - Settings → Approval Workflows
-    - Create workflow: name, entity type, add steps
-    - Per step: approver type (role, manager, user, threshold), SLA, auto-action
-    - Drag to reorder steps
-    - Save and activate
+    -   Settings → Approval Workflows
+    -   Create workflow: name, entity type, add steps
+    -   Per step: approver type (role, manager, user, threshold), SLA, auto-action
+    -   Drag to reorder steps
+    -   Save and activate
 
-- [ ] Approval inbox (already exists; enhance):
+-   [ ] Approval inbox (already exists; enhance):
 
-    - Group approvals by workflow/entity type
-    - Show pending count and SLA status
-    - Detail modal: requester info, entity data, approval history, comment field
-    - Approve/reject buttons
-    - Delegate link
+    -   Group approvals by workflow/entity type
+    -   Show pending count and SLA status
+    -   Detail modal: requester info, entity data, approval history, comment field
+    -   Approve/reject buttons
+    -   Delegate link
 
-- [ ] Request detail (leave, overtime, etc.):
-    - Show approval status with timeline
-    - Show current approver and SLA deadline
-    - If rejected, show reason and edit form to resubmit
+-   [ ] Request detail (leave, overtime, etc.):
+    -   Show approval status with timeline
+    -   Show current approver and SLA deadline
+    -   If rejected, show reason and edit form to resubmit
 
 **Acceptance criteria:**
 
-- Workflows can be defined and activated
-- Multi-step approvals work correctly
-- Delegation and escalation are functional
-- Notifications are timely and actionable
-- Approval history is complete and auditable
+-   Workflows can be defined and activated
+-   Multi-step approvals work correctly
+-   Delegation and escalation are functional
+-   Notifications are timely and actionable
+-   Approval history is complete and auditable
 
 **Implementation notes:**
 
-- Use state machine library (e.g., `winzou/state-machine-bundle` or custom)
-- ApprovalTask should be transient (created on submission, updated/deleted on decision)
-- Test matrix: multi-user, multi-step, rejection, escalation, delegation, concurrent approvals
-- Ensure no single approval blocks system (escalation after SLA)
+-   Use state machine library (e.g., `winzou/state-machine-bundle` or custom)
+-   ApprovalTask should be transient (created on submission, updated/deleted on decision)
+-   Test matrix: multi-user, multi-step, rejection, escalation, delegation, concurrent approvals
+-   Ensure no single approval blocks system (escalation after SLA)
 
 ---
 
@@ -1099,53 +1113,53 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Document versioning:
+-   [ ] Document versioning:
 
-    - Add `EmployeeDocumentVersion` table: document_id, version_number, file_path, mime_type, size, uploaded_by, uploaded_at
-    - Store multiple versions of same document (e.g., insurance_cert_v1, v2, v3)
-    - Default to latest version; allow viewing/downloading older versions
-    - Soft-delete old versions; hard-delete after retention expires
+    -   Add `EmployeeDocumentVersion` table: document_id, version_number, file_path, mime_type, size, uploaded_by, uploaded_at
+    -   Store multiple versions of same document (e.g., insurance_cert_v1, v2, v3)
+    -   Default to latest version; allow viewing/downloading older versions
+    -   Soft-delete old versions; hard-delete after retention expires
 
-- [ ] Document lifecycle:
+-   [ ] Document lifecycle:
 
-    - Add `expires_at`, `expiry_warning_days`, `retention_years` to EmployeeDocument
-    - Automation: N days before expiry, send notification "Document expires on [date]"
-    - After expiry: flag as expired, still accessible but marked
-    - After retention period: delete per policy
-    - Compliance: document retention audit trail
+    -   Add `expires_at`, `expiry_warning_days`, `retention_years` to EmployeeDocument
+    -   Automation: N days before expiry, send notification "Document expires on [date]"
+    -   After expiry: flag as expired, still accessible but marked
+    -   After retention period: delete per policy
+    -   Compliance: document retention audit trail
 
-- [ ] Document access log:
+-   [ ] Document access log:
 
-    - Log every document download/view: user, document, timestamp, IP
-    - Access logs cannot be deleted (append-only); retained per policy
-    - Export access log for compliance
+    -   Log every document download/view: user, document, timestamp, IP
+    -   Access logs cannot be deleted (append-only); retained per policy
+    -   Export access log for compliance
 
-- [ ] Document approval (optional feature for sensitive docs):
-    - Add `approved_by`, `approved_at` to EmployeeDocument
-    - Require HR approval before employee can upload sensitive documents (passport, visa, etc.)
-    - Approval workflow: employee uploads → HR reviews → approve/reject with comment
+-   [ ] Document approval (optional feature for sensitive docs):
+    -   Add `approved_by`, `approved_at` to EmployeeDocument
+    -   Require HR approval before employee can upload sensitive documents (passport, visa, etc.)
+    -   Approval workflow: employee uploads → HR reviews → approve/reject with comment
 
 #### Frontend
 
-- [ ] Document management UI (already exists; enhance):
+-   [ ] Document management UI (already exists; enhance):
 
-    - Show version history: list of previous versions
-    - Download any version
-    - Document expiry status: show "Expires in 30 days" badge
-    - Add renewal reminder
-    - Delete version option (only if retention allows)
+    -   Show version history: list of previous versions
+    -   Download any version
+    -   Document expiry status: show "Expires in 30 days" badge
+    -   Add renewal reminder
+    -   Delete version option (only if retention allows)
 
-- [ ] Expiry dashboard:
-    - HR module: show documents expiring soon (30, 60, 90 days)
-    - Export list for bulk renewal/follow-up
-    - Set renewal date and send to employee
+-   [ ] Expiry dashboard:
+    -   HR module: show documents expiring soon (30, 60, 90 days)
+    -   Export list for bulk renewal/follow-up
+    -   Set renewal date and send to employee
 
 **Acceptance criteria:**
 
-- Documents have version history
-- Expiry and retention policies are enforced
-- Access logs are complete and immutable
-- Notifications for expiring documents work
+-   Documents have version history
+-   Expiry and retention policies are enforced
+-   Access logs are complete and immutable
+-   Notifications for expiring documents work
 
 ---
 
@@ -1159,51 +1173,51 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Custom field definition:
+-   [ ] Custom field definition:
 
-    - Add `CustomEmployeeField` model: organization_id, name, field_type (text, textarea, select, date, number, checkbox), required, position, options (for select)
-    - Support organization-specific custom fields
-    - Tenant-scoped: each org has independent custom field schema
+    -   Add `CustomEmployeeField` model: organization_id, name, field_type (text, textarea, select, date, number, checkbox), required, position, options (for select)
+    -   Support organization-specific custom fields
+    -   Tenant-scoped: each org has independent custom field schema
 
-- [ ] Custom field values:
-    - Add `EmployeeCustomFieldValue` table: employee_id, custom_field_id, value
-    - Store value as JSON (supports different types)
-    - Validate by field_type and required flag
+-   [ ] Custom field values:
+    -   Add `EmployeeCustomFieldValue` table: employee_id, custom_field_id, value
+    -   Store value as JSON (supports different types)
+    -   Validate by field_type and required flag
 
 #### Frontend
 
-- [ ] Custom field admin:
+-   [ ] Custom field admin:
 
-    - Settings → Custom Employee Fields
-    - Add field: name, type, required, options
-    - Drag to reorder
-    - Edit, delete, archive fields
+    -   Settings → Custom Employee Fields
+    -   Add field: name, type, required, options
+    -   Drag to reorder
+    -   Edit, delete, archive fields
 
-- [ ] Employee form:
-    - Display custom fields in form after standard fields
-    - Validation per field_type
-    - Save custom field values alongside standard employee data
+-   [ ] Employee form:
+    -   Display custom fields in form after standard fields
+    -   Validation per field_type
+    -   Save custom field values alongside standard employee data
 
 **Acceptance criteria:**
 
-- Custom fields can be defined per organization
-- Employee form includes custom fields
-- Custom field data is validated and stored correctly
+-   Custom fields can be defined per organization
+-   Employee form includes custom fields
+-   Custom field data is validated and stored correctly
 
 ---
 
 ### Phase 3 Acceptance Criteria
 
-- [ ] Organizational structure (manager hierarchy) is implemented
-- [ ] Onboarding and offboarding checklists work end-to-end
-- [ ] Probation and regularization status is tracked
-- [ ] Approval workflow builder allows configurable multi-step workflows
-- [ ] Delegation and escalation (SLA) are functional
-- [ ] Approval notifications are timely
-- [ ] Document versioning and lifecycle management work
-- [ ] Document expiry reminders and retention policies are enforced
-- [ ] Custom employee fields can be defined and used
-- [ ] Feature tests cover happy path and edge cases (rejection, escalation, delegation)
+-   [ ] Organizational structure (manager hierarchy) is implemented
+-   [ ] Onboarding and offboarding checklists work end-to-end
+-   [ ] Probation and regularization status is tracked
+-   [ ] Approval workflow builder allows configurable multi-step workflows
+-   [ ] Delegation and escalation (SLA) are functional
+-   [ ] Approval notifications are timely
+-   [ ] Document versioning and lifecycle management work
+-   [ ] Document expiry reminders and retention policies are enforced
+-   [ ] Custom employee fields can be defined and used
+-   [ ] Feature tests cover happy path and edge cases (rejection, escalation, delegation)
 
 ---
 
@@ -1223,47 +1237,47 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Payroll period locking:
+-   [ ] Payroll period locking:
 
-    - Add `locked_at`, `locked_by` to PayrollPeriod
-    - Once locked, period cannot be edited; only adjustments allowed in new adjustment run
-    - Transition: draft → generating → generated → approving → approved → locked → paid
-    - Lock automatically after payment confirmation (or manual action by finance)
+    -   Add `locked_at`, `locked_by` to PayrollPeriod
+    -   Once locked, period cannot be edited; only adjustments allowed in new adjustment run
+    -   Transition: draft → generating → generated → approving → approved → locked → paid
+    -   Lock automatically after payment confirmation (or manual action by finance)
 
-- [ ] Payroll period snapshots:
+-   [ ] Payroll period snapshots:
 
-    - On approval, create immutable snapshot of all PayrollItems for that period
-    - Store snapshot as JSON in `calculation_snapshot` column
-    - Snapshot includes: employee, gross, deductions, net, tax, all detail
-    - Recalculation (after lock) creates new period or adjustment run, does not modify original
+    -   On approval, create immutable snapshot of all PayrollItems for that period
+    -   Store snapshot as JSON in `calculation_snapshot` column
+    -   Snapshot includes: employee, gross, deductions, net, tax, all detail
+    -   Recalculation (after lock) creates new period or adjustment run, does not modify original
 
-- [ ] Adjustment runs:
-    - Add `PayrollAdjustmentRun` model: period_id, adjustment_type (bonus, deduction, correction), created_by, approved_by, status
-    - Adjustments are separate from regular payroll items
-    - Support retroactive pay: run for past period without affecting original calculation
-    - Audit trail: original amount → adjustment → new total
+-   [ ] Adjustment runs:
+    -   Add `PayrollAdjustmentRun` model: period_id, adjustment_type (bonus, deduction, correction), created_by, approved_by, status
+    -   Adjustments are separate from regular payroll items
+    -   Support retroactive pay: run for past period without affecting original calculation
+    -   Audit trail: original amount → adjustment → new total
 
 #### Frontend
 
-- [ ] Payroll period detail:
+-   [ ] Payroll period detail:
 
-    - Show lock status: "Draft", "Locked", "Paid"
-    - Lock button (finance role only): "Lock this period (cannot be edited)"
-    - Confirmation dialog: "This period will be locked. You will not be able to edit it."
-    - Show locked_at and locked_by
+    -   Show lock status: "Draft", "Locked", "Paid"
+    -   Lock button (finance role only): "Lock this period (cannot be edited)"
+    -   Confirmation dialog: "This period will be locked. You will not be able to edit it."
+    -   Show locked_at and locked_by
 
-- [ ] Adjustment run UI:
-    - New adjustment: select period, type, affected employees, amount/reason
-    - Show original calculation vs. adjusted total
-    - Submit for approval
-    - Paid separately or included in next payroll
+-   [ ] Adjustment run UI:
+    -   New adjustment: select period, type, affected employees, amount/reason
+    -   Show original calculation vs. adjusted total
+    -   Submit for approval
+    -   Paid separately or included in next payroll
 
 **Acceptance criteria:**
 
-- Payroll periods can be locked
-- Locked periods cannot be edited
-- Adjustment runs are separate and auditable
-- Snapshots preserve original calculations
+-   Payroll periods can be locked
+-   Locked periods cannot be edited
+-   Adjustment runs are separate and auditable
+-   Snapshots preserve original calculations
 
 ---
 
@@ -1277,45 +1291,45 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Statutory rule model:
+-   [ ] Statutory rule model:
 
-    - Add `StatutoryRule` model: organization_id, country_code, rule_type (income_tax_bracket, sse_rate, philhealth_rate, pag_ibig_rate), effective_date, values (JSON)
-    - Store versions: e.g., BIR 2023 rates, BIR 2024 rates
-    - Payroll calculation queries the active rule for each period's date
+    -   Add `StatutoryRule` model: organization_id, country_code, rule_type (income_tax_bracket, sse_rate, philhealth_rate, pag_ibig_rate), effective_date, values (JSON)
+    -   Store versions: e.g., BIR 2023 rates, BIR 2024 rates
+    -   Payroll calculation queries the active rule for each period's date
 
-- [ ] Rule management:
+-   [ ] Rule management:
 
-    - Admin interface to add/update rules by effective date
-    - Rules are immutable once created (append-only history)
-    - Support bulk import from PDF/spreadsheet
-    - Version tagging: "BIR 2023", "SSS 2024-Q1", etc.
+    -   Admin interface to add/update rules by effective date
+    -   Rules are immutable once created (append-only history)
+    -   Support bulk import from PDF/spreadsheet
+    -   Version tagging: "BIR 2023", "SSS 2024-Q1", etc.
 
-- [ ] Payroll calculation integration:
-    - Payroll job queries active rule set for payroll_start_date
-    - Calculate tax, SSS, PhilHealth, Pag-IBIG using rules[payroll_start_date]
-    - Audit trail: which rule version was used for each calculation
+-   [ ] Payroll calculation integration:
+    -   Payroll job queries active rule set for payroll_start_date
+    -   Calculate tax, SSS, PhilHealth, Pag-IBIG using rules[payroll_start_date]
+    -   Audit trail: which rule version was used for each calculation
 
 #### Frontend
 
-- [ ] Settings → Payroll → Statutory Rules:
-    - List rules by type and effective date
-    - Upload new rule: file (JSON/CSV), effective date, version name
-    - Validate: check format, consistency, no gaps
-    - Preview: show impact on sample payroll
+-   [ ] Settings → Payroll → Statutory Rules:
+    -   List rules by type and effective date
+    -   Upload new rule: file (JSON/CSV), effective date, version name
+    -   Validate: check format, consistency, no gaps
+    -   Preview: show impact on sample payroll
 
 **Acceptance criteria:**
 
-- Statutory rules are versioned by effective date
-- Payroll calculations use correct rule version for each period
-- Rules can be imported and validated
-- Audit trail shows which rule version was applied
+-   Statutory rules are versioned by effective date
+-   Payroll calculations use correct rule version for each period
+-   Rules can be imported and validated
+-   Audit trail shows which rule version was applied
 
 **Implementation notes:**
 
-- Reference BIR official brackets: https://bir-cdn.bir.gov.ph/
-- Test against known payroll scenarios with 2023 and 2024 rates
-- Document rule schema (columns, calculations)
-- Provide test fixtures for regression testing
+-   Reference BIR official brackets: https://bir-cdn.bir.gov.ph/
+-   Test against known payroll scenarios with 2023 and 2024 rates
+-   Document rule schema (columns, calculations)
+-   Provide test fixtures for regression testing
 
 ---
 
@@ -1329,39 +1343,39 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Payroll variance report:
+-   [ ] Payroll variance report:
 
-    - Compare period-to-period or month-to-month: total payroll, tax, deductions
-    - Flag high variance (>5% or absolute threshold)
-    - Drill down: by employee, by deduction type, by department
-    - Export CSV
+    -   Compare period-to-period or month-to-month: total payroll, tax, deductions
+    -   Flag high variance (>5% or absolute threshold)
+    -   Drill down: by employee, by deduction type, by department
+    -   Export CSV
 
-- [ ] Reconciliation checklist:
+-   [ ] Reconciliation checklist:
 
-    - Add `PayrollReconciliation` model: period_id, reconciled_by, reconciled_at, notes, variance_status (ok, minor, major)
-    - Finance officer checks: payroll total matches bank export, headcount matches, outliers explained
-    - Sign-off: once reconciled, period is confirmed and data is locked further (for audit)
+    -   Add `PayrollReconciliation` model: period_id, reconciled_by, reconciled_at, notes, variance_status (ok, minor, major)
+    -   Finance officer checks: payroll total matches bank export, headcount matches, outliers explained
+    -   Sign-off: once reconciled, period is confirmed and data is locked further (for audit)
 
-- [ ] Bank export matching:
-    - Import bank file (CSV with payment records): employee ID/name, amount, date
-    - Match to approved payroll: is every employee paid the correct amount on the correct date?
-    - Report unmatched records (payments to non-employees, mismatches)
-    - Audit trail: import date, imported by, matches
+-   [ ] Bank export matching:
+    -   Import bank file (CSV with payment records): employee ID/name, amount, date
+    -   Match to approved payroll: is every employee paid the correct amount on the correct date?
+    -   Report unmatched records (payments to non-employees, mismatches)
+    -   Audit trail: import date, imported by, matches
 
 #### Frontend
 
-- [ ] Payroll → Reconciliation:
-    - List periods with reconciliation status
-    - Detail: variance report, notes, sign-off button
-    - Import bank file: upload CSV, preview matches, confirm
-    - Export reconciliation report
+-   [ ] Payroll → Reconciliation:
+    -   List periods with reconciliation status
+    -   Detail: variance report, notes, sign-off button
+    -   Import bank file: upload CSV, preview matches, confirm
+    -   Export reconciliation report
 
 **Acceptance criteria:**
 
-- Variance reports can be generated
-- Payroll can be reconciled and signed off
-- Bank file matching works
-- Reconciliation audit trail is complete
+-   Variance reports can be generated
+-   Payroll can be reconciled and signed off
+-   Bank file matching works
+-   Reconciliation audit trail is complete
 
 ---
 
@@ -1375,51 +1389,51 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] BIR reporting:
+-   [ ] BIR reporting:
 
-    - Generate BIR 2316 (Annual Withholding Tax Report per employee): per-employee tax summary for calendar year
-    - Generate Alphalist (BIR Form): all employees, gross, withholding tax, summary
-    - Support BIR XML or CSV export format
-    - Aggregate by organization for bulk filing
+    -   Generate BIR 2316 (Annual Withholding Tax Report per employee): per-employee tax summary for calendar year
+    -   Generate Alphalist (BIR Form): all employees, gross, withholding tax, summary
+    -   Support BIR XML or CSV export format
+    -   Aggregate by organization for bulk filing
 
-- [ ] SSS reporting:
+-   [ ] SSS reporting:
 
-    - Generate SSS contribution file: employee ID, name, salary, contributions
-    - Generate remittance report: monthly total contributions to submit
-    - Track remittance date and reference number
+    -   Generate SSS contribution file: employee ID, name, salary, contributions
+    -   Generate remittance report: monthly total contributions to submit
+    -   Track remittance date and reference number
 
-- [ ] PhilHealth and Pag-IBIG:
+-   [ ] PhilHealth and Pag-IBIG:
 
-    - Generate remittance file and report per insurer
-    - Track remittance status and confirmation
+    -   Generate remittance file and report per insurer
+    -   Track remittance status and confirmation
 
-- [ ] Report generation and archival:
-    - `POST /payroll/statutory-reports/generate` with year/month range
-    - Async job generates reports, stores as files, sends download link
-    - Archive reports: cannot be regenerated (immutable); re-download from archive
-    - Audit log: who generated, when, what parameters
+-   [ ] Report generation and archival:
+    -   `POST /payroll/statutory-reports/generate` with year/month range
+    -   Async job generates reports, stores as files, sends download link
+    -   Archive reports: cannot be regenerated (immutable); re-download from archive
+    -   Audit log: who generated, when, what parameters
 
 #### Frontend
 
-- [ ] Settings → Compliance → Statutory Reports:
-    - Generate report: select year, report type (BIR, SSS, PhilHealth, Pag-IBIG)
-    - Download generated reports
-    - View archive of past reports
-    - Set remittance dates and track status
+-   [ ] Settings → Compliance → Statutory Reports:
+    -   Generate report: select year, report type (BIR, SSS, PhilHealth, Pag-IBIG)
+    -   Download generated reports
+    -   View archive of past reports
+    -   Set remittance dates and track status
 
 **Acceptance criteria:**
 
-- BIR, SSS, PhilHealth, Pag-IBIG reports can be generated
-- Reports are formatted per official specs
-- Report generation is auditable
-- Archive is immutable
+-   BIR, SSS, PhilHealth, Pag-IBIG reports can be generated
+-   Reports are formatted per official specs
+-   Report generation is auditable
+-   Archive is immutable
 
 **Implementation notes:**
 
-- Reference official BIR forms: https://bir.gov.ph/
-- Test with sample employee data and known calculations
-- Document validation rules (all employees included, no duplicates, correct formulas)
-- Consider third-party compliance service (e.g., BIR e-filing) for future integration
+-   Reference official BIR forms: https://bir.gov.ph/
+-   Test with sample employee data and known calculations
+-   Document validation rules (all employees included, no duplicates, correct formulas)
+-   Consider third-party compliance service (e.g., BIR e-filing) for future integration
 
 ---
 
@@ -1433,41 +1447,41 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Payslip generation:
+-   [ ] Payslip generation:
 
-    - On payroll approval/payment, generate Payslip PDF for each employee
-    - Include: period dates, gross, earnings, deductions, net, tax, YTD totals
-    - Store payslip file: `storage/payslips/{organization_id}/{year}/{month}/{employee_id}.pdf`
-    - Track payslip access: who viewed, when
+    -   On payroll approval/payment, generate Payslip PDF for each employee
+    -   Include: period dates, gross, earnings, deductions, net, tax, YTD totals
+    -   Store payslip file: `storage/payslips/{organization_id}/{year}/{month}/{employee_id}.pdf`
+    -   Track payslip access: who viewed, when
 
-- [ ] Payslip retrieval:
-    - `GET /my/payslips?year=2024&month=08` → list payslips for current user
-    - `GET /payroll/payslips/{payslip_id}/download` → download PDF
-    - Only employee, their manager, and finance can access
+-   [ ] Payslip retrieval:
+    -   `GET /my/payslips?year=2024&month=08` → list payslips for current user
+    -   `GET /payroll/payslips/{payslip_id}/download` → download PDF
+    -   Only employee, their manager, and finance can access
 
 #### Frontend
 
-- [ ] Employee payroll portal:
+-   [ ] Employee payroll portal:
 
-    - New section: "My Payslips"
-    - Table: date, period, net pay, download button
-    - Filter by year/month
-    - Download PDF
+    -   New section: "My Payslips"
+    -   Table: date, period, net pay, download button
+    -   Filter by year/month
+    -   Download PDF
 
-- [ ] Payslip detail (PDF):
-    - Company header (logo, name, address)
-    - Period dates and pay date
-    - Earnings: salary, overtime, bonuses, etc.
-    - Deductions: tax, SSS, PhilHealth, Pag-IBIG, loans, etc.
-    - Summary: gross, total deductions, net
-    - YTD totals and tax summary
+-   [ ] Payslip detail (PDF):
+    -   Company header (logo, name, address)
+    -   Period dates and pay date
+    -   Earnings: salary, overtime, bonuses, etc.
+    -   Deductions: tax, SSS, PhilHealth, Pag-IBIG, loans, etc.
+    -   Summary: gross, total deductions, net
+    -   YTD totals and tax summary
 
 **Acceptance criteria:**
 
-- Payslips are generated after payroll approval
-- Employees can view and download payslips
-- Access is logged and restricted to authorized users
-- PDF format is clear and professional
+-   Payslips are generated after payroll approval
+-   Employees can view and download payslips
+-   Access is logged and restricted to authorized users
+-   PDF format is clear and professional
 
 ---
 
@@ -1481,52 +1495,52 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Segregation of duties:
+-   [ ] Segregation of duties:
 
-    - Define roles: Payroll Processor (creates run), Payroll Reviewer (verifies), Payroll Approver (approves payment), Payroll Payer (executes payment)
-    - Require different users for each role
-    - Enforce: processor ≠ reviewer ≠ approver ≠ payer
+    -   Define roles: Payroll Processor (creates run), Payroll Reviewer (verifies), Payroll Approver (approves payment), Payroll Payer (executes payment)
+    -   Require different users for each role
+    -   Enforce: processor ≠ reviewer ≠ approver ≠ payer
 
-- [ ] Payroll workflow:
+-   [ ] Payroll workflow:
 
-    - Draft: processor creates period, generates items
-    - Pending review: processor marks "ready for review"
-    - Reviewed: reviewer checks calculations, reconciliation; approves or rejects with comment
-    - Approved: approver final sign-off; triggers payment (or manual payment later)
-    - Paid: payer confirms payment sent; marks as paid with reference number
+    -   Draft: processor creates period, generates items
+    -   Pending review: processor marks "ready for review"
+    -   Reviewed: reviewer checks calculations, reconciliation; approves or rejects with comment
+    -   Approved: approver final sign-off; triggers payment (or manual payment later)
+    -   Paid: payer confirms payment sent; marks as paid with reference number
 
-- [ ] Audit trail:
-    - Log each transition: user, timestamp, action (generate, submit for review, review approved, approve, pay)
-    - Preserve comments and rejections
+-   [ ] Audit trail:
+    -   Log each transition: user, timestamp, action (generate, submit for review, review approved, approve, pay)
+    -   Preserve comments and rejections
 
 #### Frontend
 
-- [ ] Payroll workflow UI:
-    - Processor: "Submit for review" button
-    - Reviewer: "Review results" page with variance checks, sign-off button
-    - Approver: "Approve payroll" button
-    - Payer: "Mark as paid" with reference number
+-   [ ] Payroll workflow UI:
+    -   Processor: "Submit for review" button
+    -   Reviewer: "Review results" page with variance checks, sign-off button
+    -   Approver: "Approve payroll" button
+    -   Payer: "Mark as paid" with reference number
 
 **Acceptance criteria:**
 
-- Roles are segregated
-- Workflow transitions are enforced
-- Audit trail shows each step and actor
+-   Roles are segregated
+-   Workflow transitions are enforced
+-   Audit trail shows each step and actor
 
 ---
 
 ### Phase 4 Acceptance Criteria
 
-- [ ] Payroll periods can be locked; locked periods are immutable
-- [ ] Adjustment runs are separate and auditable
-- [ ] Statutory rules are versioned by effective date
-- [ ] Payroll calculations use correct rule version
-- [ ] Variance reports can be generated
-- [ ] Reconciliation is supported; bank matching works
-- [ ] BIR, SSS, PhilHealth, Pag-IBIG reports can be generated
-- [ ] Payslips are generated and accessible to employees
-- [ ] Maker-checker workflow is enforced
-- [ ] Audit trail is complete for all payroll changes
+-   [ ] Payroll periods can be locked; locked periods are immutable
+-   [ ] Adjustment runs are separate and auditable
+-   [ ] Statutory rules are versioned by effective date
+-   [ ] Payroll calculations use correct rule version
+-   [ ] Variance reports can be generated
+-   [ ] Reconciliation is supported; bank matching works
+-   [ ] BIR, SSS, PhilHealth, Pag-IBIG reports can be generated
+-   [ ] Payslips are generated and accessible to employees
+-   [ ] Maker-checker workflow is enforced
+-   [ ] Audit trail is complete for all payroll changes
 
 ---
 
@@ -1546,48 +1560,48 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Saved reports:
+-   [ ] Saved reports:
 
-    - Add `SavedReport` model: organization_id, name, report_type, filters (JSON), created_by, next_delivery_at, delivery_schedule
-    - Support filters: date range, department, employee status, etc.
-    - Allow editing filters and re-running
+    -   Add `SavedReport` model: organization_id, name, report_type, filters (JSON), created_by, next_delivery_at, delivery_schedule
+    -   Support filters: date range, department, employee status, etc.
+    -   Allow editing filters and re-running
 
-- [ ] Scheduled delivery:
+-   [ ] Scheduled delivery:
 
-    - Delivery schedule: daily, weekly (day of week), monthly (day of month)
-    - On schedule, generate report and email to recipients
-    - Track delivery history and failures
+    -   Delivery schedule: daily, weekly (day of week), monthly (day of month)
+    -   On schedule, generate report and email to recipients
+    -   Track delivery history and failures
 
-- [ ] Report types (expand existing):
-    - Headcount report: total, by department, by status, trends
-    - Attendance report: present/absent/late, by employee/department
-    - Leave usage: used/remaining by type, by employee, by department
-    - Payroll report: total payroll, tax, by department
-    - Compliance report: auditable actions, approval SLAs, exceptions
+-   [ ] Report types (expand existing):
+    -   Headcount report: total, by department, by status, trends
+    -   Attendance report: present/absent/late, by employee/department
+    -   Leave usage: used/remaining by type, by employee, by department
+    -   Payroll report: total payroll, tax, by department
+    -   Compliance report: auditable actions, approval SLAs, exceptions
 
 #### Frontend
 
-- [ ] Reports → Saved Reports:
+-   [ ] Reports → Saved Reports:
 
-    - List saved reports
-    - Create report: name, type, filters, delivery schedule
-    - Edit filters and re-run
-    - Download or view in browser
-    - Email delivery: add recipients
-    - Delete report
+    -   List saved reports
+    -   Create report: name, type, filters, delivery schedule
+    -   Edit filters and re-run
+    -   Download or view in browser
+    -   Email delivery: add recipients
+    -   Delete report
 
-- [ ] Role-based dashboards:
-    - CEO: headcount, payroll trend, attrition, revenue impact
-    - HR Manager: pending approvals, expiring documents, exceptions, headcount by dept
-    - Department Manager: team members, attendance, leave usage, performance
-    - Finance: payroll variance, statutory compliance, bank reconciliation status
-    - Employee: my payslips, my leave balance, my attendance record, my tasks
+-   [ ] Role-based dashboards:
+    -   CEO: headcount, payroll trend, attrition, revenue impact
+    -   HR Manager: pending approvals, expiring documents, exceptions, headcount by dept
+    -   Department Manager: team members, attendance, leave usage, performance
+    -   Finance: payroll variance, statutory compliance, bank reconciliation status
+    -   Employee: my payslips, my leave balance, my attendance record, my tasks
 
 **Acceptance criteria:**
 
-- Reports can be saved and scheduled
-- Delivery works reliably
-- Dashboards are role-specific and relevant
+-   Reports can be saved and scheduled
+-   Delivery works reliably
+-   Dashboards are role-specific and relevant
 
 ---
 
@@ -1601,31 +1615,31 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] API key management:
+-   [ ] API key management:
 
-    - Add `ApiKey` model: organization_id, name, key (hashed), secret, scopes (space-separated), last_used_at, created_at
-    - Generate key/secret pair; allow rotating secret
-    - Scopes: employees:read, employees:write, payroll:read, attendance:read, leave:read, etc.
-    - Rate limit by key: 1000 requests/hour per scope
+    -   Add `ApiKey` model: organization_id, name, key (hashed), secret, scopes (space-separated), last_used_at, created_at
+    -   Generate key/secret pair; allow rotating secret
+    -   Scopes: employees:read, employees:write, payroll:read, attendance:read, leave:read, etc.
+    -   Rate limit by key: 1000 requests/hour per scope
 
-- [ ] Webhook subscriptions:
-    - Add `WebhookSubscription` model: organization_id, event_type (employee.created, leave_request.approved, payroll.generated), url, active, secret
-    - Support events: employee lifecycle, leave/overtime approvals, payroll state changes, attendance corrections
-    - Retry on failure: exponential backoff, max 5 retries
-    - Signature verification: HMAC-SHA256 of event payload + secret
+-   [ ] Webhook subscriptions:
+    -   Add `WebhookSubscription` model: organization_id, event_type (employee.created, leave_request.approved, payroll.generated), url, active, secret
+    -   Support events: employee lifecycle, leave/overtime approvals, payroll state changes, attendance corrections
+    -   Retry on failure: exponential backoff, max 5 retries
+    -   Signature verification: HMAC-SHA256 of event payload + secret
 
 #### Frontend
 
-- [ ] Settings → Integrations:
-    - API keys section: list, create new, rotate secret, delete
-    - Webhooks section: list, create new (event + URL), test webhook (send test payload), delete
-    - Show recent webhook deliveries and failures
+-   [ ] Settings → Integrations:
+    -   API keys section: list, create new, rotate secret, delete
+    -   Webhooks section: list, create new (event + URL), test webhook (send test payload), delete
+    -   Show recent webhook deliveries and failures
 
 **Acceptance criteria:**
 
-- API keys can be created and rotated
-- Webhooks are delivered with correct signature
-- Retries work and are logged
+-   API keys can be created and rotated
+-   Webhooks are delivered with correct signature
+-   Retries work and are logged
 
 ---
 
@@ -1639,33 +1653,33 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] SAML integration:
+-   [ ] SAML integration:
 
-    - Support SAML 2.0 single sign-on
-    - Allow tenant to upload IdP certificate and configure SSO endpoint
-    - On SAML assertion, create/update user in tenant
-    - Map SAML attributes to user fields (email, name, department)
-    - Login flow: redirect to IdP, receive assertion, auto-login to tenant
+    -   Support SAML 2.0 single sign-on
+    -   Allow tenant to upload IdP certificate and configure SSO endpoint
+    -   On SAML assertion, create/update user in tenant
+    -   Map SAML attributes to user fields (email, name, department)
+    -   Login flow: redirect to IdP, receive assertion, auto-login to tenant
 
-- [ ] SCIM provisioning:
-    - Implement SCIM 2.0 API (users endpoint)
-    - Allow IdP (e.g., Azure AD, Okta) to provision/deprovision users via SCIM
-    - Endpoints: `/scim/v2/Users` (list, create, update, delete)
-    - Validate SCIM bearer token (stored in `ScimToken`)
+-   [ ] SCIM provisioning:
+    -   Implement SCIM 2.0 API (users endpoint)
+    -   Allow IdP (e.g., Azure AD, Okta) to provision/deprovision users via SCIM
+    -   Endpoints: `/scim/v2/Users` (list, create, update, delete)
+    -   Validate SCIM bearer token (stored in `ScimToken`)
 
 #### Frontend
 
-- [ ] Settings → Single Sign-On:
-    - SSO configuration: method (OIDC, SAML), enable/disable
-    - For SAML: upload IdP certificate, enter SSO URL, configure attribute mapping
-    - For SCIM: generate SCIM token (display once), show SCIM endpoint URL
-    - Test button: verify SAML/SCIM connectivity
+-   [ ] Settings → Single Sign-On:
+    -   SSO configuration: method (OIDC, SAML), enable/disable
+    -   For SAML: upload IdP certificate, enter SSO URL, configure attribute mapping
+    -   For SCIM: generate SCIM token (display once), show SCIM endpoint URL
+    -   Test button: verify SAML/SCIM connectivity
 
 **Acceptance criteria:**
 
-- SAML authentication works end-to-end
-- SCIM user provisioning works
-- Both support attribute mapping and user deactivation
+-   SAML authentication works end-to-end
+-   SCIM user provisioning works
+-   Both support attribute mapping and user deactivation
 
 ---
 
@@ -1679,37 +1693,37 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Performance goals:
+-   [ ] Performance goals:
 
-    - Add `PerformanceGoal` model: employee_id, goal_name, description, start_date, end_date, status (draft, active, completed, archived)
-    - Link goal to role/competency framework
-    - Support SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
+    -   Add `PerformanceGoal` model: employee_id, goal_name, description, start_date, end_date, status (draft, active, completed, archived)
+    -   Link goal to role/competency framework
+    -   Support SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
 
-- [ ] Performance reviews:
-    - Add `PerformanceReview` model: employee_id, reviewer_id, period, rating (1-5), feedback, status (draft, submitted, finalized)
-    - Self-review and manager review workflow
-    - Support peer reviews (multi-rater feedback)
-    - Review schedule: annual, mid-year, quarterly
+-   [ ] Performance reviews:
+    -   Add `PerformanceReview` model: employee_id, reviewer_id, period, rating (1-5), feedback, status (draft, submitted, finalized)
+    -   Self-review and manager review workflow
+    -   Support peer reviews (multi-rater feedback)
+    -   Review schedule: annual, mid-year, quarterly
 
 #### Frontend
 
-- [ ] My Goals (employee):
+-   [ ] My Goals (employee):
 
-    - List active goals
-    - Detail: description, progress, comments
-    - Submit self-assessment
+    -   List active goals
+    -   Detail: description, progress, comments
+    -   Submit self-assessment
 
-- [ ] Performance Reviews (manager):
-    - List direct reports due for review
-    - Review form: rating, feedback, goal alignment
-    - Submit and finalize review
-    - View past reviews
+-   [ ] Performance Reviews (manager):
+    -   List direct reports due for review
+    -   Review form: rating, feedback, goal alignment
+    -   Submit and finalize review
+    -   View past reviews
 
 **Acceptance criteria:**
 
-- Goals can be set and tracked
-- Reviews can be submitted and stored
-- Review workflow is enforced
+-   Goals can be set and tracked
+-   Reviews can be submitted and stored
+-   Review workflow is enforced
 
 ---
 
@@ -1723,33 +1737,33 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Training catalog:
+-   [ ] Training catalog:
 
-    - Add `Training` model: organization_id, name, description, category, required_for_roles, expiry_period_months
-    - Support mandatory vs. optional
+    -   Add `Training` model: organization_id, name, description, category, required_for_roles, expiry_period_months
+    -   Support mandatory vs. optional
 
-- [ ] Training records:
-    - Add `EmployeeTraining` model: employee_id, training_id, completion_date, certificate_url, expires_at
-    - Track compliance: completed, expiry coming soon, expired
+-   [ ] Training records:
+    -   Add `EmployeeTraining` model: employee_id, training_id, completion_date, certificate_url, expires_at
+    -   Track compliance: completed, expiry coming soon, expired
 
 #### Frontend
 
-- [ ] My Training (employee):
+-   [ ] My Training (employee):
 
-    - List required and completed training
-    - Upload certificate
-    - View expiry dates
+    -   List required and completed training
+    -   Upload certificate
+    -   View expiry dates
 
-- [ ] HR → Training Management:
-    - Training catalog management
-    - Employee compliance report: who has completed, who is due, who is overdue
-    - Send reminders for expiring certifications
+-   [ ] HR → Training Management:
+    -   Training catalog management
+    -   Employee compliance report: who has completed, who is due, who is overdue
+    -   Send reminders for expiring certifications
 
 **Acceptance criteria:**
 
-- Training can be assigned to roles
-- Employee completion and expiry are tracked
-- Compliance reports work
+-   Training can be assigned to roles
+-   Employee completion and expiry are tracked
+-   Compliance reports work
 
 ---
 
@@ -1763,41 +1777,41 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Benefits enrollment:
+-   [ ] Benefits enrollment:
 
-    - Add `Benefit` model: organization_id, name (health insurance, 401k, gym membership), type, monthly_cost, coverage
-    - Add `EmployeeBenefit` model: employee_id, benefit_id, enrolled_at, start_date, deduction_frequency (monthly, per-payroll)
-    - On enrollment, start payroll deduction
+    -   Add `Benefit` model: organization_id, name (health insurance, 401k, gym membership), type, monthly_cost, coverage
+    -   Add `EmployeeBenefit` model: employee_id, benefit_id, enrolled_at, start_date, deduction_frequency (monthly, per-payroll)
+    -   On enrollment, start payroll deduction
 
-- [x] Expense reimbursement:
-    - Add `ExpenseRequest` model: employee_id, category, amount, description, receipt_url, status (draft, pending, approved, rejected, reimbursed)
-    - Approval workflow: employee submits → manager approves → finance pays
-    - Track payment date and reference
+-   [x] Expense reimbursement:
+    -   Add `ExpenseRequest` model: employee_id, category, amount, description, receipt_url, status (draft, pending, approved, rejected, reimbursed)
+    -   Approval workflow: employee submits → manager approves → finance pays
+    -   Track payment date and reference
 
 #### Frontend
 
-- [ ] My Benefits (employee):
+-   [ ] My Benefits (employee):
 
-    - List available benefits
-    - Enroll/unenroll
-    - View deduction schedule
+    -   List available benefits
+    -   Enroll/unenroll
+    -   View deduction schedule
 
-- [ ] My Expenses (employee):
+-   [ ] My Expenses (employee):
 
-    - Submit expense: category, amount, receipt upload
-    - View status and reimbursement date
-    - View past reimbursements
+    -   Submit expense: category, amount, receipt upload
+    -   View status and reimbursement date
+    -   View past reimbursements
 
-- [ ] HR → Benefits Management:
-    - Benefit catalog
-    - Employee enrollment report
-    - Cost tracking
+-   [ ] HR → Benefits Management:
+    -   Benefit catalog
+    -   Employee enrollment report
+    -   Cost tracking
 
 **Acceptance criteria:**
 
-- [ ] Benefits can be enrolled and deducted from payroll
-- [x] Expenses can be submitted, approved/rejected, and reimbursed with an audit trail
-- [x] Reimbursement is tracked with date and payment reference
+-   [ ] Benefits can be enrolled and deducted from payroll
+-   [x] Expenses can be submitted, approved/rejected, and reimbursed with an audit trail
+-   [x] Reimbursement is tracked with date and payment reference
 
 ---
 
@@ -1811,46 +1825,46 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 #### Backend
 
-- [ ] Integration framework:
+-   [ ] Integration framework:
 
-    - Design integration interface: event → external service → response
-    - Support popular services (Slack, Teams, Google Workspace, Microsoft 365, QuickBooks, Xero)
-    - Webhook → Slack: new approval → "Approval needed for [entity]" in Slack channel
-    - Webhook → Teams: same for Teams
-    - Calendar sync: payroll dates, company holidays to Google/Microsoft calendars
+    -   Design integration interface: event → external service → response
+    -   Support popular services (Slack, Teams, Google Workspace, Microsoft 365, QuickBooks, Xero)
+    -   Webhook → Slack: new approval → "Approval needed for [entity]" in Slack channel
+    -   Webhook → Teams: same for Teams
+    -   Calendar sync: payroll dates, company holidays to Google/Microsoft calendars
 
-- [ ] Configuration:
-    - Settings → Integrations: show available integrations
-    - Per integration: configuration form (API keys, channel, mapping)
-    - Test connection button
-    - Disable/remove integration
+-   [ ] Configuration:
+    -   Settings → Integrations: show available integrations
+    -   Per integration: configuration form (API keys, channel, mapping)
+    -   Test connection button
+    -   Disable/remove integration
 
 #### Frontend
 
-- [ ] Integrations directory (future):
-    - Browse available integrations
-    - Install: configure and activate
-    - Manage: connected integrations, settings, disconnect
+-   [ ] Integrations directory (future):
+    -   Browse available integrations
+    -   Install: configure and activate
+    -   Manage: connected integrations, settings, disconnect
 
 **Acceptance criteria:**
 
-- Integration framework is documented
-- 2-3 sample integrations (Slack, Teams, Google Calendar) are working
-- Integration settings are secure and tested
+-   Integration framework is documented
+-   2-3 sample integrations (Slack, Teams, Google Calendar) are working
+-   Integration settings are secure and tested
 
 ---
 
 ### Phase 5 Acceptance Criteria
 
-- [ ] Saved reports can be generated and scheduled
-- [ ] Role-based dashboards are functional
-- [ ] API keys and webhooks are working
-- [ ] SAML and SCIM are implemented
-- [ ] Performance goals and reviews are functional
-- [ ] Training and certification tracking works
-- [ ] Benefits enrollment and deduction are working
-- [ ] Expense reimbursement workflow is complete
-- [ ] 2-3 integrations (Slack, Teams, Google Calendar) are functional
+-   [ ] Saved reports can be generated and scheduled
+-   [ ] Role-based dashboards are functional
+-   [ ] API keys and webhooks are working
+-   [ ] SAML and SCIM are implemented
+-   [ ] Performance goals and reviews are functional
+-   [ ] Training and certification tracking works
+-   [ ] Benefits enrollment and deduction are working
+-   [ ] Expense reimbursement workflow is complete
+-   [ ] 2-3 integrations (Slack, Teams, Google Calendar) are functional
 
 ---
 
@@ -1872,12 +1886,12 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 ### Team Composition (Recommended)
 
-- **Backend Lead** (1 FTE): owner of data models, APIs, business logic, security
-- **Frontend Lead** (1 FTE): owner of UI, state management, integrations, accessibility
-- **QA Engineer** (0.5 FTE, scaling to 1 FTE in Phases 3–5): automated testing, regression, user acceptance testing
-- **DevOps** (0.5 FTE): infrastructure, CI/CD, deployments, monitoring, backups
-- **Product Manager** (1 FTE): requirements, prioritization, stakeholder feedback
-- **Domain Expert/Compliance** (0.25–0.5 FTE, part-time): for payroll, tax, HR best practices
+-   **Backend Lead** (1 FTE): owner of data models, APIs, business logic, security
+-   **Frontend Lead** (1 FTE): owner of UI, state management, integrations, accessibility
+-   **QA Engineer** (0.5 FTE, scaling to 1 FTE in Phases 3–5): automated testing, regression, user acceptance testing
+-   **DevOps** (0.5 FTE): infrastructure, CI/CD, deployments, monitoring, backups
+-   **Product Manager** (1 FTE): requirements, prioritization, stakeholder feedback
+-   **Domain Expert/Compliance** (0.25–0.5 FTE, part-time): for payroll, tax, HR best practices
 
 **Total: ~4–5 FTE**
 
@@ -1920,38 +1934,38 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 ### Phase 1
 
-- ✅ All isolation tests pass
-- ✅ Zero security findings in external audit
-- ✅ 100% endpoint authorization coverage
-- ✅ Audit log captures all sensitive actions
+-   ✅ All isolation tests pass
+-   ✅ Zero security findings in external audit
+-   ✅ 100% endpoint authorization coverage
+-   ✅ Audit log captures all sensitive actions
 
 ### Phase 2
 
-- ✅ 10+ organizations can be onboarded and isolated
-- ✅ Trial → paid conversion works end-to-end
-- ✅ Stripe webhooks are 100% reliable (monitored, alerted)
-- ✅ Admin can manage organizations and support customers
+-   ✅ 10+ organizations can be onboarded and isolated
+-   ✅ Trial → paid conversion works end-to-end
+-   ✅ Stripe webhooks are 100% reliable (monitored, alerted)
+-   ✅ Admin can manage organizations and support customers
 
 ### Phase 3
 
-- ✅ Workflows (onboarding, approvals, documents) work for real HR scenarios
-- ✅ Org chart and manager hierarchy functional
-- ✅ Custom fields usable by customers
-- ✅ Feature tests cover >80% of code paths
+-   ✅ Workflows (onboarding, approvals, documents) work for real HR scenarios
+-   ✅ Org chart and manager hierarchy functional
+-   ✅ Custom fields usable by customers
+-   ✅ Feature tests cover >80% of code paths
 
 ### Phase 4
 
-- ✅ Payroll calculations pass validation against known benchmarks
-- ✅ Statutory reports (BIR, SSS) are correct and submittable
-- ✅ Payroll period locking prevents data corruption
-- ✅ Reconciliation process works end-to-end
+-   ✅ Payroll calculations pass validation against known benchmarks
+-   ✅ Statutory reports (BIR, SSS) are correct and submittable
+-   ✅ Payroll period locking prevents data corruption
+-   ✅ Reconciliation process works end-to-end
 
 ### Phase 5
 
-- ✅ Reports can be scheduled and delivered
-- ✅ API is documented; sample integrations work
-- ✅ SSO/SCIM authentication works
-- ✅ Advanced features (goals, training, benefits) are functional
+-   ✅ Reports can be scheduled and delivered
+-   ✅ API is documented; sample integrations work
+-   ✅ SSO/SCIM authentication works
+-   ✅ Advanced features (goals, training, benefits) are functional
 
 ---
 
@@ -1959,33 +1973,33 @@ After the pricing and self-service block above, resume **organizational hierarch
 
 Before selling to first paying customer:
 
-- [ ] Phase 1 complete (security audit passed)
-- [ ] Phase 2 complete (billing working)
-- [ ] Data backup and restore tested quarterly
-- [ ] Disaster recovery plan documented and tested
-- [ ] SLA and support procedures documented
-- [ ] Privacy policy and terms of service reviewed by legal
-- [ ] GDPR/data privacy compliance assessed
-- [ ] Vulnerability disclosure policy published
-- [ ] Security training for team completed
-- [ ] Penetration testing completed with findings addressed
-- [ ] Load testing: system handles 50+ concurrent users
-- [ ] Monitoring and alerting in place
-- [ ] Incident response plan documented
-- [ ] Customer onboarding and success plan ready
+-   [ ] Phase 1 complete (security audit passed)
+-   [ ] Phase 2 complete (billing working)
+-   [ ] Data backup and restore tested quarterly
+-   [ ] Disaster recovery plan documented and tested
+-   [ ] SLA and support procedures documented
+-   [ ] Privacy policy and terms of service reviewed by legal
+-   [ ] GDPR/data privacy compliance assessed
+-   [ ] Vulnerability disclosure policy published
+-   [ ] Security training for team completed
+-   [ ] Penetration testing completed with findings addressed
+-   [ ] Load testing: system handles 50+ concurrent users
+-   [ ] Monitoring and alerting in place
+-   [ ] Incident response plan documented
+-   [ ] Customer onboarding and success plan ready
 
 ---
 
 ## Long-term Vision (Post-Phase 5)
 
-- **Mobile apps** (iOS/Android): clock-in, leave requests, approvals on mobile
-- **AI/ML features**: attendance anomaly detection, attrition prediction, recommended leave allocation
-- **Embedded analytics**: Tableau/Power BI dashboards
-- **White-label SaaS**: reseller program for HR consultants
-- **Regional expansion**: add payroll for Singapore, Indonesia, Malaysia, Vietnam
-- **Recruitment**: ATS integrated with applicant tracking
-- **Learning management**: course library, progress tracking
-- **Employee experience platform**: wellness, engagement surveys, internal communication
+-   **Mobile apps** (iOS/Android): clock-in, leave requests, approvals on mobile
+-   **AI/ML features**: attendance anomaly detection, attrition prediction, recommended leave allocation
+-   **Embedded analytics**: Tableau/Power BI dashboards
+-   **White-label SaaS**: reseller program for HR consultants
+-   **Regional expansion**: add payroll for Singapore, Indonesia, Malaysia, Vietnam
+-   **Recruitment**: ATS integrated with applicant tracking
+-   **Learning management**: course library, progress tracking
+-   **Employee experience platform**: wellness, engagement surveys, internal communication
 
 ---
 
@@ -2000,3 +2014,7 @@ This roadmap prioritizes security, compliance, and operational maturity over fea
 5. **Ecosystem** (Phase 5) = Platform advantage
 
 Good luck! 🚀
+
+**Native input icon theme correction (2026-09-11):** Removed the extra dark-mode inversion from App.vue so native date/time icons use the browser's existing dark color scheme; extended picker styling to month/week fields. Production and Docker builds passed (655 modules); authorization and encryption audits passed. Local frontend container rebuilt; HTTP and served CSS verified at 127.0.0.1:3000. Browser visual verification remains pending; next step is to refresh and check picker contrast in both themes. No launch gate status changed.
+
+**UI standardization review (2026-09-11):** Re-audited the seven-phase UI checklist; centralized theme-aware input/button styles, preserved validation/floating-label/textarea behavior, aligned native date/time icons, removed conflicting table sizing, improved mobile action wrapping and touch targets, and filled missing button variants/accessibility names. See [UI standardization checklist](ui-standardization-checklist.md). Verification: 187 backend tests (1,683 assertions), 15 frontend tests, tenancy (69 tables), authorization and encryption audits all passed; production and final Docker builds passed (656 modules). Chrome checks passed for shared controls in both themes, keyboard/clear/select/textarea interactions, 390px mobile layout and 44px touch targets. Local frontend rebuilt and served CSS verified. Remaining: Safari/Firefox and complete authenticated workflow acceptance; next step is reviewing real module data in the refreshed UI. No readiness gate was advanced.

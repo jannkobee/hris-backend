@@ -41,6 +41,8 @@ Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])
     ->controller(OrganizationOwnerInvitationController::class)
     ->group(function (): void {
         Route::post('/{organization}/owner-invitations', 'store')->name('owner-invitations.store');
+        Route::post('/{organization}/owner-invitations/{invitation}/resend', 'resend')->name('owner-invitations.resend');
+        Route::delete('/{organization}/owner-invitations/{invitation}/revoke', 'revoke')->name('owner-invitations.revoke');
     });
 
 Route::middleware(['platform.provisioning', 'throttle:platform-provisioning'])

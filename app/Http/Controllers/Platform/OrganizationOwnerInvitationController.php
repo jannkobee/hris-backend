@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AcceptOrganizationOwnerInvitationRequest;
 use App\Http\Requests\StoreOrganizationOwnerInvitationRequest;
 use App\Models\Organization;
+use App\Models\OrganizationOwnerInvitation;
 use App\Services\Organizations\OrganizationOwnerInvitationService;
 use App\Services\Utils\ResponseServiceInterface;
 
@@ -26,6 +27,22 @@ class OrganizationOwnerInvitationController extends Controller
         return $this->response->storeResponse(
             'Organization owner invitation',
             $this->invitations->invite($organization, $request->validated())
+        );
+    }
+
+    public function resend(Organization $organization, OrganizationOwnerInvitation $invitation)
+    {
+        return $this->response->updateResponse(
+            'Organization owner invitation resent',
+            $this->invitations->resend($organization, $invitation)
+        );
+    }
+
+    public function revoke(Organization $organization, OrganizationOwnerInvitation $invitation)
+    {
+        return $this->response->updateResponse(
+            'Organization owner invitation revoked',
+            $this->invitations->revoke($organization, $invitation)
         );
     }
 

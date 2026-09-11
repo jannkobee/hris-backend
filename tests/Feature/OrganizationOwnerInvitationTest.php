@@ -42,6 +42,7 @@ class OrganizationOwnerInvitationTest extends TestCase
         ]);
 
         Mail::assertSent(OrganizationOwnerInvitationMail::class, fn ($mail) => $mail->hasTo('owner@example.test'));
+        Mail::assertSent(OrganizationOwnerInvitationMail::class, fn($mail) => $mail->hasTo('owner@example.test'));
         $this->assertSame($organization->id, $owner->organization_id);
         $this->assertSame('owner@example.test', $owner->email);
         app(TenantContext::class)->run($organization, function () use ($owner): void {
@@ -54,6 +55,48 @@ class OrganizationOwnerInvitationTest extends TestCase
         app(OrganizationOwnerInvitationService::class)->accept([
             'token' => $query['token'],
             'password' => 'OwnerPassword!2026',
+        ]);
+    }
+
+    public function test_owner_invitation_can_be_resent_and_revoked(): void
+    {
+        Mail::fake();
+        $organization = Organization::create([
+            'slug' => 'invite-manage-test',
+            'name' => 'Invitation Manage Test',
+            'timezone' => 'Asia/Manila',
+            'country_code' => 'PH',
+            'plan_code' => Organization::PLAN_ENTERPRISE,
+            'status' => Organization::STATUS_ACTIVE,
+            'subscription_status' => Organization::SUBSCRIPTION_TRIALING,
+        ]);
+
+        $service = app(OrganizationOwnerInvitationService::class);
+        $result = $service->invite($organization, [
+            'email' => 'manage@example.test',
+            'first_name' => 'Manage',
+            'last_name' => 'Owner',
+        ]);
+        /** @var OrganizationOwnerInvitation $invitation */
+        $invitation = $result['invitation'];
+
+        $this->assertNull($invitation->revoked_at);
+
+        // Resend
+        $resent = $service->resend($organization, $invitation);
+        $this->assertTrue($resent['mail_delivered']);
+        $this->assertNotSame($result['acceptance_url'], $resent['acceptance_url']);
+
+        // Revoke
+        $revoked = $service->revoke($organization, $invitation);
+        $this->assertNotNull($revoked->revoked_at);
+
+        // Attempting to accept revoked invitation should fail
+        parse_str((string) parse_url($resent['acceptance_url'], PHP_URL_QUERY), $query);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->accept([
+            'token' => $query['token'],
+            'password' => 'Password123!',
         ]);
     }
 }

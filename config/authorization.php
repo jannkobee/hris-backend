@@ -59,6 +59,7 @@ return [
         'App\\Http\\Controllers\\Notification\\AppNotificationController@index' => 'Current-user notifications.',
         'App\\Http\\Controllers\\Notification\\AppNotificationController@read' => 'Current-user notification ownership.',
         'App\\Http\\Controllers\\Expense\\ExpenseClaimController@store' => 'Current employee expense claim submission.',
+        'App\\Http\\Controllers\\Expense\\ExpenseClaimController@index' => 'Current employee claims, or tenant claims for employee-view, employee-management, or payroll-management permission.',
         'App\\Http\\Controllers\\Organization\\OrganizationBrandingController@show' => 'Authenticated tenant member branding view.',
         'App\\Http\\Controllers\\Organization\\OrganizationBrandingController@logo' => 'Authenticated tenant member branding logo stream.',
     ],

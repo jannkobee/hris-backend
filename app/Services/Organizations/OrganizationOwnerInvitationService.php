@@ -116,4 +116,65 @@ class OrganizationOwnerInvitationService
             });
         });
     }
+
+    public function resend(Organization $organization, OrganizationOwnerInvitation $invitation): array
+    {
+        return $this->tenantContext->run($organization, function () use ($organization, $invitation): array {
+            if ($invitation->accepted_at) {
+                throw ValidationException::withMessages(['invitation' => 'This invitation has already been accepted.']);
+            }
+
+            $token = Str::random(64);
+            $expiresAt = now()->addDays((int) config('platform.owner_invitation_days', 7));
+
+            $invitation->update([
+                'token_hash' => hash('sha256', $token),
+                'expires_at' => $expiresAt,
+                'revoked_at' => null,
+            ]);
+
+            $acceptanceUrl = rtrim((string) config('platform.owner_invitation_url'), '?')
+                .'?token='.urlencode($token);
+
+            $mailDelivered = true;
+            try {
+                Mail::to($invitation->email)->send(new OrganizationOwnerInvitationMail($organization, $acceptanceUrl, $expiresAt));
+            } catch (\Throwable $exception) {
+                report($exception);
+                $mailDelivered = false;
+            }
+
+            $this->auditLogs->insertLog($invitation, 'organization owner invitation resent', [
+                'record_id' => $invitation->id,
+                'email' => $invitation->email,
+                'expires_at' => $expiresAt,
+                'mail_delivered' => $mailDelivered,
+            ]);
+
+            return [
+                'invitation' => $invitation->fresh(),
+                'acceptance_url' => $acceptanceUrl,
+                'mail_delivered' => $mailDelivered,
+            ];
+        });
+    }
+
+    public function revoke(Organization $organization, OrganizationOwnerInvitation $invitation): OrganizationOwnerInvitation
+    {
+        return $this->tenantContext->run($organization, function () use ($invitation): OrganizationOwnerInvitation {
+            if ($invitation->accepted_at) {
+                throw ValidationException::withMessages(['invitation' => 'Accepted invitations cannot be revoked.']);
+            }
+
+            $invitation->update(['revoked_at' => now()]);
+
+            $this->auditLogs->insertLog($invitation, 'organization owner invitation revoked', [
+                'record_id' => $invitation->id,
+                'email' => $invitation->email,
+            ]);
+
+            return $invitation->fresh();
+        });
+    }
 }
+

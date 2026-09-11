@@ -1,6 +1,6 @@
 <p>Hello {{ $user->full_name ?: $user->email }},</p>
 
-<p>We received a request to reset the password for your Trefnexus account.</p>
+<p>We received a request to reset the password for your Suitify HR account.</p>
 
 <p><a href="{{ $resetUrl }}">Reset your password</a></p>
 
