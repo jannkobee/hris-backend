@@ -15,5 +15,14 @@ class StoreExpenseClaimRequest extends FormRequest
     public function rules(): array
     {
         return ['employee_id' => ['required', TenantRule::exists('employees')], 'expense_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'], 'category' => ['required', 'string', 'max:100'], 'description' => ['required', 'string', 'max:2000'], 'amount' => ['required', 'numeric', 'min:0.01'], 'receipt_path' => ['nullable', 'string', 'max:500']];
+        return [
+            'employee_id' => ['required', TenantRule::exists('employees')],
+            'expense_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'category' => ['required', 'string', 'max:100'],
+            'description' => ['required', 'string', 'max:2000'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'receipt' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
+            'receipt_path' => ['nullable', 'string', 'max:500'],
+        ];
     }
 }

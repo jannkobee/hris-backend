@@ -152,39 +152,114 @@ This ledger records every working session across the Suitify HR codebase. Every 
 -   **Next Recommended Step:** Proceed with Philippine Payroll Compliance encrypted PDF payslip generation and download (`GET /payroll-periods/{id}/payslips/{item_id}/pdf`).
 
 ## [2026-09-11 18:11] Session: Correct Dark Theme Native Input Icons
-- **Agent/Model:** Codex / GPT-6
-- **Scope Delivered:**
-  - Updated `hris-frontend/src/App.vue` to remove double inversion of native calendar/clock icons: the existing `color-scheme: dark` already selects a light icon.
-  - Extended consistent picker styling to month and week inputs; preserved light/dark hover states.
-  - Rebuilt and restarted the local frontend container; updated both readiness roadmaps.
-- **Verification Evidence:**
-  - Backend tests: `php artisan test` not run (CSS-only change).
-  - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
-  - Authorization audit: `php artisan authorization:audit` passed.
-  - Encryption audit: `php artisan security:encryption-audit` passed.
-  - Frontend build: `npm run build` passed (655 modules); Docker frontend build passed.
-  - Formatted App.vue with Prettier. HTTP 200 from http://127.0.0.1:3000; served CSS contains dark color scheme and no invert(1) filter.
-- **Open Issues / Blockers:** Browser visual verification was not available. The localhost HTTP probe returned 404, while the explicit IPv4 endpoint passed.
-- **Next Recommended Step:** Refresh the app and visually confirm native picker icons in both themes.
+
+-   **Agent/Model:** Codex / GPT-6
+-   **Scope Delivered:**
+    -   Updated `hris-frontend/src/App.vue` to remove double inversion of native calendar/clock icons: the existing `color-scheme: dark` already selects a light icon.
+    -   Extended consistent picker styling to month and week inputs; preserved light/dark hover states.
+    -   Rebuilt and restarted the local frontend container; updated both readiness roadmaps.
+-   **Verification Evidence:**
+    -   Backend tests: `php artisan test` not run (CSS-only change).
+    -   Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    -   Authorization audit: `php artisan authorization:audit` passed.
+    -   Encryption audit: `php artisan security:encryption-audit` passed.
+    -   Frontend build: `npm run build` passed (655 modules); Docker frontend build passed.
+    -   Formatted App.vue with Prettier. HTTP 200 from http://127.0.0.1:3000; served CSS contains dark color scheme and no invert(1) filter.
+-   **Open Issues / Blockers:** Browser visual verification was not available. The localhost HTTP probe returned 404, while the explicit IPv4 endpoint passed.
+-   **Next Recommended Step:** Refresh the app and visually confirm native picker icons in both themes.
 
 ## [2026-09-11 20:37] Session: UI Standardization and Theme-Aware Control Refinement
-- **Agent/Model:** Codex / GPT-6
-- **Scope Delivered:**
-  - Re-audited frontend button templates against the user's seven-phase checklist; documented results in `docs/ui-standardization-checklist.md`.
-  - Extracted input/button styles into `hris-frontend/src/styles/controls.css`; added `surface-field` theme colors in `src/plugins/vuetify.ts`; removed conflicting global rules from `src/App.vue`.
-  - Preserved error colors, floating labels, textarea auto-growth, and nested button contrast. Added keyboard focus, reduced-motion support, explicit native color schemes, right-aligned date/time indicators, and 44px coarse-pointer icon targets.
-  - Cleaned `Table.vue` toolbar/search and 28px action overrides; improved wrapping in `ModuleHeader.vue`.
-  - Filled missing primary button variants and added accessible icon names across shared dialogs, document controls, auth, tenant modules, marketing, and platform views. Toggle children retain inherited variants.
-  - Rebuilt and restarted the local frontend container. Preserved pre-existing workspace changes.
-- **Verification Evidence:**
-  - Backend tests: `php artisan test` passed (187 tests, 1,683 assertions).
-  - Tenancy audit: `php artisan tenancy:audit` passed (69 tables).
-  - Authorization audit: `php artisan authorization:audit` passed.
-  - Encryption audit: `php artisan security:encryption-audit` passed.
-  - Frontend tests: `node --test tests/*.test.cjs` passed (15 tests).
-  - Frontend build: `npm run build` passed (656 modules); final Docker build passed (656 modules, Vite 13.31s).
-  - Prettier applied to edited frontend files.
-  - Isolated Chrome checks passed for light/dark schemes, picker filters, error/icon colors, normal/error focus rings, visible keyboard focus, clear/select behavior, and textarea growth (66px to 150px). Desktop icons measured 32px; touch icons measured 44px; 390px mobile viewport had no page overflow.
-  - Final HTTP 200 and served CSS verified at http://127.0.0.1:3000. Preview fixtures removed from frontend; local screenshots and check output retained under `.tmp/ui-review/`.
-- **Open Issues / Blockers:** No implementation blocker. Safari/Firefox and every authenticated module workflow were not browser-tested; the browser checks exercised representative shared controls. Vite and headless Chrome required sandbox escalation for local verification.
-- **Next Recommended Step:** Review the refreshed application with real employee/payroll data and extend browser acceptance coverage to Safari/Firefox.
+
+-   **Agent/Model:** Codex / GPT-6
+-   **Scope Delivered:**
+    -   Re-audited frontend button templates against the user's seven-phase checklist; documented results in `docs/ui-standardization-checklist.md`.
+    -   Extracted input/button styles into `hris-frontend/src/styles/controls.css`; added `surface-field` theme colors in `src/plugins/vuetify.ts`; removed conflicting global rules from `src/App.vue`.
+    -   Preserved error colors, floating labels, textarea auto-growth, and nested button contrast. Added keyboard focus, reduced-motion support, explicit native color schemes, right-aligned date/time indicators, and 44px coarse-pointer icon targets.
+    -   Cleaned `Table.vue` toolbar/search and 28px action overrides; improved wrapping in `ModuleHeader.vue`.
+    -   Filled missing primary button variants and added accessible icon names across shared dialogs, document controls, auth, tenant modules, marketing, and platform views. Toggle children retain inherited variants.
+    -   Rebuilt and restarted the local frontend container. Preserved pre-existing workspace changes.
+-   **Verification Evidence:**
+    -   Backend tests: `php artisan test` passed (187 tests, 1,683 assertions).
+    -   Tenancy audit: `php artisan tenancy:audit` passed (69 tables).
+    -   Authorization audit: `php artisan authorization:audit` passed.
+    -   Encryption audit: `php artisan security:encryption-audit` passed.
+    -   Frontend tests: `node --test tests/*.test.cjs` passed (15 tests).
+    -   Frontend build: `npm run build` passed (656 modules); final Docker build passed (656 modules, Vite 13.31s).
+    -   Prettier applied to edited frontend files.
+    -   Isolated Chrome checks passed for light/dark schemes, picker filters, error/icon colors, normal/error focus rings, visible keyboard focus, clear/select behavior, and textarea growth (66px to 150px). Desktop icons measured 32px; touch icons measured 44px; 390px mobile viewport had no page overflow.
+    -   Final HTTP 200 and served CSS verified at http://127.0.0.1:3000. Preview fixtures removed from frontend; local screenshots and check output retained under `.tmp/ui-review/`.
+-   **Open Issues / Blockers:** No implementation blocker. Safari/Firefox and every authenticated module workflow were not browser-tested; the browser checks exercised representative shared controls. Vite and headless Chrome required sandbox escalation for local verification.
+-   **Next Recommended Step:** Review the refreshed application with real employee/payroll data and extend browser acceptance coverage to Safari/Firefox.
+
+## [2026-09-11 21:30] Session: Benefits & Expenses Module Review, Improvements & Statutory Compliance
+
+-   **Agent/Model:** Antigravity / Gemini Pro
+-   **Scope Delivered:**
+    -   Researched Benefits & Expenses module backend and frontend architecture against Philippine statutory requirements (BIR RR 2-98 and RR 11-2018).
+    -   Backend: Added private disk receipt upload and tenant-isolated, ownership-verified streaming preview/download endpoint (`GET /api/v1/expense-claims/{id}/receipt`).
+    -   Backend: Implemented Philippine De Minimis Service (`PhilippineDeMinimisService`) providing statutory tax-exempt ceilings across 8 categories (`GET /api/v1/benefit-plans/de-minimis-ceilings`).
+    -   Backend: Implemented finance accounting CSV export (`GET /api/v1/expense-claims/export`).
+    -   Backend: Added Benefit Plan update capability (`PATCH /api/v1/benefit-plans/{id}`), enrolled employees roster retrieval (`GET /api/v1/benefit-plans/{id}/enrollments`), and unenrollment cancellation (`DELETE /api/v1/benefit-enrollments/{id}`).
+    -   Backend: Registered all new endpoints in `config/authorization.php` and verified 100% route coverage under `--strict` audit.
+    -   Backend: Created test suite `tests/Feature/BenefitsAndExpensesImprovementTest.php` with 7 feature tests and 49 assertions.
+    -   Frontend: Expanded `benefitsExpensesApi` and TypeScript interfaces (`DeMinimisItem`, `BenefitEnrollment`, `ExpenseClaim.has_receipt`).
+    -   Frontend: Enhanced `BenefitsExpenses.vue` with:
+        -   Receipt upload with file picker in "New expense claim" dialog.
+        -   Real-time Philippine De Minimis advice cards warning when expense amounts exceed non-taxable statutory ceilings.
+        -   Inline image/PDF modal previewer with original file download.
+        -   Benefit Plan cards showing enrollment count badges, "Enroll", "Enrolled (X)" roster dialog, and "Edit" modal.
+        -   Enrolled employee roster dialog with one-click unenroll action.
+        -   Finance CSV export button with instant browser download.
+    -   Documentation: Updated `session-logs.md`, `module-improvement-roadmap.md`, and `industry-readiness-roadmap.md`.
+-   **Verification Evidence:**
+    -   Backend tests: `php artisan test` result (199 passed, 1,769 assertions)
+    -   Tenancy audit: `php artisan tenancy:audit` result (Tenant schema audit passed for 69 tables)
+    -   Authorization audit: `php artisan authorization:audit --strict` result (100% route coverage passed)
+    -   Frontend build: `npm run build` result (Passed in 12.01s, 0 TypeScript/Vite errors)
+-   **Open Issues / Blockers:** None.
+-   **Next Recommended Step:** Proceed with Direct Payroll Reimbursement Flow (automatically appending reimbursed expense claims as non-taxable allowances in the next open payroll run).
+
+---
+
+## [2026-09-11 22:00] Session: Docker Environment Synchronization, Route 404 Resolution & Full Suite Verification
+
+-   **Agent/Model:** Antigravity / Gemini Pro
+-   **Scope Delivered:**
+    -   Diagnosed 404 Not Found errors on `backend/api/v1/benefit-plans/de-minimis-ceilings` and `backend/api/v1/organization-chart`:
+        -   Containers (`hris-backend:local` and `hris-frontend:local`) had baked outdated source code images prior to route additions and did not have host source mounts.
+        -   Rebuilt full Docker stack: `docker compose build backend frontend queue scheduler reverb migrate`.
+        -   Recreated and restarted services: `docker compose up -d`.
+    -   Resolved BenefitController middleware collision where an unconditional `permission:manage-employees` preceded `except(['deMinimisCeilings'])`, ensuring regular employees have access to Philippine de minimis statutory guidance.
+    -   Verified live HTTP response on port 8000 via authenticated bearer requests:
+        -   `GET /backend/api/v1/benefit-plans/de-minimis-ceilings` returned HTTP 200 with all 8 statutory categories.
+        -   `GET /backend/api/v1/organization-chart` returned HTTP 200 with hierarchy tree data.
+-   **Verification Evidence:**
+    -   Backend tests: `php artisan test` result (199 passed, 1,769 assertions)
+    -   Tenancy audit: `php artisan tenancy:audit` result (Tenant schema audit passed for 69 tables)
+    -   Authorization audit: `php artisan authorization:audit --strict` result (100% route coverage passed)
+    -   Frontend unit tests: `node --test tests/*.test.cjs` result (15 passed, 0 failed)
+    -   Frontend build: `npm run build` result (Passed in 15.28s, 0 TypeScript/Vite errors)
+-   **Open Issues / Blockers:** None.
+-   **Next Recommended Step:** Hard-refresh browser (`Ctrl+F5` or `Cmd+Shift+R`) on `http://localhost:3000` to verify live views in the browser.
+
+---
+
+## [2026-09-11 22:20] Session: Removal of Icon Boxes on Headers and Tables for Clean Typographic Hierarchy
+
+-   **Agent/Model:** Antigravity / Gemini Pro
+-   **Scope Delivered:**
+    -   Per user design feedback, removed the square icon boxes and leading icons before titles across all table and page headers to achieve clean, flush-left typography:
+        -   `src/components/Table.vue`: Removed `.app-table__icon` box and icon from title row; adjusted `.app-table__heading` to keep title, count pill, and subtitle flush to the left edge.
+        -   `src/components/layouts/HrisApp/ModuleHeader.vue`: Removed `.module-header__icon` 50px box and icon; made `icon` prop optional with default `""`; adjusted `.module-header__identity` for clean left alignment.
+        -   `src/views/HrisApp/Modules/Notes/Notes.vue`: Removed `.notes-hero__icon` box before "My Notes".
+        -   `src/views/HrisApp/Modules/LeaveCreditManagement/LeaveCreditManagement.vue`: Removed `.accrual-hero__icon` box before "Leave Credit Accrual Settings".
+    -   Rebuilt frontend production bundle and recreated `hris-frontend-1` Docker container.
+-   **Verification Evidence:**
+    -   Backend tests: `php artisan test` (199 passed, 1,769 assertions)
+    -   Tenancy audit: `php artisan tenancy:audit` (passed for 69 tables)
+    -   Authorization audit: `php artisan authorization:audit --strict` (passed, 100% route coverage)
+    -   Frontend unit tests: `node --test tests/*.test.cjs` (15 passed, 0 failed)
+    -   Frontend build: `npm run build` (passed in 13.76s, 0 TypeScript/Vite errors)
+    -   Docker container: `hris-frontend-1` healthy and serving updated assets on `http://localhost:3000`
+-   **Open Issues / Blockers:** None.
+-   **Next Recommended Step:** Hard-refresh browser (`Ctrl+F5` / `Cmd+Shift+R`) on `http://localhost:3000` to view the clean, flush-left typographic titles.

@@ -157,4 +157,9 @@ class Employee extends Model
     {
         return $this->hasMany(ExpenseClaim::class);
     }
+
+    public function benefitEnrollments(): HasMany
+    {
+        return $this->hasMany(BenefitEnrollment::class);
+    }
 }

@@ -16,8 +16,15 @@ class ExpenseClaim extends Model
 
     protected $casts = ['expense_date' => 'date:Y-m-d', 'amount' => 'decimal:2', 'reviewed_at' => 'datetime', 'reimbursed_at' => 'datetime'];
 
+    protected $appends = ['has_receipt'];
+
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function getHasReceiptAttribute(): bool
+    {
+        return ! empty($this->receipt_path);
     }
 }

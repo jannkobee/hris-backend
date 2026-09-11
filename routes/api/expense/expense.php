@@ -8,4 +8,8 @@ Route::prefix('expense-claims')->name('expense-claims.')->controller(ExpenseClai
     Route::post('/', 'store')->name('store');
     Route::post('{claim}/review', 'review')->name('review');
     Route::post('{claim}/reimburse', 'reimburse')->name('reimburse');
+    Route::get('/export', 'export')->name('export');
+    Route::get('/{claim}/receipt', 'receipt')->name('receipt');
+    Route::post('/{claim}/review', 'review')->name('review');
+    Route::post('/{claim}/reimburse', 'reimburse')->name('reimburse');
 });
