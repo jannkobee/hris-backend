@@ -42,7 +42,7 @@ class OrganizationOwnerInvitationTest extends TestCase
         ]);
 
         Mail::assertSent(OrganizationOwnerInvitationMail::class, fn ($mail) => $mail->hasTo('owner@example.test'));
-        Mail::assertSent(OrganizationOwnerInvitationMail::class, fn($mail) => $mail->hasTo('owner@example.test'));
+        Mail::assertSent(OrganizationOwnerInvitationMail::class, fn ($mail) => $mail->hasTo('owner@example.test'));
         $this->assertSame($organization->id, $owner->organization_id);
         $this->assertSame('owner@example.test', $owner->email);
         app(TenantContext::class)->run($organization, function () use ($owner): void {
@@ -84,7 +84,8 @@ class OrganizationOwnerInvitationTest extends TestCase
 
         // Resend
         $resent = $service->resend($organization, $invitation);
-        $this->assertTrue($resent['mail_delivered']);
+        $this->assertFalse($resent['mail_delivered']); // The test transport is array, not an inbox.
+        $this->assertSame('not_sent', $resent['mail_status']);
         $this->assertNotSame($result['acceptance_url'], $resent['acceptance_url']);
 
         // Revoke

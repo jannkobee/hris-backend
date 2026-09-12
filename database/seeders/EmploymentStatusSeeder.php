@@ -45,7 +45,7 @@ class EmploymentStatusSeeder extends Seeder
         ];
 
         foreach ($statuses as $status) {
-            EmploymentStatus::updateOrCreate(
+            EmploymentStatus::firstOrCreate(
                 ['name' => $status['name']],
                 [
                     'description' => $status['description'],

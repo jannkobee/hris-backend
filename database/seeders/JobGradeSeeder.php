@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\JobGrade;
+use Illuminate\Database\Seeder;
 
 class JobGradeSeeder extends Seeder
 {
@@ -48,7 +48,7 @@ class JobGradeSeeder extends Seeder
         ];
 
         foreach ($grades as $grade) {
-            JobGrade::updateOrCreate(
+            JobGrade::firstOrCreate(
                 ['code' => $grade['code']],
                 $grade
             );

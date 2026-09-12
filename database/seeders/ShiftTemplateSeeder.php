@@ -63,7 +63,7 @@ class ShiftTemplateSeeder extends Seeder
         ];
 
         foreach ($templates as $template) {
-            ShiftTemplate::updateOrCreate(
+            ShiftTemplate::firstOrCreate(
                 ['code' => $template['code']],
                 $template
             );

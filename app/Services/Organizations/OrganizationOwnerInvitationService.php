@@ -51,12 +51,14 @@ class OrganizationOwnerInvitationService
             $acceptanceUrl = rtrim((string) config('platform.owner_invitation_url'), '?')
                 .'?token='.urlencode($token);
 
-            $mailDelivered = true;
+            $mailDelivered = ! in_array(config('mail.default'), ['log', 'array'], true);
+            $mailStatus = $mailDelivered ? 'submitted' : 'not_sent';
             try {
                 Mail::to($email)->send(new OrganizationOwnerInvitationMail($organization, $acceptanceUrl, $expiresAt));
             } catch (\Throwable $exception) {
                 report($exception);
                 $mailDelivered = false;
+                $mailStatus = 'failed';
             }
 
             $this->auditLogs->insertLog($invitation, 'organization owner invitation created', [
@@ -70,6 +72,7 @@ class OrganizationOwnerInvitationService
                 'invitation' => $invitation,
                 'acceptance_url' => $acceptanceUrl,
                 'mail_delivered' => $mailDelivered,
+                'mail_status' => $mailStatus,
             ];
         });
     }
@@ -136,12 +139,14 @@ class OrganizationOwnerInvitationService
             $acceptanceUrl = rtrim((string) config('platform.owner_invitation_url'), '?')
                 .'?token='.urlencode($token);
 
-            $mailDelivered = true;
+            $mailDelivered = ! in_array(config('mail.default'), ['log', 'array'], true);
+            $mailStatus = $mailDelivered ? 'submitted' : 'not_sent';
             try {
                 Mail::to($invitation->email)->send(new OrganizationOwnerInvitationMail($organization, $acceptanceUrl, $expiresAt));
             } catch (\Throwable $exception) {
                 report($exception);
                 $mailDelivered = false;
+                $mailStatus = 'failed';
             }
 
             $this->auditLogs->insertLog($invitation, 'organization owner invitation resent', [
@@ -155,6 +160,7 @@ class OrganizationOwnerInvitationService
                 'invitation' => $invitation->fresh(),
                 'acceptance_url' => $acceptanceUrl,
                 'mail_delivered' => $mailDelivered,
+                'mail_status' => $mailStatus,
             ];
         });
     }
@@ -177,4 +183,3 @@ class OrganizationOwnerInvitationService
         });
     }
 }
-

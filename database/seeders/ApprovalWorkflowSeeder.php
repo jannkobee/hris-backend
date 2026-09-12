@@ -32,7 +32,7 @@ class ApprovalWorkflowSeeder extends Seeder
         ];
 
         foreach ($workflows as $wf) {
-            $workflow = ApprovalWorkflow::updateOrCreate(
+            $workflow = ApprovalWorkflow::firstOrCreate(
                 ['resource_type' => $wf['resource_type']],
                 [
                     'name' => $wf['name'],
@@ -40,7 +40,7 @@ class ApprovalWorkflowSeeder extends Seeder
                 ]
             );
 
-            ApprovalWorkflowStep::updateOrCreate(
+            ApprovalWorkflowStep::firstOrCreate(
                 [
                     'workflow_id' => $workflow->id,
                     'sequence' => 1,

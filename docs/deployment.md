@@ -1,5 +1,7 @@
 # Production deployment
 
+For first-administrator bootstrap and subsequent organization creation, see [Organization setup](organization-setup.md). After migrations, run `php artisan platform:setup`; ordinary database seeding no longer creates a demo administrator.
+
 Copy `deploy/.env.production.example` to a secure host-only `deploy/.env.production`, replace every placeholder, and generate `APP_KEY` with `php artisan key:generate --show`.
 
 From `hris-backend`, deploy with:

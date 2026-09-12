@@ -385,3 +385,200 @@ This ledger records every working session across the Suitify HR codebase. Every 
     - Local Git status/log/branch inspection succeeded with a command-scoped safe.directory exception; no global Git settings changed. Remote branch switch still pending.
 - **Open Issues / Blockers:** Server clones must select develop before staging setup. Secrets, TLS, application runtime, and acceptance remain pending.
 - **Next Recommended Step:** Confirm remote develop revisions and deployment-file presence, then configure staging environment.
+
+## [2026-09-12 17:06] Session: Prepare Server-Only Staging Configuration
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User chose to merge develop into main; preserve main as deployment branch. Remote listing now confirms production Compose and environment template exist.
+    - Reviewed template and validator. Prepared configuration instructions using ~/suitify/staging.env outside both build contexts, exclusive file creation, mode 0600, and unique generated secrets.
+    - Initial smoke environment uses log mail and disabled Stripe. Full staging validator requires SMTP and Stripe even when disabled; do not claim its gate passed. Compose syntax-only validation is the next check.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (configuration guidance only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Deployment-file existence confirmed by user output; generated environment and Compose syntax validation still pending.
+- **Open Issues / Blockers:** SMTP, Stripe provider gates, TLS, builds, migrations, backups and runtime acceptance remain pending. No launch gate advanced.
+- **Next Recommended Step:** Create external staging.env and run Compose config --quiet without exposing resolved secrets.
+
+## [2026-09-12 17:08] Session: Staging Compose Configuration Validated
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User reports successful secret-safe Compose config --quiet check using ../staging.env and docker-compose.production.yml on Lightsail.
+    - Supplied production image build command with Compose parallelism limited to one for the 4 GB host.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (remote infrastructure guidance).
+    - Tenancy audit: `php artisan tenancy:audit` not run (remote migrations not run yet).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not yet verified; Docker image build is the next step.
+    - Remote Compose config --quiet passed according to user report. This verifies configuration parsing, not application readiness or the full staging validator.
+- **Open Issues / Blockers:** Image builds, runtime startup, migrations/audits, HTTPS, email, backups, and application acceptance remain pending.
+- **Next Recommended Step:** Collect image build results, then configure HTTPS and start and verify the staging stack.
+
+## [2026-09-12 17:09] Session: Diagnose Staging Dependency Download Failure
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed remote Docker build failure: frontend npm ci exited with ECONNRESET; backend dependency installation was canceled by the failed overall build.
+    - Recommended retrying frontend alone, then building PHP services separately. The supplied output shows Compose --parallel 1 did not serialize all BuildKit targets in this environment.
+    - No dependency versions or registry configuration changed.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (images not built).
+    - Tenancy audit: `php artisan tenancy:audit` not run (remote migrations pending).
+    - Authorization audit: `php artisan authorization:audit` not run (runtime unavailable).
+    - Frontend build: Docker build failed at npm ci with ECONNRESET before npm run build; deprecation notices were warnings.
+- **Open Issues / Blockers:** Dependency download retry pending; backend build, runtime, TLS and staging acceptance remain unverified.
+- **Next Recommended Step:** Retry frontend image build alone; collect complete error if connection resets recur before changing network configuration.
+
+## [2026-09-12 17:15] Session: Staging Images Built Successfully
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User reports frontend and backend image builds both succeeded after retrying separately.
+    - Supplied startup command using existing images, service status inspection, and local HTTP health checks. Production Compose performs migrations through its migrate service before dependent application services start.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (remote release tests still pending).
+    - Tenancy audit: `php artisan tenancy:audit` not run (next after startup).
+    - Authorization audit: `php artisan authorization:audit` not run (next after startup).
+    - Frontend build: user reports Docker frontend build succeeded, which includes npm run build; detailed final output not supplied.
+    - PHP service image builds succeeded according to user report. Runtime health not yet verified.
+- **Open Issues / Blockers:** Stack startup, migrations, audits, HTTPS, account provisioning, email, backups and browser acceptance remain pending.
+- **Next Recommended Step:** Start stack with --no-build, inspect ps -a and local health endpoints, then configure TLS proxy and perform application audits.
+
+## [2026-09-12 17:18] Session: Local Web Health Passed and HTTPS Setup Prepared
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User provided HTTP 200 and ok response from 127.0.0.1:8081/healthz, confirming the frontend Nginx health endpoint responds.
+    - Prepared standalone Caddy Docker proxy configuration with persistent certificate volumes, Linux host networking to reach loopback-bound services, /app/* forwarding to Reverb, and default forwarding to frontend.
+    - Supplied Lightsail HTTP/HTTPS firewall setup and Caddy validation/start commands for the temporary base hostname.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run.
+    - Tenancy audit: `php artisan tenancy:audit` not yet run on staging.
+    - Authorization audit: `php artisan authorization:audit` not yet run on staging.
+    - Frontend build: previously reported successful by user.
+    - Frontend health HTTP 200 verified through supplied output; this is not Laravel/database or full service health verification. Requested ps -a output has not been supplied.
+- **Open Issues / Blockers:** Public HTTPS, runtime audits, tenant hostname certificates, account provisioning, email, backups, and workflow acceptance remain pending. Caddy instructions have not yet been executed/verified.
+- **Next Recommended Step:** Verify HTTPS and service status, then run backend audits and provision staging access.
+
+## [2026-09-12 17:23] Session: Diagnose Public HTTPS Timeout
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed Caddy logs: proxy starts on 80/443; TLS-ALPN validation times out connecting to 52.76.75.229, HTTP validation succeeds, and certificate is obtained successfully.
+    - Identified blocked inbound TCP 443 as the likely cause of browser timeout; supplied Lightsail IPv4 HTTPS firewall correction and local HTTPS/UFW diagnostics if it persists.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run.
+    - Tenancy audit: `php artisan tenancy:audit` not run.
+    - Authorization audit: `php artisan authorization:audit` not run.
+    - Frontend build: previously reported successful by user.
+    - Caddy certificate issuance and public HTTP ACME access confirmed in supplied logs. Public HTTPS remains unreachable according to user report.
+- **Open Issues / Blockers:** Confirm inbound TCP 443 rule and external HTTPS access; application audits, provisioning and staging acceptance remain pending.
+- **Next Recommended Step:** Add or correct Lightsail IPv4 HTTPS rule; if timeout persists inspect local HTTPS response and host firewall status.
+
+## [2026-09-12 17:27] Session: HTTPS Staging Site Accessible
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User reports public site works after correcting the missing Lightsail HTTPS rule.
+    - Updated both readiness roadmaps with infrastructure progress and remaining acceptance gates.
+    - Prepared remote service status and tenancy, strict authorization, and encryption audit commands; inspected organization provisioning command for the next step.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run against deployed database.
+    - Tenancy audit: `php artisan tenancy:audit` pending remote execution.
+    - Authorization audit: `php artisan authorization:audit --strict` pending remote execution.
+    - Encryption audit: `php artisan security:encryption-audit` pending remote execution.
+    - Frontend build: Docker build previously reported successful by user.
+    - Certificate issuance evidenced in Caddy logs; external site accessibility confirmed by user, not independently browser-tested.
+- **Open Issues / Blockers:** Service/migration status, audits, staging login, authenticated workflows, tenant TLS, email, backups, monitoring and rollback remain pending. No full staging acceptance claimed.
+- **Next Recommended Step:** Collect runtime status/audits and provision staging access without seeding known default credentials.
+
+## [2026-09-12 17:31] Session: Staging Runtime Audits Passed
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed remote health and audit output; updated both readiness roadmaps.
+    - Inspected tenant resolution, signup/provisioning and seeders. Existing base hostname resolves to legacy organization. Default AdminSeeder creates known development credentials, so prepared selective catalogue seeding and custom administrator setup instead.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run against deployed database.
+    - Tenancy audit: `php artisan tenancy:audit` passed (69 tables).
+    - Authorization audit: `php artisan authorization:audit --strict` passed.
+    - Encryption audit: `php artisan security:encryption-audit` passed (six configured fields).
+    - Frontend build: previously reported successful by user.
+    - All nine long-running Compose services healthy; migrate exited 0, per remote terminal output.
+- **Open Issues / Blockers:** Custom administrator email/setup and authenticated acceptance pending; email, Stripe, backups/restore, monitoring and rollback gates remain open.
+- **Next Recommended Step:** Initialize catalogue/default seeders without AdminSeeder; create a unique staging administrator and verify login.
+
+## [2026-09-12 17:42] Session: Prepare Private Administrator Password Setup
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User selected jkobe415@gmail.com as the staging administrator login.
+    - Reviewed User casts, tenant context, authentication requirements and installed Laravel Prompts password API.
+    - Prepared a remote CLI account creation command scoped to the configured default organization, using the Admin role, active flag, masked password entry and confirmation. Existing matching accounts are preserved.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (guided account provisioning only).
+    - Tenancy audit: last remote run passed for 69 tables; no schema changes.
+    - Authorization audit: last remote strict audit passed.
+    - Frontend build: previously reported successful by user; no frontend changes.
+    - Account creation and authenticated browser login remain pending user execution; no password collected or recorded.
+- **Open Issues / Blockers:** Selective catalogue seeding success has not been explicitly reported; provisioning requires an existing Admin role. Other staging acceptance gates remain open.
+- **Next Recommended Step:** Execute masked-password administrator creation, then verify login at the base staging hostname.
+
+## [2026-09-12 17:43] Session: Diagnose Missing Staging Admin Role
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User account-creation output shows ModelNotFoundException for Role at the Admin lookup inside the default tenant context. Execution stopped before password prompts and user creation.
+    - Supplied the four selective initialization seeders again, with instructions to run individually and report failures before retrying account provisioning.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (remote provisioning guidance).
+    - Tenancy audit: most recent remote run passed (69 tables); not rerun this turn.
+    - Authorization audit: most recent remote strict run passed; not rerun this turn.
+    - Frontend build: previously reported successful; no frontend changes.
+    - Administrator creation failed at missing Admin role; no successful account creation claimed.
+- **Open Issues / Blockers:** Required role/default seeding is not confirmed. Admin creation and authenticated login remain pending.
+- **Next Recommended Step:** Verify selective seeder success, then retry private-password account creation.
+
+## [2026-09-12 17:44] Session: Review DatabaseSeeder for Public Staging
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Re-read DatabaseSeeder, AdminSeeder and RolePermissionSeeder at user request.
+    - Confirmed DatabaseSeeder runs the required catalogue/default seeders but also AdminSeeder, which creates admin@base.com with hardcoded password secret using firstOrCreate.
+    - Explained why selective seeding was recommended for the publicly accessible staging site. No seeder changes made or remote seeding executed.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (read-only seeder review).
+    - Tenancy audit: prior remote result passed for 69 tables; not rerun.
+    - Authorization audit: prior remote strict result passed; not rerun.
+    - Frontend build: prior user-reported build passed; not rerun.
+- **Open Issues / Blockers:** Role initialization and custom administrator creation remain pending; existing DatabaseSeeder includes development credentials.
+- **Next Recommended Step:** Initialize the four non-admin seeders, then create the requested administrator with a private password, or update AdminSeeder before using the complete seeder on staging.
+
+## [2026-09-12 19:29] Session: Organization Provisioning Reliability Review
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed public signup, Platform Console creation, CLI, seeders, invitations, tests and tenant routing.
+    - Added docs/organization-provisioning-review.md with six prioritized findings, proposed one-command bootstrap/shared provisioning experience, and validation gaps.
+    - Reproduced missing-password acceptance when send_owner_invitation is false using the installed Laravel validator; probe retained under workspace .tmp.
+    - Application code and deployed resources unchanged; this is a review, not implementation or full staging acceptance.
+- **Verification Evidence:**
+    - Backend tests: focused `php artisan test --filter='OrganizationProvisioningTest|TrialSignupTest|OrganizationOwnerInvitationTest'` passed (6 tests, 35 assertions) against SQLite in-memory.
+    - Tenancy audit: prior remote result passed (69 tables); not rerun for this review.
+    - Authorization audit: prior remote strict result passed; not rerun for this review.
+    - Frontend build: not rerun (no frontend changes).
+    - Validator probe confirmed false invitation flag accepts absent password; static review traced ownerless provisioning consequence.
+- **Open Issues / Blockers:** Reviewed defects remain unfixed: tenant login destination, owner validation, default credentials, CLI recovery, initialization consistency, and invitation delivery UX. Staging administrator creation remains unfinished.
+- **Next Recommended Step:** Implement the review's shared initialization and secure bootstrap flow, then tenant-aware login and invitation UX with focused regression coverage.
+
+## [2026-09-13 00:12] Session: Secure Organization Setup and Provisioning Improvements
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Added secure platform:setup and shared owner prompt helper; initializes migrated default or explicitly selected existing workspace and its first administrator without pasted PHP. Existing active administrators and passwords are preserved on retries.
+    - Added OrganizationInitializationService for global catalogue, tenant roles/permissions and defaults. CLI organizations:create now uses shared provisioning, validates credentials, accepts explicit country/timezone, records subscription lifecycle and prints recovery instructions for duplicate workspaces.
+    - Removed AdminSeeder from ordinary DatabaseSeeder; blocked direct demo admin seeding outside local/testing. Changed default record seeders to firstOrCreate to preserve customized values. Added nested environment-file exclusions to Docker build context.
+    - Fixed false-invitation/missing-password validation and normalized controller boolean input. Added transport-aware invitation status; log/array mail does not report delivery.
+    - Added tenant-aware login URLs to provisioning/signup/invitation completion and same-origin API routing in production Compose. Console creation now suggests slugs, supports owner-controlled invitation setup, Free Basic defaults, and workspace/private invitation links.
+    - Added seven feature regressions, updated invitation and Compose expectations, and wrote organization-setup.md plus the review report. Updated deployment guide and all three roadmaps.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` passed (206 tests, 1,823 assertions) against isolated SQLite in-memory; 57.73s.
+    - Tenancy audit: `php artisan tenancy:audit` passed (69 tables).
+    - Authorization audit: `php artisan authorization:audit --strict` passed.
+    - Encryption audit: `php artisan security:encryption-audit` passed.
+    - Deployment configuration tests: both Compose regression files passed (5 tests), including tenant-relative frontend API URL.
+    - Frontend tests: `node --test tests/*.test.cjs` passed (15 tests).
+    - Frontend build: final `npm run build` passed (658 modules, Vite 18.69s); TypeScript check passed. Sandbox parent-directory denial required the approved build escalation. An intermediate build process handle became unavailable across the environment update, so final verification was rerun and captured.
+    - PHP Pint and frontend Prettier applied to changed code; git diff --check passed before final documentation updates.
+- **Open Issues / Blockers:** No local implementation/test blocker. Changes remain uncommitted and have not been deployed to AWS. Staging needs rebuilds and the new setup command, then authenticated browser acceptance. Additional workspace DNS/TLS, real SMTP delivery, backup/restore, monitoring and rollback remain external gates. Existing accounts are not silently removed or reset, including any previously seeded demo account. API/CLI tests do not establish browser/provider acceptance or concurrent workload guarantees.
+- **Next Recommended Step:** Review/merge backend and frontend changes into main, pull and rebuild Lightsail images, then run platform:setup --admin-email=jkobe415@gmail.com in the app container and verify login.

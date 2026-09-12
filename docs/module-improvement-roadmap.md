@@ -196,3 +196,7 @@ This document provides the canonical improvement roadmap and architectural speci
 -   [ ] **Stripe Invoice & Receipt History in Customer UI:** Expose customer billing receipts and past invoices in `Billing.vue`.
 -   [ ] **Automated Dunning Workflow:** Day 1, 3, and 7 grace-period email reminders prior to workspace suspension.
 -   [ ] **Cryptographic Audit Manifest:** SHA-256 digital signature manifest for compliance CSV exports.
+
+## Organization creation and deployment bootstrap (2026-09-13)
+
+Delivered secure platform:setup for the existing default workspace; unified CLI/web initialization; credential-free baseline seeding; private owner-password prompts; preserved defaults on retries; required owner mode validation; invitation controls and honest mail status; and tenant-aware login links with same-origin production API routing. See [Organization setup](organization-setup.md). Backend suite: 206 tests / 1,823 assertions; tenancy (69 tables), strict authorization, encryption, 5 Compose tests and 15 frontend tests passed. Final production build verification is recorded in the session log. AWS rollout and authenticated browser acceptance remain pending.

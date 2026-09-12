@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TrialSignupRequest;
 use App\Models\Organization;
 use App\Services\Organizations\OrganizationProvisioningService;
+use App\Services\Organizations\OrganizationWorkspaceUrl;
 use App\Services\Utils\ResponseServiceInterface;
 
 class TrialSignupController extends Controller
@@ -40,6 +41,7 @@ class TrialSignupController extends Controller
         ]);
 
         return $this->response->storeResponse('Trial organization', [
+            'login_url' => app(OrganizationWorkspaceUrl::class)->login($organization),
             'organization' => ['name' => $organization->name, 'slug' => $organization->slug, 'plan_code' => $organization->plan_code, 'subscription_status' => $organization->subscription_status, 'trial_ends_at' => $organization->trial_ends_at],
         ]);
     }

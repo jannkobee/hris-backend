@@ -47,6 +47,8 @@ test("production topology uses private ports, health checks, and dependency gate
     assert.equal(result.status, 0, result.stderr);
 
     const config = JSON.parse(result.stdout);
+    // Login and API calls must stay on the selected tenant hostname.
+    assert.equal(config.services.frontend.build.args.VITE_API_URL, "/backend/api/v1");
     assert.deepEqual(config.services.frontend.ports[0], {
         mode: "ingress",
         host_ip: "127.0.0.1",

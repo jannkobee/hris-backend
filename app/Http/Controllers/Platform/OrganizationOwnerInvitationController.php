@@ -8,6 +8,7 @@ use App\Http\Requests\StoreOrganizationOwnerInvitationRequest;
 use App\Models\Organization;
 use App\Models\OrganizationOwnerInvitation;
 use App\Services\Organizations\OrganizationOwnerInvitationService;
+use App\Services\Organizations\OrganizationWorkspaceUrl;
 use App\Services\Utils\ResponseServiceInterface;
 
 class OrganizationOwnerInvitationController extends Controller
@@ -53,6 +54,7 @@ class OrganizationOwnerInvitationController extends Controller
         return $this->response->storeResponse('Organization owner account', [
             'id' => $owner->id,
             'email' => $owner->email,
+            'login_url' => app(OrganizationWorkspaceUrl::class)->login($owner->organization),
         ]);
     }
 }

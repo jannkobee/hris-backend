@@ -17,6 +17,10 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
+        if (! app()->environment(['local', 'testing'])) {
+            throw new \RuntimeException('Demo administrator seeding is restricted to local/testing. Run php artisan platform:setup instead.');
+        }
+
         $organization = Organization::query()
             ->where('slug', config('tenancy.default_slug'))
             ->firstOrFail();

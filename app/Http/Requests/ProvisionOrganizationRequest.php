@@ -30,7 +30,7 @@ class ProvisionOrganizationRequest extends FormRequest
             'admin_last_name' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['required', 'email', 'max:255'],
             'send_owner_invitation' => ['nullable', 'boolean'],
-            'admin_password' => ['required_without:send_owner_invitation', 'nullable', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'admin_password' => [Rule::requiredIf(fn () => ! $this->boolean('send_owner_invitation')), Rule::prohibitedIf(fn () => $this->boolean('send_owner_invitation')), 'nullable', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
         ];
     }
 }

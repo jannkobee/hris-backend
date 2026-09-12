@@ -43,7 +43,7 @@ class OvertimePolicySeeder extends Seeder
         ];
 
         foreach ($policies as $policy) {
-            OvertimePolicy::updateOrCreate(
+            OvertimePolicy::firstOrCreate(
                 ['day_type' => $policy['day_type']],
                 $policy
             );

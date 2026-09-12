@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\WebhookSubscription;
 use App\Services\Organizations\OrganizationOwnerInvitationService;
 use App\Services\Organizations\OrganizationProvisioningService;
+use App\Services\Organizations\OrganizationWorkspaceUrl;
 use App\Services\Organizations\PlatformSupportService;
 use App\Services\Organizations\SubscriptionLifecycleService;
 use App\Services\Plans\PlanEntitlementService;
@@ -60,6 +61,7 @@ class OrganizationProvisioningController extends Controller
     public function store(ProvisionOrganizationRequest $request)
     {
         $attributes = $request->validated();
+        $attributes['send_owner_invitation'] = $request->boolean('send_owner_invitation');
         $organization = $this->provisioning->provision($attributes);
         $payload = $this->payload($organization);
 
@@ -158,6 +160,7 @@ class OrganizationProvisioningController extends Controller
     {
         return [
             ...$organization->toArray(),
+            'login_url' => app(OrganizationWorkspaceUrl::class)->login($organization),
             'plan' => $this->entitlements->payload($organization),
         ];
     }
