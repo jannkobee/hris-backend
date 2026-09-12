@@ -283,3 +283,105 @@ This ledger records every working session across the Suitify HR codebase. Every 
     -   Docker container: `hris-frontend-1` healthy and verified on port 3000
 -   **Open Issues / Blockers:** None.
 -   **Next Recommended Step:** Hard-refresh browser (`Ctrl+F5` or `Cmd+Shift+R`) on `http://localhost:3000` to verify the single, clean navbar CTA pair.
+
+## [2026-09-12 16:44] Session: AWS Staging Deployment Orientation
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed session history, all three roadmaps, production Compose, deployment runbooks, and infrastructure requirements.
+    - User confirmed the AWS target is staging only. Proposed a Singapore Lightsail Linux instance with 2 vCPU and 4 GB RAM using the existing Docker topology; checked AWS documentation for instance pricing, account access, and budget setup.
+    - Updated this session ledger. No AWS resources created and no application configuration changed; no readiness gate advanced.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (deployment guidance only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no code changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+- **Open Issues / Blockers:** Budget and domain remain unspecified; AWS console state, server provisioning, DNS/TLS, SMTP, backups, and live staging verification remain pending. Git status inspection encountered the sandbox account ownership check; no Git configuration was changed.
+- **Next Recommended Step:** Guide the user through account MFA/budget setup and Lightsail instance selection, then configure the staging host and domain.
+
+## [2026-09-12 16:52] Session: Lightsail Host Created and Docker Installation Guidance
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User screenshots confirm suitify-staging is running in Singapore Zone A with 4 GB RAM, 2 vCPU, and 80 GB SSD; static IPv4 52.76.75.229 is attached.
+    - User opened browser SSH and supplied Ubuntu 24.04.4 LTS x86_64 login output. User has no staging domain.
+    - Checked official Docker Ubuntu repository installation instructions and supplied installation and verification commands for the remote host.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (guided infrastructure setup only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no code changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Server state is evidenced by user screenshot and terminal output; Docker installation is not yet verified.
+- **Open Issues / Blockers:** Docker verification, source transfer, staging secrets, hostname/TLS, email, backups, and application deployment remain pending. No staging acceptance gate advanced.
+- **Next Recommended Step:** Collect Docker hello-world and Compose version output, then transfer the release candidate to the server.
+
+## [2026-09-12 17:05] Session: Diagnose Docker Repository Paste Error
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Read user-provided remote terminal transcript. Extra blank lines separated the Docker deb822 repository fields, causing APT malformed-entry errors; Docker installation did not complete.
+    - Supplied a single-line printf command to rewrite only docker.sources with contiguous fields, followed by installation and verification steps.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (remote setup guidance only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application code changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Diagnosis based on supplied terminal output; remote repair and Docker verification pending.
+- **Open Issues / Blockers:** Docker repository repair must succeed before installing containers; staging application remains undeployed.
+- **Next Recommended Step:** Run corrected repository command and collect hello-world and Compose version results.
+
+## [2026-09-12 17:15] Session: Docker Packages Installed on Staging
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - Reviewed user-supplied terminal output confirming successful installation of Docker Engine 29.8.0 and Compose plugin 5.5.1 on the Lightsail host.
+    - Reviewed both image build definitions for the upcoming source transfer. Requested runtime verification and repository availability information.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (infrastructure guidance only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Package installation succeeded according to remote transcript; hello-world and Compose runtime output remain pending.
+- **Open Issues / Blockers:** Source transfer method, runtime verification, staging configuration, hostname/TLS, and application acceptance remain pending. No launch gate advanced.
+- **Next Recommended Step:** Verify Docker execution and identify whether the current backend/frontend release is available in GitHub or needs local archive transfer.
+
+## [2026-09-12 17:20] Session: GitHub Source Transfer Setup
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User supplied successful Docker hello-world output and Compose v5.5.1 verification.
+    - User confirmed latest code is pushed and supplied jannkobee/hris-backend and jannkobee/hris-frontend GitHub URLs.
+    - Supplied non-interactive HTTPS clone commands into sibling directories under ~/suitify. Public visibility could not be confirmed by web fetch; private access may require dedicated read-only deploy keys.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (infrastructure guidance only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Remote Docker runtime verified through user-supplied output; source cloning not yet verified.
+- **Open Issues / Blockers:** GitHub visibility/access, source transfer, staging secrets, hostname/TLS, and application deployment remain pending.
+- **Next Recommended Step:** Collect clone results; configure repository-specific deploy keys if authentication is required.
+
+## [2026-09-12 17:00] Session: Staging Repositories Cloned
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User terminal output confirms both GitHub repositories cloned successfully into /home/ubuntu/suitify as sibling directories.
+    - Reviewed local production environment template and tenancy domain settings. Researched sslip.io as a temporary staging DNS option; individual hostname TLS is supported, wildcard certificates are not.
+    - Requested remote commit identifiers, deployment-file presence, and DNS resolution before configuring the release.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (guided infrastructure setup).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Both source clones succeeded per supplied transcript. No app containers or HTTPS endpoint verified yet.
+- **Open Issues / Blockers:** Remote release identity and DNS checks pending. Temporary hostname proposal is suitify.52-76-75-229.sslip.io; tenant hostnames need individual certificates. Secrets, email, backups, deployment, and acceptance remain pending.
+- **Next Recommended Step:** Inspect remote release identifiers and file/DNS checks, then configure server-only staging secrets and TLS.
+
+## [2026-09-12 17:02] Session: Identify Staging Branch Mismatch
+- **Agent/Model:** Codex / GPT-6
+- **Scope Delivered:**
+    - User screenshot confirms temporary DNS resolves to 52.76.75.229, but backend c81d711 and frontend 92eb70e default checkouts lack current deployment files.
+    - Read-only local Git inspection confirms active development is on develop in both repositories: backend c545bb7 and frontend 7a92651. Deployment files were committed in backend 16670ee.
+    - Supplied server commands to switch both fresh clones to develop and recheck release identifiers and deployment-file presence.
+- **Verification Evidence:**
+    - Backend tests: `php artisan test` not run (branch diagnosis only).
+    - Tenancy audit: `php artisan tenancy:audit` not run (no schema changes).
+    - Authorization audit: `php artisan authorization:audit` not run (no application changes).
+    - Frontend build: `npm run build` not run (no frontend changes).
+    - Local Git status/log/branch inspection succeeded with a command-scoped safe.directory exception; no global Git settings changed. Remote branch switch still pending.
+- **Open Issues / Blockers:** Server clones must select develop before staging setup. Secrets, TLS, application runtime, and acceptance remain pending.
+- **Next Recommended Step:** Confirm remote develop revisions and deployment-file presence, then configure staging environment.
